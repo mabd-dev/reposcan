@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/MABD-dev/RepoScan/internal/gitx"
 	"github.com/MABD-dev/RepoScan/internal/scan"
 	"github.com/MABD-dev/RepoScan/pkg/report"
 	"time"
@@ -12,6 +13,7 @@ func main() {
 	// get list of dir to scan
 	// for now assume dirs = ["~/"]
 	roots := []string{"/home/mabd/Documents/", "/home/mabd/.config"}
+	//roots := []string{"/home/mabd/.config/nvim"}
 
 	gitRepos, warnings := scan.FindGitRepos(roots)
 
@@ -21,14 +23,19 @@ func main() {
 
 	repoStates := make([]report.RepoState, 0, len(gitRepos))
 	for _, repoPath := range gitRepos {
-		fmt.Println("git repo: " + repoPath)
+		uncommitedLines, err := gitx.UncommitedFiles(repoPath)
+		if err != nil {
+			fmt.Println("error shit= " + err.Error())
+			break
+		}
+
 		repoStates = append(
 			repoStates,
 			report.RepoState{
-				Path:       repoPath,
-				Repo:       "something",
-				Branch:     "Something else",
-				Uncommited: false,
+				Path:            repoPath,
+				Repo:            "something",
+				Branch:          "Something else",
+				UncommitedFiles: uncommitedLines,
 			},
 		)
 	}
