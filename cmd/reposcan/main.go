@@ -10,10 +10,14 @@ func main() {
 	// for now assume dirs = ["~/"]
 	roots := []string{"/home/mabd/Documents/", "/home/mabd/.config"}
 
-	gitRepos := scan.FindGitRepos(roots)
+	gitRepos, warnings := scan.FindGitRepos(roots)
 
 	for _, repoPath := range gitRepos {
 		fmt.Println("git repo: " + repoPath)
+	}
+
+	for _, warning := range warnings {
+		fmt.Println("warning: " + warning)
 	}
 
 	// scan the dirs

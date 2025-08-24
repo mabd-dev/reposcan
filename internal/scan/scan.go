@@ -1,7 +1,6 @@
 package scan
 
 import (
-	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -13,9 +12,10 @@ import (
 // - A directory containing `.git` (directory) is a repo root.
 // - Or a `.git` file whose contents include "gitdir:" (worktrees/submodules).
 // - When we find a repo root, we SkipDir to avoid descending into nested repos (for now).
-func FindGitRepos(roots []string) []string {
+func FindGitRepos(roots []string) (gitRepos []string, warnings []string) {
 
-	gitRepos := []string{}
+	//gitRepos := []string{}
+	//warnings := []string{}
 
 	for _, root := range roots {
 		root = os.ExpandEnv(root)
@@ -24,7 +24,8 @@ func FindGitRepos(roots []string) []string {
 			if err != nil {
 				// TODO: return warnings back
 				// possible errors: permission denied
-				fmt.Println("Warning: " + err.Error())
+				warnings = append(warnings, err.Error())
+				// fmt.Println("Warning: " + err.Error())
 				return nil
 			}
 
@@ -40,7 +41,7 @@ func FindGitRepos(roots []string) []string {
 		})
 	}
 
-	return removeDuplicates(gitRepos)
+	return removeDuplicates(gitRepos), warnings
 
 }
 
