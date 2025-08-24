@@ -10,10 +10,9 @@ import (
 )
 
 func main() {
-	// get list of dir to scan
+	// TODO: user input -- get list of dir to scan
 	// for now assume dirs = ["~/"]
 	roots := []string{"/home/mabd/Documents/", "/home/mabd/.config"}
-	//roots := []string{"/home/mabd/.config/nvim"}
 
 	gitRepos, warnings := scan.FindGitRepos(roots)
 
@@ -23,6 +22,12 @@ func main() {
 
 	repoStates := make([]report.RepoState, 0, len(gitRepos))
 	for _, repoPath := range gitRepos {
+		repoName, err := gitx.GitRepoName(repoPath)
+		if err != nil {
+			fmt.Println("Failed to get repo name= " + err.Error())
+			break
+		}
+
 		branch, err := gitx.GitRepoBranch(repoPath)
 		if err != nil {
 			fmt.Println("Failed to get branch name= " + err.Error())
@@ -39,7 +44,7 @@ func main() {
 			repoStates,
 			report.RepoState{
 				Path:            repoPath,
-				Repo:            "something",
+				Repo:            repoName,
 				Branch:          branch,
 				UncommitedFiles: uncommitedLines,
 			},

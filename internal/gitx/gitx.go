@@ -2,10 +2,31 @@ package gitx
 
 import (
 	"bytes"
+	"errors"
 	//"fmt"
 	"os/exec"
+	"regexp"
 	"strings"
 )
+
+func GitRepoName(gitDir string) (repoName string, err error) {
+	remote, err := runGitCommand(gitDir, "remote", "get-url", "origin")
+	if err != nil {
+		return "", err
+	}
+
+	remote = strings.TrimSpace(remote)
+
+	re := regexp.MustCompile(`([^/]+?)(?:\.git)?$`)
+	match := re.FindStringSubmatch(remote)
+	if len(match) > 1 {
+		repoName = match[1]
+	} else {
+		return "", errors.New("repo name cannot be found")
+	}
+
+	return repoName, nil
+}
 
 func GitRepoBranch(gitDir string) (branchName string, err error) {
 	str, err := runGitCommand(gitDir, "branch", "--show-current")
