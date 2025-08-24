@@ -1,5 +1,9 @@
 package report
 
+import (
+	"time"
+)
+
 type RepoState struct {
 	Path       string `json:"path"`
 	Repo       string `json:"repo"`
