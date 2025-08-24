@@ -1,0 +1,11 @@
+# Go
+bin/
+dist/
+*.out
+*.test
+# Editors
+.idea/
+.vscode/
+# OS
+.DS_Store
+
