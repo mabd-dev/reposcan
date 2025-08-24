@@ -7,6 +7,14 @@ import (
 	"strings"
 )
 
+func GitRepoBranch(gitDir string) (branchName string, err error) {
+	str, err := runGitCommand(gitDir, "branch", "--show-current")
+	if err != nil {
+		return "", err
+	}
+	return strings.TrimSpace(str), nil
+}
+
 // check https://git-scm.com/docs/git-status/2.11.4.html for file states
 func UncommitedFiles(gitDir string) (changes []string, err error) {
 	str, err := runGitCommand(gitDir, "status", "--porcelain=v1", "-uall")

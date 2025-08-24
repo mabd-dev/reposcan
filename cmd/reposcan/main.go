@@ -23,9 +23,15 @@ func main() {
 
 	repoStates := make([]report.RepoState, 0, len(gitRepos))
 	for _, repoPath := range gitRepos {
+		branch, err := gitx.GitRepoBranch(repoPath)
+		if err != nil {
+			fmt.Println("Failed to get branch name= " + err.Error())
+			break
+		}
+
 		uncommitedLines, err := gitx.UncommitedFiles(repoPath)
 		if err != nil {
-			fmt.Println("error shit= " + err.Error())
+			fmt.Println("Failed to get file changes= " + err.Error())
 			break
 		}
 
@@ -34,7 +40,7 @@ func main() {
 			report.RepoState{
 				Path:            repoPath,
 				Repo:            "something",
-				Branch:          "Something else",
+				Branch:          branch,
 				UncommitedFiles: uncommitedLines,
 			},
 		)
