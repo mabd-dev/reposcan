@@ -22,22 +22,21 @@ func main() {
 
 	repoStates := make([]report.RepoState, 0, len(gitRepos))
 	for _, repoPath := range gitRepos {
+
 		repoName, err := gitx.GitRepoName(repoPath)
 		if err != nil {
-			fmt.Println("Failed to get repo name= " + err.Error())
-			break
+			fmt.Printf("Failed to get repo name, path=%s, erro=%s\n", repoPath, err.Error())
 		}
 
 		branch, err := gitx.GitRepoBranch(repoPath)
 		if err != nil {
-			fmt.Println("Failed to get branch name= " + err.Error())
-			break
+			fmt.Printf("Failed to get branch name, path=%s, error=%s\n", repoPath, err.Error())
 		}
 
 		uncommitedLines, err := gitx.UncommitedFiles(repoPath)
 		if err != nil {
-			fmt.Println("Failed to get file changes= " + err.Error())
-			break
+			fmt.Println("Failed to get uncommited files=" + err.Error())
+			continue
 		}
 
 		repoStates = append(
