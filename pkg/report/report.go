@@ -4,10 +4,6 @@ import (
 	"time"
 )
 
-type GitRepo struct {
-	Path string
-}
-
 type RepoState struct {
 	Path            string   `json:"path"`
 	Repo            string   `json:"repo"`

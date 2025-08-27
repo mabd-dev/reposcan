@@ -9,8 +9,18 @@ import (
 	"strings"
 )
 
-func GitRepoName(gitDir string) (repoName string, err error) {
-	remote, err := runGitCommand(gitDir, "remote", "get-url", "origin")
+func CreateGitReposFrom(paths []string) (gitRepos []GitRepo) {
+	for _, p := range paths {
+		gitRepo := GitRepo{
+			Path: p,
+		}
+		gitRepos = append(gitRepos, gitRepo)
+	}
+	return gitRepos
+}
+
+func (r GitRepo) GitRepoName() (repoName string, err error) {
+	remote, err := runGitCommand(r.Path, "remote", "get-url", "origin")
 	if err != nil {
 		return "", err
 	}
@@ -28,8 +38,8 @@ func GitRepoName(gitDir string) (repoName string, err error) {
 	return repoName, nil
 }
 
-func GitRepoBranch(gitDir string) (branchName string, err error) {
-	str, err := runGitCommand(gitDir, "branch", "--show-current")
+func (r GitRepo) GitRepoBranch() (branchName string, err error) {
+	str, err := runGitCommand(r.Path, "branch", "--show-current")
 	if err != nil {
 		return "", err
 	}
@@ -37,8 +47,8 @@ func GitRepoBranch(gitDir string) (branchName string, err error) {
 }
 
 // check https://git-scm.com/docs/git-status/2.11.4.html for file states
-func UncommitedFiles(gitDir string) (changes []string, err error) {
-	str, err := runGitCommand(gitDir, "status", "--porcelain=v1", "-uall")
+func (r GitRepo) UncommitedFiles() (changes []string, err error) {
+	str, err := runGitCommand(r.Path, "status", "--porcelain=v1", "-uall")
 	if err != nil {
 		return []string{}, err
 	}

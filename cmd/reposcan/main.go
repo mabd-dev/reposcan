@@ -39,26 +39,28 @@ func main() {
 
 	fmt.Printf("Look into roots=%s\n", roots)
 
-	gitRepos, warnings := scan.FindGitRepos(roots)
+	gitReposPaths, warnings := scan.FindGitRepos(roots)
 
 	for _, warning := range warnings {
 		fmt.Println("warning: " + warning)
 	}
 
+	gitRepos := gitx.CreateGitReposFrom(gitReposPaths)
+
 	repoStates := make([]report.RepoState, 0, len(gitRepos))
-	for _, repoPath := range gitRepos {
+	for _, repo := range gitRepos {
 
-		repoName, err := gitx.GitRepoName(repoPath)
+		repoName, err := repo.GitRepoName()
 		if err != nil {
-			fmt.Printf("Failed to get repo name, path=%s, erro=%s\n", repoPath, err.Error())
+			fmt.Printf("Failed to get repo name, path=%s, erro=%s\n", repo.Path, err.Error())
 		}
 
-		branch, err := gitx.GitRepoBranch(repoPath)
+		branch, err := repo.GitRepoBranch()
 		if err != nil {
-			fmt.Printf("Failed to get branch name, path=%s, error=%s\n", repoPath, err.Error())
+			fmt.Printf("Failed to get branch name, path=%s, error=%s\n", repo.Path, err.Error())
 		}
 
-		uncommitedLines, err := gitx.UncommitedFiles(repoPath)
+		uncommitedLines, err := repo.UncommitedFiles()
 		if err != nil {
 			fmt.Println("Failed to get uncommited files=" + err.Error())
 			continue
@@ -67,7 +69,7 @@ func main() {
 		repoStates = append(
 			repoStates,
 			report.RepoState{
-				Path:            repoPath,
+				Path:            repo.Path,
 				Repo:            repoName,
 				Branch:          branch,
 				UncommitedFiles: uncommitedLines,
