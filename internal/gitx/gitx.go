@@ -3,24 +3,33 @@ package gitx
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	//"fmt"
 	"os/exec"
 	"regexp"
 	"strings"
 )
 
-func CreateGitReposFrom(paths []string) (gitRepos []GitRepo) {
-	for _, p := range paths {
-		gitRepo := GitRepo{
-			Path: p,
-		}
-		gitRepos = append(gitRepos, gitRepo)
+func CreateGitReposFrom(path string) (gitRepo GitRepo) {
+	repoName, err := getGitRepoName(path)
+	if err != nil {
+		fmt.Printf("Failed to get repo name, path=%s, erro=%s\n", path, err.Error())
 	}
-	return gitRepos
+
+	branch, err := getGitRepoBranch(path)
+	if err != nil {
+		fmt.Printf("Failed to get branch name, path=%s, error=%s\n", path, err.Error())
+	}
+
+	return GitRepo{
+		Path:     path,
+		RepoName: repoName,
+		Branch:   branch,
+	}
 }
 
-func (r GitRepo) GitRepoName() (repoName string, err error) {
-	remote, err := runGitCommand(r.Path, "remote", "get-url", "origin")
+func getGitRepoName(path string) (repoName string, err error) {
+	remote, err := runGitCommand(path, "remote", "get-url", "origin")
 	if err != nil {
 		return "", err
 	}
@@ -38,8 +47,8 @@ func (r GitRepo) GitRepoName() (repoName string, err error) {
 	return repoName, nil
 }
 
-func (r GitRepo) GitRepoBranch() (branchName string, err error) {
-	str, err := runGitCommand(r.Path, "branch", "--show-current")
+func getGitRepoBranch(path string) (branchName string, err error) {
+	str, err := runGitCommand(path, "branch", "--show-current")
 	if err != nil {
 		return "", err
 	}

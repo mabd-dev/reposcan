@@ -1,5 +1,7 @@
 package gitx
 
 type GitRepo struct {
-	Path string
+	Path     string
+	RepoName string
+	Branch   string
 }
