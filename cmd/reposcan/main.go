@@ -2,17 +2,42 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"github.com/MABD-dev/RepoScan/internal/gitx"
 	"github.com/MABD-dev/RepoScan/internal/scan"
 	"github.com/MABD-dev/RepoScan/pkg/report"
+	"os"
+	"strings"
 	"time"
 )
 
+type multiFlag []string
+
+func (m *multiFlag) String() string {
+	return strings.Join(*m, ",")
+}
+
+func (m *multiFlag) Set(value string) error {
+	*m = append(*m, value)
+	return nil
+}
+
 func main() {
-	// TODO: user input -- get list of dir to scan
-	// for now assume dirs = ["~/"]
-	roots := []string{"/home/mabd/Documents/", "/home/mabd/.config"}
+	var roots multiFlag
+	flag.Var(&roots, "root", "Root directory to scan. Defaults to $HOME.")
+	flag.Parse()
+
+	if len(roots) == 0 {
+		if home, ok := os.LookupEnv("HOME"); ok {
+			roots = append(roots, home)
+		} else {
+			fmt.Fprintln(os.Stderr, "error: --root not provided and HOME not set")
+			os.Exit(1)
+		}
+	}
+
+	fmt.Printf("Look into roots=%s\n", roots)
 
 	gitRepos, warnings := scan.FindGitRepos(roots)
 
