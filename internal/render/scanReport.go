@@ -23,7 +23,7 @@ func RenderScanReport(r report.ScanReport) {
 
 	// Header
 	fmt.Printf("\n\n\n")
-	fmt.Printf("%s\n", BoldS("Git Checker Report (v%d)", r.Version))
+	fmt.Printf("%s\n", BoldS("Repo Scan Report (v%d)", r.Version))
 	fmt.Printf("%s %s\n", DimS("Generated at:"), GrayS(r.GeneratedAt.Format(time.RFC3339)))
 	if dirty > 0 {
 		fmt.Printf("Total repositories: %s  |  With uncommitted changes: %s\n\n",
