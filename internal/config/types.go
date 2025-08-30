@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"os"
 	"strings"
 )
 
@@ -44,18 +45,25 @@ type Config struct {
 	JsonOutputPath string `json:"jsonOutputPath,omitempty"`
 
 	// Print json on std out,
-	JsonStdOut bool `json:"jsonStdOut"`
+	PrintStdOut bool `json:"printStdOut"`
 
 	Version int `json:"version"`
 }
 
 func Defaults() Config {
+	home, err := os.UserHomeDir()
+
+	var roots []string = nil
+	if err == nil {
+		roots = []string{home}
+	}
+
 	return Config{
-		Roots:          nil,
+		Roots:          roots,
 		DirIgnore:      nil,
-		Only:           OnlyAll,
+		Only:           OnlyUncommited,
 		JsonOutputPath: "",
-		JsonStdOut:     false,
+		PrintStdOut:    true,
 		Version:        1,
 	}
 }

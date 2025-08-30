@@ -48,7 +48,7 @@ func main() {
 	}
 
 	if jsonStdout.IsSet {
-		configs.JsonStdOut = jsonStdout.Value
+		configs.PrintStdOut = jsonStdout.Value
 	}
 
 	if onlyFilter.IsSet {
@@ -112,7 +112,7 @@ func main() {
 	// 	os.Exit(1)
 	// }
 
-	if configs.JsonStdOut {
+	if configs.PrintStdOut {
 		//fmt.Println(string(jsonReport))
 		render.RenderScanReport(report)
 	}
