@@ -18,7 +18,6 @@ func FindGitRepos(roots []string) (gitReposPaths []string, warnings []string) {
 
 		_ = filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 			if err != nil {
-				// TODO: return warnings back
 				// possible errors: permission denied
 				warnings = append(warnings, err.Error())
 				// fmt.Println("Warning: " + err.Error())

@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"github.com/MABD-dev/RepoScan/internal/config"
 	"github.com/MABD-dev/RepoScan/internal/gitx"
 	"github.com/MABD-dev/RepoScan/internal/scan"
 	"github.com/MABD-dev/RepoScan/pkg/report"
-	"os"
 	"strings"
 	"time"
 )
@@ -24,22 +24,43 @@ func (m *multiFlag) Set(value string) error {
 }
 
 func main() {
+	paths := config.DefaultPaths()
+
+	// Step 1: Reading config and create default file if not exists
+	configs, err := config.CreateOrReadConfigs(paths.ConfigFilePath)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	validation := config.Validate(configs)
+	if len(validation.Errors) > 0 {
+		validation.Print()
+		return
+	}
+
+	// Step 2: define cli subcommands
 	var roots multiFlag
 	flag.Var(&roots, "root", "Root directory to scan. Defaults to $HOME.")
 	flag.Parse()
 
 	if len(roots) == 0 {
-		if home, ok := os.LookupEnv("HOME"); ok {
-			roots = append(roots, home)
-		} else {
-			fmt.Fprintln(os.Stderr, "error: --root not provided and HOME not set")
-			os.Exit(1)
-		}
+		roots = configs.Roots
+	} else {
+		configs.Roots = roots
 	}
 
-	fmt.Printf("Look into roots=%s\n", roots)
+	// validate after applied cli commands to config
+	validation = config.Validate(configs)
+	if len(validation.Errors) > 0 {
+		validation.Print()
+		return
+	}
 
-	gitReposPaths, warnings := scan.FindGitRepos(roots)
+	fmt.Printf("Look into roots=%s\n", configs.Roots)
+
+	// Step 3: find git repos at defined configs.Roots
+	gitReposPaths, warnings := scan.FindGitRepos(configs.Roots)
 
 	for _, warning := range warnings {
 		fmt.Println("warning: " + warning)
@@ -68,7 +89,7 @@ func main() {
 	}
 
 	report := report.ScanReport{
-		Version:     1,
+		Version:     configs.Version,
 		GeneratedAt: time.Now(),
 		RepoStates:  repoStates,
 	}
@@ -79,7 +100,9 @@ func main() {
 		return
 	}
 
-	fmt.Println(string(reportJson))
+	if configs.JsonStdOut {
+		fmt.Println(string(reportJson))
+	}
 
 	// scan the dirs
 	// write dirs paths
