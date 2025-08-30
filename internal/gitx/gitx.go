@@ -3,8 +3,7 @@ package gitx
 import (
 	"bytes"
 	"errors"
-	"fmt"
-	//"fmt"
+	"github.com/MABD-dev/RepoScan/internal/render"
 	"os/exec"
 	"regexp"
 	"strings"
@@ -13,12 +12,14 @@ import (
 func CreateGitReposFrom(path string) (gitRepo GitRepo) {
 	repoName, err := getGitRepoName(path)
 	if err != nil {
-		fmt.Printf("Failed to get repo name, path=%s, erro=%s\n", path, err.Error())
+		msg := "Failed to get repo name, path=" + path + " error=" + err.Error() + "\n"
+		render.Warning(msg)
 	}
 
 	branch, err := getGitRepoBranch(path)
 	if err != nil {
-		fmt.Printf("Failed to get branch name, path=%s, error=%s\n", path, err.Error())
+		msg := "Failed to get branch name, path=" + path + ", error=" + err.Error() + "\n"
+		render.Warning(msg)
 	}
 
 	return GitRepo{

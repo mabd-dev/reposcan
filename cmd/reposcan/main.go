@@ -1,12 +1,13 @@
 package main
 
 import (
-	"encoding/json"
+	//"encoding/json"
 	"flag"
 	"fmt"
 	cli "github.com/MABD-dev/RepoScan/internal/cliFlags"
 	"github.com/MABD-dev/RepoScan/internal/config"
 	"github.com/MABD-dev/RepoScan/internal/gitx"
+	"github.com/MABD-dev/RepoScan/internal/render"
 	"github.com/MABD-dev/RepoScan/internal/scan"
 	"github.com/MABD-dev/RepoScan/internal/utils"
 	"github.com/MABD-dev/RepoScan/pkg/report"
@@ -67,13 +68,12 @@ func main() {
 	}
 
 	fmt.Printf("Look into roots=%s\n", configs.Roots)
-	fmt.Printf("only=%s\n", string(configs.Only))
 
 	// Step 3: find git repos at defined configs.Roots
 	gitReposPaths, warnings := scan.FindGitRepos(configs.Roots)
 
 	for _, warning := range warnings {
-		fmt.Println("warning: " + warning)
+		render.Warning(warning)
 	}
 
 	repoStates := make([]report.RepoState, 0, len(gitReposPaths))
@@ -83,7 +83,7 @@ func main() {
 
 		uncommitedLines, err := gitRepo.UncommitedFiles()
 		if err != nil {
-			fmt.Println("Failed to get uncommited files=" + err.Error())
+			render.Warning("Failed to get uncommited files=" + err.Error())
 			continue
 		}
 
@@ -106,15 +106,15 @@ func main() {
 		RepoStates:  repoStates,
 	}
 
-	jsonReport, err := json.MarshalIndent(report, "", "    ")
-	if err != nil {
-		fmt.Println("Error convert report to json, message=", err)
-		os.Exit(1)
-	}
+	// jsonReport, err := json.MarshalIndent(report, "", "    ")
+	// if err != nil {
+	// 	fmt.Println("Error convert report to json, message=", err)
+	// 	os.Exit(1)
+	// }
 
 	if configs.JsonStdOut {
-		fmt.Println(string(jsonReport))
-		// render.ReportToStdout(report, configs)
+		//fmt.Println(string(jsonReport))
+		render.RenderScanReport(report)
 	}
 
 	for _, repoState := range report.RepoStates {

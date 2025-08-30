@@ -1,7 +1,7 @@
 package config
 
 import (
-	"fmt"
+	"github.com/MABD-dev/RepoScan/internal/render"
 	"github.com/MABD-dev/RepoScan/internal/utils"
 	"strings"
 )
@@ -71,19 +71,13 @@ func Validate(config Config) Validation {
 
 // Print out warnings and errors to stdout if they exist
 func (v Validation) Print() {
-	if len(v.Warnings) > 0 || len(v.Errors) > 0 {
-		fmt.Println("**************** Config ****************")
-	}
-
 	for _, w := range v.Warnings {
-		fmt.Printf("Confg\tW\tfield=%s, message=%s\n", w.Field, w.Message)
+		msg := "Confg\tfield=" + w.Field + " , message=" + w.Message + "\n"
+		render.Warning(msg)
 	}
 
 	for _, e := range v.Errors {
-		fmt.Printf("Config\tE\tfield=%s, message=%s\n", e.Field, e.Message)
-	}
-
-	if len(v.Warnings) > 0 || len(v.Errors) > 0 {
-		fmt.Println("***************************************")
+		msg := "Config\tfield=" + e.Field + ", message=" + e.Message + "\n"
+		render.Error(msg)
 	}
 }
