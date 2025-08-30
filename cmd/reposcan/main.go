@@ -95,7 +95,7 @@ func main() {
 			UncommitedFiles: uncommitedLines,
 		}
 
-		if Filter(configs, repoState) {
+		if Filter(configs.Only, repoState) {
 			repoStates = append(repoStates, repoState)
 		}
 	}
