@@ -5,6 +5,7 @@ import (
 )
 
 type RepoState struct {
+	ID              string   `json:"id"`
 	Path            string   `json:"path"`
 	Repo            string   `json:"repo"`
 	Branch          string   `json:"branch"`

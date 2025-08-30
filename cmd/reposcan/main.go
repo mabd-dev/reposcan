@@ -7,6 +7,7 @@ import (
 	"github.com/MABD-dev/RepoScan/internal/config"
 	"github.com/MABD-dev/RepoScan/internal/gitx"
 	"github.com/MABD-dev/RepoScan/internal/scan"
+	"github.com/MABD-dev/RepoScan/internal/utils"
 	"github.com/MABD-dev/RepoScan/pkg/report"
 	"strings"
 	"time"
@@ -80,6 +81,7 @@ func main() {
 		repoStates = append(
 			repoStates,
 			report.RepoState{
+				ID:              utils.Hash(gitRepo.Path),
 				Path:            gitRepo.Path,
 				Repo:            gitRepo.RepoName,
 				Branch:          gitRepo.Branch,
