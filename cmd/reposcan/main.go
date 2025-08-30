@@ -9,6 +9,7 @@ import (
 	"github.com/MABD-dev/RepoScan/internal/scan"
 	"github.com/MABD-dev/RepoScan/internal/utils"
 	"github.com/MABD-dev/RepoScan/pkg/report"
+	"os"
 	"strings"
 	"time"
 )
@@ -31,13 +32,13 @@ func main() {
 	configs, err := config.CreateOrReadConfigs(paths.ConfigFilePath)
 	if err != nil {
 		fmt.Println(err)
-		return
+		os.Exit(1)
 	}
 
 	validation := config.Validate(configs)
 	if len(validation.Errors) > 0 {
 		validation.Print()
-		return
+		os.Exit(1)
 	}
 
 	// Step 2: define cli subcommands
@@ -61,7 +62,7 @@ func main() {
 	validation = config.Validate(configs)
 	if len(validation.Errors) > 0 {
 		validation.Print()
-		return
+		os.Exit(1)
 	}
 
 	fmt.Printf("Look into roots=%s\n", configs.Roots)
@@ -105,13 +106,18 @@ func main() {
 	reportJson, err := json.MarshalIndent(report, "", "    ")
 	if err != nil {
 		fmt.Println("Error convert report to json, message=", err)
-		return
+		os.Exit(1)
 	}
 
 	if configs.JsonStdOut {
 		fmt.Println(string(reportJson))
 	}
 
-	// scan the dirs
-	// write dirs paths
+	for _, repoState := range report.RepoStates {
+		if len(repoState.UncommitedFiles) > 0 {
+			os.Exit(1)
+		}
+	}
+
+	os.Exit(0)
 }
