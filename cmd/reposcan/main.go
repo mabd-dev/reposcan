@@ -4,26 +4,15 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	cli "github.com/MABD-dev/RepoScan/internal/cliFlags"
 	"github.com/MABD-dev/RepoScan/internal/config"
 	"github.com/MABD-dev/RepoScan/internal/gitx"
 	"github.com/MABD-dev/RepoScan/internal/scan"
 	"github.com/MABD-dev/RepoScan/internal/utils"
 	"github.com/MABD-dev/RepoScan/pkg/report"
 	"os"
-	"strings"
 	"time"
 )
-
-type multiFlag []string
-
-func (m *multiFlag) String() string {
-	return strings.Join(*m, ",")
-}
-
-func (m *multiFlag) Set(value string) error {
-	*m = append(*m, value)
-	return nil
-}
 
 func main() {
 	paths := config.DefaultPaths()
@@ -42,11 +31,13 @@ func main() {
 	}
 
 	// Step 2: define cli subcommands
-	var roots multiFlag
+	var roots cli.MultiFlag
+	var jsonStdout cli.BoolFlag
+	var onlyFilter cli.StringFlag
 
 	flag.Var(&roots, "root", "Root directory to scan. Defaults to $HOME.")
-	jsonStdout := flag.Bool("json-stdout", true, "Write resport to stdout in json format")
-	only := flag.String("only", "all", "Filter out git repos, options=all|uncommited")
+	flag.Var(&jsonStdout, "json-stdout", "Write resport to stdout in json format")
+	flag.Var(&onlyFilter, "only", "Filter out git repos, options=all|uncommited")
 	flag.Parse()
 
 	if len(roots) == 0 {
@@ -55,12 +46,12 @@ func main() {
 		configs.Roots = roots
 	}
 
-	if jsonStdout != nil {
-		configs.JsonStdOut = *jsonStdout
+	if jsonStdout.IsSet {
+		configs.JsonStdOut = jsonStdout.Value
 	}
 
-	if only != nil {
-		onlyFilter, err := config.CreateOnlyFilter(*only)
+	if onlyFilter.IsSet {
+		onlyFilter, err := config.CreateOnlyFilter(onlyFilter.Value)
 		if err != nil {
 			fmt.Println(err.Error())
 			os.Exit(1)
@@ -76,6 +67,7 @@ func main() {
 	}
 
 	fmt.Printf("Look into roots=%s\n", configs.Roots)
+	fmt.Printf("only=%s\n", string(configs.Only))
 
 	// Step 3: find git repos at defined configs.Roots
 	gitReposPaths, warnings := scan.FindGitRepos(configs.Roots)
@@ -95,16 +87,17 @@ func main() {
 			continue
 		}
 
-		repoStates = append(
-			repoStates,
-			report.RepoState{
-				ID:              utils.Hash(gitRepo.Path),
-				Path:            gitRepo.Path,
-				Repo:            gitRepo.RepoName,
-				Branch:          gitRepo.Branch,
-				UncommitedFiles: uncommitedLines,
-			},
-		)
+		repoState := report.RepoState{
+			ID:              utils.Hash(gitRepo.Path),
+			Path:            gitRepo.Path,
+			Repo:            gitRepo.RepoName,
+			Branch:          gitRepo.Branch,
+			UncommitedFiles: uncommitedLines,
+		}
+
+		if Filter(configs, repoState) {
+			repoStates = append(repoStates, repoState)
+		}
 	}
 
 	report := report.ScanReport{
@@ -113,14 +106,15 @@ func main() {
 		RepoStates:  repoStates,
 	}
 
-	reportJson, err := json.MarshalIndent(report, "", "    ")
+	jsonReport, err := json.MarshalIndent(report, "", "    ")
 	if err != nil {
 		fmt.Println("Error convert report to json, message=", err)
 		os.Exit(1)
 	}
 
 	if configs.JsonStdOut {
-		fmt.Println(string(reportJson))
+		fmt.Println(string(jsonReport))
+		// render.ReportToStdout(report, configs)
 	}
 
 	for _, repoState := range report.RepoStates {
