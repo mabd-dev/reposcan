@@ -46,6 +46,7 @@ func main() {
 
 	flag.Var(&roots, "root", "Root directory to scan. Defaults to $HOME.")
 	jsonStdout := flag.Bool("json-stdout", true, "Write resport to stdout in json format")
+	only := flag.String("only", "all", "Filter out git repos, options=all|uncommited")
 	flag.Parse()
 
 	if len(roots) == 0 {
@@ -56,6 +57,15 @@ func main() {
 
 	if jsonStdout != nil {
 		configs.JsonStdOut = *jsonStdout
+	}
+
+	if only != nil {
+		onlyFilter, err := config.CreateOnlyFilter(*only)
+		if err != nil {
+			fmt.Println(err.Error())
+			os.Exit(1)
+		}
+		configs.Only = onlyFilter
 	}
 
 	// validate after applied cli commands to config
