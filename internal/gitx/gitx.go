@@ -32,7 +32,7 @@ func CreateGitReposFrom(path string) (gitRepo GitRepo) {
 func getGitRepoName(path string) (repoName string, err error) {
 	remote, err := runGitCommand(path, "remote", "get-url", "origin")
 	if err != nil {
-		return "", err
+		return "-", err
 	}
 
 	remote = strings.TrimSpace(remote)
@@ -51,7 +51,7 @@ func getGitRepoName(path string) (repoName string, err error) {
 func getGitRepoBranch(path string) (branchName string, err error) {
 	str, err := runGitCommand(path, "branch", "--show-current")
 	if err != nil {
-		return "", err
+		return "-", err
 	}
 	return strings.TrimSpace(str), nil
 }
