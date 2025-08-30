@@ -42,13 +42,19 @@ func main() {
 
 	// Step 2: define cli subcommands
 	var roots multiFlag
+
 	flag.Var(&roots, "root", "Root directory to scan. Defaults to $HOME.")
+	jsonStdout := flag.Bool("json-stdout", true, "Write resport to stdout in json format")
 	flag.Parse()
 
 	if len(roots) == 0 {
 		roots = configs.Roots
 	} else {
 		configs.Roots = roots
+	}
+
+	if jsonStdout != nil {
+		configs.JsonStdOut = *jsonStdout
 	}
 
 	// validate after applied cli commands to config
