@@ -17,7 +17,7 @@ Total repositories: 3  |  With uncommitted changes: 2
 
 Repo                     Branch             Uncommitted  Path
 ---------------------------------------------------------------
-reposcan                 main               0            /home/me/code/reposcan
+empty                    main               0            /home/me/projects/empty
 habitsss                 develop            2            /home/me/projects/habitsss
 reposcan                 feature/cliFlags   1            /home/me/projects/reposcan
 
