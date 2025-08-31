@@ -11,17 +11,13 @@ import (
 // Creates config file at [SourceDefaultConfigPath], then write [config] to it
 // If file already exist, do nothing
 func WriteToFile(config Config, path string) error {
-	// Create parent directories if needed
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		return err
-	}
 
 	data, err := toml.Marshal(config)
 	if err != nil {
 		return err
 	}
 
-	return os.WriteFile(path, data, 0o644)
+	return utils.WriteToFile(data, path)
 }
 
 func Load(conf *Config, path string) error {

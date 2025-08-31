@@ -75,9 +75,10 @@ reposcan --root ~/Code --root ~/work
 
 Flags
 ```graphql
---root PATH         # add a directory to scan (repeatable)
---only TYPE         # filter repos: all|dirty
---output TYPE       # stdout, options=table|json|none
+--root PATH                 # add a directory to scan (repeatable)
+--only TYPE                 # filter repos: all|dirty
+--output TYPE               # stdout, options=table|json|none
+--json-output-path PATH     # output scan report in json format to desired location
 ```
 
 ## ⚙️ Configuration
@@ -110,6 +111,10 @@ only = "dirty"
 #   2. `table`: human readable representation of scan report
 #   3. `non`: prints nothing
 Output = "table"
+
+# output scan reports to this folder. All nested folders will be created
+# if they don't exist
+JsonOutputPath = '/home/me/Documents/code/projects/Go/reposcan/output-samples'
 ```
 > You can still override everything via CLI flags.
 
@@ -124,9 +129,9 @@ Output = "table"
 - [x] Stdout Ouput in 3 formats: json, table, none
 - [x] Read user customizable `config.toml` file
 - [x] Support ahead of remote
+- [x] Export Report to json file
 - [ ] Support behind remote
 - [ ] Support dirignore
-- [ ] Export Report to json file
 - [ ] Detect ahead/behind commits
 - [ ] Worker pool for speed
 - [ ] Support git worktrees

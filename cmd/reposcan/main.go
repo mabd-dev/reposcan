@@ -6,11 +6,13 @@ import (
 	cli "github.com/MABD-dev/reposcan/internal/cliFlags"
 	"github.com/MABD-dev/reposcan/internal/config"
 	"github.com/MABD-dev/reposcan/internal/gitx"
-	"github.com/MABD-dev/reposcan/internal/render"
+	"github.com/MABD-dev/reposcan/internal/render/file"
+	"github.com/MABD-dev/reposcan/internal/render/stdout"
 	"github.com/MABD-dev/reposcan/internal/scan"
 	"github.com/MABD-dev/reposcan/internal/utils"
 	"github.com/MABD-dev/reposcan/pkg/report"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -36,10 +38,12 @@ func Run() {
 	var roots cli.MultiFlag
 	var outputFormat cli.StringFlag
 	var onlyFilter cli.StringFlag
+	var jsonOutputPath cli.StringFlag
 
 	flag.Var(&roots, "root", "Root directory to scan. Defaults to $HOME.")
 	flag.Var(&outputFormat, "output", "Output, option=json|table|none")
 	flag.Var(&onlyFilter, "only", "Filter out git repos, options=all|dirty")
+	flag.Var(&jsonOutputPath, "json-output-path", "Save scan report into json file")
 	flag.Parse()
 
 	if len(roots) == 0 {
@@ -64,6 +68,11 @@ func Run() {
 			os.Exit(1)
 		}
 		configs.Only = onlyFilter
+	}
+
+	if jsonOutputPath.IsSet {
+		path := strings.TrimSpace(jsonOutputPath.Value)
+		configs.JsonOutputPath = path
 	}
 
 	// validate after applied cli commands to config
@@ -116,15 +125,24 @@ func Run() {
 
 	switch configs.Output {
 	case config.OutputJson:
-		err = render.RenderScanReportAsJson(report)
+		err = stdout.RenderScanReportAsJson(report)
 		if err != nil {
-			render.Error(err.Error())
+			stdout.Error(err.Error())
 			os.Exit(1)
 		}
 	case config.OutputTable:
-		render.RenderScanReportAsTable(report)
+		stdout.RenderScanReportAsTable(report)
 	case config.OutputNone:
 		break
+	}
+
+	trimmedJsonOutputPath := strings.TrimSpace(configs.JsonOutputPath)
+	if len(trimmedJsonOutputPath) > 0 {
+		err = file.WriteScanReport(report, trimmedJsonOutputPath)
+		if err != nil {
+			stdout.Error(err.Error())
+			os.Exit(1)
+		}
 	}
 
 	for _, repoState := range report.RepoStates {

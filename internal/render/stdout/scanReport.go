@@ -1,4 +1,4 @@
-package render
+package stdout
 
 import (
 	"encoding/json"

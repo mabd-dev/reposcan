@@ -1,4 +1,4 @@
-package render
+package stdout
 
 import (
 	"github.com/fatih/color"

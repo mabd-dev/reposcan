@@ -3,6 +3,7 @@ package utils
 import (
 	"errors"
 	"os"
+	"path/filepath"
 )
 
 // FileExists checks if a file exists at the given path.
@@ -37,4 +38,14 @@ func DirExists(path string) (bool, error) {
 		return false, nil
 	}
 	return false, err
+}
+
+// Write data to file and create all parent folders if needed
+func WriteToFile(data []byte, path string) error {
+	// Create parent directories if needed
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		return err
+	}
+
+	return os.WriteFile(path, data, 0o644)
 }

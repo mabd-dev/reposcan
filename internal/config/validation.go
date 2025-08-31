@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/MABD-dev/reposcan/internal/render"
+	"github.com/MABD-dev/reposcan/internal/render/stdout"
 	"github.com/MABD-dev/reposcan/internal/utils"
 	"strings"
 )
@@ -55,19 +55,19 @@ func Validate(config Config) Validation {
 	}
 
 	if len(strings.TrimSpace(config.JsonOutputPath)) > 0 {
-		outputFileExists, err := utils.FileExists(config.JsonOutputPath)
+		outputFileExists, err := utils.DirExists(config.JsonOutputPath)
 		if err != nil {
 			issue := Issue{
 				Field:   "jsonOutputPath",
 				Message: "error reading path: '" + config.JsonOutputPath + "' error=" + err.Error(),
 			}
-			errors = append(errors, issue)
+			warnings = append(warnings, issue)
 		} else if !outputFileExists {
 			issue := Issue{
 				Field:   "jsonOutputPath",
 				Message: "output path '" + config.JsonOutputPath + "' does not exists!",
 			}
-			errors = append(errors, issue)
+			warnings = append(warnings, issue)
 		}
 	}
 
@@ -81,11 +81,11 @@ func Validate(config Config) Validation {
 func (v Validation) Print() {
 	for _, w := range v.Warnings {
 		msg := "Confg\tfield=" + w.Field + " , message=" + w.Message + "\n"
-		render.Warning(msg)
+		stdout.Warning(msg)
 	}
 
 	for _, e := range v.Errors {
 		msg := "Config\tfield=" + e.Field + ", message=" + e.Message + "\n"
-		render.Error(msg)
+		stdout.Error(msg)
 	}
 }
