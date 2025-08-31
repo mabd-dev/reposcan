@@ -5,7 +5,7 @@ It helps you quickly find:
 
 - Repositories with **uncommitted files**  
 - Repositories with **unpushed commits** (ahead of upstream)  
-- Repositories with **unpulled changes** (behind upstream)  
+- Repositories with **unpulled changes** (behind upstream)  (todo)
 
 It outputs results in both **human-friendly tables** and **machine-friendly JSON**, so you can use it interactively or integrate with scripts and future UIs.
 
@@ -76,7 +76,7 @@ Flags
 ```graphql
 --root PATH         # add a directory to scan (repeatable)
 --print-stdout      # print report to stdout in a human readable table
---only TYPE         # filter repos: all|uncommited
+--only TYPE         # filter repos: all|dirty
 ```
 
 ## ⚙️ Configuration
@@ -97,7 +97,9 @@ dirIgnore = [
   "/.local/"
 ]
 
-only = "uncommited"
+# options: 
+#  dirty: git repos with un-commited changes or unpushed changes
+only = "dirty"
 
 PrintStdOut = true
 ```
@@ -109,7 +111,8 @@ PrintStdOut = true
 - [x] Detect uncommitted files
 - [x] Detect uncommitted files
 - [x] Read user customizable `config.toml` file
-- [ ] Support unpushed + unpulled changes
+- [x] Support ahead of remote
+- [ ] Support behind remote
 - [ ] Support dirignore
 - [ ] Export Report to json file
 - [ ] Detect ahead/behind commits
