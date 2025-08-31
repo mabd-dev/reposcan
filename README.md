@@ -11,7 +11,7 @@ It outputs results in both **human-friendly tables** and **machine-friendly JSON
 
 🖼 Example output
 ```sh
-Repo Scan Report (v1)
+Repo Scan Report
 Generated at: 2025-08-31T14:12:45Z
 Total repositories: 3  |  With uncommitted changes: 2
 
@@ -108,8 +108,9 @@ PrintStdOut = true
 - [x] Scan filesystem for repos
 - [x] Detect uncommitted files
 - [x] Detect uncommitted files
-- [ ] Support dirignore
+- [x] Read user customizable `config.toml` file
 - [ ] Support unpushed + unpulled changes
+- [ ] Support dirignore
 - [ ] Export Report to json file
 - [ ] Detect ahead/behind commits
 - [ ] Worker pool for speed
