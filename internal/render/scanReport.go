@@ -47,7 +47,7 @@ func RenderScanReport(r report.ScanReport) {
 		fmt.Printf("%s %s %s %s %s %s\n",
 			CyanBold("%-*s", repoW, "Repo"),
 			CyanBold("%-*s", branchW, "Branch"),
-			CyanBold("%-*s", uncommW, "Uncommitted"),
+			CyanBold("%-*s", uncommW, "Not-Commited"),
 			CyanBold("%-*s", aheadW, "Ahead"),
 			CyanBold("%-*s", behindW, "Behind"),
 			CyanBold("%s", "Path"),

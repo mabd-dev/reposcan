@@ -11,8 +11,8 @@ func Filter(f config.OnlyFilter, repoState report.RepoState) bool {
 	switch f {
 	case config.OnlyAll:
 		return true
-	case config.OnlyUncommited:
-		if len(repoState.UncommitedFiles) > 0 {
+	case config.OnlyDirty:
+		if repoState.IsDirty() {
 			return true
 		}
 	}

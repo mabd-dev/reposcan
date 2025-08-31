@@ -11,8 +11,8 @@ type OnlyFilter string
 const (
 	OnlyAll OnlyFilter = "all"
 
-	// Have uncommited files
-	OnlyUncommited = "uncommited"
+	// Have uncommited files, ahead/behind remote
+	OnlyDirty = "dirty"
 )
 
 func CreateOnlyFilter(s string) (OnlyFilter, error) {
@@ -21,8 +21,8 @@ func CreateOnlyFilter(s string) (OnlyFilter, error) {
 	switch str {
 	case string(OnlyAll):
 		return OnlyAll, nil
-	case string(OnlyUncommited):
-		return OnlyUncommited, nil
+	case string(OnlyDirty):
+		return OnlyDirty, nil
 	}
 
 	return OnlyAll, errors.New(s + " is not valid only filter")
@@ -30,7 +30,7 @@ func CreateOnlyFilter(s string) (OnlyFilter, error) {
 
 func (f OnlyFilter) IsValid() bool {
 	switch f {
-	case OnlyAll, OnlyUncommited:
+	case OnlyAll, OnlyDirty:
 		return true
 	}
 	return false
@@ -61,7 +61,7 @@ func Defaults() Config {
 	return Config{
 		Roots:          roots,
 		DirIgnore:      nil,
-		Only:           OnlyUncommited,
+		Only:           OnlyDirty,
 		JsonOutputPath: "",
 		PrintStdOut:    true,
 		Version:        1,

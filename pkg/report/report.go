@@ -19,3 +19,7 @@ type ScanReport struct {
 	RepoStates  []RepoState `json:"repoStates"`
 	GeneratedAt time.Time   `json:"generatedAt"`
 }
+
+func (r *RepoState) IsDirty() bool {
+	return len(r.UncommitedFiles) > 0 || r.Ahead > 0 || r.Behind > 0
+}

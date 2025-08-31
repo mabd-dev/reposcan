@@ -37,7 +37,7 @@ func main() {
 
 	flag.Var(&roots, "root", "Root directory to scan. Defaults to $HOME.")
 	flag.Var(&printStdout, "print-stdout", "Write resport to stdout in table format")
-	flag.Var(&onlyFilter, "only", "Filter out git repos, options=all|uncommited")
+	flag.Var(&onlyFilter, "only", "Filter out git repos, options=all|dirty")
 	flag.Parse()
 
 	if len(roots) == 0 {
