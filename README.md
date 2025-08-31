@@ -12,14 +12,15 @@ It outputs results in both **human-friendly tables** and **machine-friendly JSON
 🖼 Example output
 ```sh
 Repo Scan Report
-Generated at: 2025-08-31T14:12:45Z
-Total repositories: 3  |  With uncommitted changes: 2
+Generated at: 2025-08-31T08:44:54+03:00
+Total repositories: 3  |  Dirty: 3
 
-Repo                     Branch             Uncommitted  Path
----------------------------------------------------------------
-empty                    main               0            /home/me/projects/empty
-habitsss                 develop            2            /home/me/projects/habitsss
-reposcan                 feature/cliFlags   1            /home/me/projects/reposcan
+Repo                     Branch                    Not-Commited Ahead  Path
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+empty                    main                      2            0      /home/me/projects/empty
+habitsss                 master                    1            1     /home/me/projects/habitsss
+reposcan                 main                      1            3      /home/me/projects/reposcan
+
 
 Details:
 
