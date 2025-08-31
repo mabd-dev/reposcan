@@ -22,7 +22,7 @@ func RenderScanReport(r report.ScanReport) {
 	}
 
 	// Header
-	fmt.Printf("\n\n\n")
+	fmt.Printf("\n\n")
 	fmt.Printf("%s\n", BoldS("Repo Scan Report (v%d)", r.Version))
 	fmt.Printf("%s %s\n", DimS("Generated at:"), GrayS(r.GeneratedAt.Format(time.RFC3339)))
 	if dirty > 0 {
@@ -40,13 +40,16 @@ func RenderScanReport(r report.ScanReport) {
 		uncommW = 12
 	)
 	// Header row (use SprintfFunc so widths are applied before coloring)
-	fmt.Printf("%s %s %s %s\n",
-		CyanBold("%-*s", repoW, "Repo"),
-		CyanBold("%-*s", branchW, "Branch"),
-		CyanBold("%-*s", uncommW, "Uncommitted"),
-		CyanBold("%s", "Path"),
-	)
-	fmt.Println(strings.Repeat("─", repoW+1+branchW+1+uncommW+1+60-2))
+
+	if len(r.RepoStates) > 0 {
+		fmt.Printf("%s %s %s %s\n",
+			CyanBold("%-*s", repoW, "Repo"),
+			CyanBold("%-*s", branchW, "Branch"),
+			CyanBold("%-*s", uncommW, "Uncommitted"),
+			CyanBold("%s", "Path"),
+		)
+		fmt.Println(strings.Repeat("─", repoW+1+branchW+1+uncommW+1+60-2))
+	}
 
 	// Rows
 	for _, rs := range r.RepoStates {
