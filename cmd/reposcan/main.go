@@ -49,7 +49,7 @@ func Run() {
 	fmt.Printf("Look into roots=%s\n", configs.Roots)
 
 	// Step 3: find git repos at defined configs.Roots
-	gitReposPaths, warnings := scan.FindGitRepos(configs.Roots)
+	gitReposPaths, warnings := scan.FindGitRepos(configs.Roots, configs.DirIgnore)
 	reportWarnings = append(reportWarnings, warnings...)
 
 	repoStates := make([]report.RepoState, 0, len(gitReposPaths))

@@ -12,7 +12,12 @@ import (
 // - A directory containing `.git` (directory) is a repo root.
 // - Or a `.git` file whose contents include "gitdir:" (worktrees/submodules).
 // - When we find a repo root, we SkipDir to avoid descending into nested repos (for now).
-func FindGitRepos(roots []string) (gitReposPaths []string, warnings []string) {
+func FindGitRepos(
+	roots []string,
+	dirignore []string,
+) (gitReposPaths []string, warnings []string) {
+	matcher := NewIgnoreMatcher(roots, dirignore)
+
 	for _, root := range roots {
 		root = os.ExpandEnv(root)
 
@@ -26,6 +31,10 @@ func FindGitRepos(roots []string) (gitReposPaths []string, warnings []string) {
 
 			if !d.IsDir() {
 				return nil
+			}
+
+			if matcher.ShouldIgnore(path) {
+				return fs.SkipDir
 			}
 
 			if isGitRepo(path) {

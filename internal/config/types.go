@@ -26,9 +26,56 @@ func Defaults() Config {
 		roots = []string{home}
 	}
 
+	defaultDirIgnore := []string{
+		// --- Package managers / deps ---
+		"**/node_modules/**",
+		"**/vendor/**",
+		"**/.venv/**",
+		"**/venv/**",
+		"**/.m2/**",
+		"**/.gradle/**",
+		"**/.cargo/**",
+		"**/target/**",
+
+		// --- Build / dist ---
+		"**/build/**",
+		"**/dist/**",
+		"**/.next/**",
+		"**/.nuxt/**",
+
+		// --- Cache & temp ---
+		"**/.cache/**",
+		"**/.local/**",
+		"**/.pytest_cache/**",
+
+		// --- IDE / tooling ---
+		"**/.idea/**",
+		"**/.vscode/**",
+		"**/.terraform/**",
+		"**/.docker/**",
+
+		// --- OS metadata ---
+		"**/.DS_Store", // macOS
+		"**/Thumbs.db", // Windows
+
+		// --- Linux system dirs ---
+		"/proc/**",
+		"/sys/**",
+		"/dev/**",
+		"/run/**",
+		"/tmp/**",
+		"/var/log/**",
+		"/var/tmp/**",
+
+		// --- macOS system dirs ---
+		"/System/**",
+		"/Library/**",
+		"~/Library/**",
+	}
+
 	return Config{
 		Roots:          roots,
-		DirIgnore:      nil,
+		DirIgnore:      defaultDirIgnore,
 		Only:           OnlyDirty,
 		JsonOutputPath: "",
 		Output:         OutputTable,

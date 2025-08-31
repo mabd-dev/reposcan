@@ -118,6 +118,8 @@ JsonOutputPath = '/home/me/Documents/code/projects/Go/reposcan/output-samples'
 ```
 > You can still override everything via CLI flags.
 
+check [sample/config.toml](sample) for detailed configuration with examples
+
 ### Config lookup order
 1.  check config in `~/.config/reposcan/config.toml`
 2. check cli flags and override those in step 1

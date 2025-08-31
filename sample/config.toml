@@ -1,0 +1,66 @@
+Version = 1
+
+Roots = [
+    "/home/mabd/"
+]
+
+# options: all|dirty
+Only = 'dirty'
+
+
+# folder output path -- this will be used to export report scan to that folder
+# if folder does not exist, it will be created recursively
+JsonOutputPath = '/somewhere/nice'
+
+
+# options: table|json|none
+Output = "table"
+
+
+DirIgnore = [
+    # --- Package managers / deps ---
+    "**/node_modules/**",
+    "**/vendor/**",
+    "**/.venv/**",
+    "**/venv/**",
+    "**/.m2/**",
+    "**/.gradle/**",
+    "**/.cargo/**",
+    "**/target/**",
+
+    # --- Build / dist ---
+    "**/build/**",
+    "**/dist/**",
+    "**/.next/**",
+    "**/.nuxt/**",
+
+    # --- Cache & temp ---
+    "**/.cache/**",
+    "**/.local/**",
+    "**/.pytest_cache/**",
+
+    # --- IDE / tooling ---
+    "**/.idea/**",
+    "**/.vscode/**",
+    "**/.terraform/**",
+    "**/.docker/**",
+
+    # --- OS metadata ---
+    "**/.DS_Store", # macOS
+    "**/Thumbs.db", # Windows
+
+    # --- Linux system dirs ---
+    "/proc/**",
+    "/sys/**",
+    "/dev/**",
+    "/run/**",
+    "/tmp/**",
+    "/var/log/**",
+    "/var/tmp/**",
+
+    # --- macOS system dirs ---
+    "/System/**",
+    "/Library/**",
+    "~/Library/**",
+]
+
