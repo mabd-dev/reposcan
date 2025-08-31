@@ -1,4 +1,4 @@
-package main
+package reposcan
 
 import (
 	"github.com/MABD-dev/RepoScan/internal/config"

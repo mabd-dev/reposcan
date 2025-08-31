@@ -1,4 +1,4 @@
-package main
+package reposcan
 
 import (
 	"flag"
@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-func main() {
+func Run() {
 	reportWarnings := []string{}
 
 	paths := config.DefaultPaths()
