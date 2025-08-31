@@ -19,7 +19,7 @@ Repo                     Branch             Uncommitted  Path
 ---------------------------------------------------------------
 reposcan                 main               0            /home/me/code/reposcan
 habitsss                 develop            2            /home/me/projects/habitsss
-bayaa                    feature/login      1            /home/me/go/src/bayaa
+reposcan                 feature/cliFlags   1            /home/me/projects/reposcan
 
 Details:
 
@@ -28,8 +28,8 @@ Path: /home/me/projects/habitsss
   - internal/db/models.go
   - README.md
 
-Repo: bayaa
-Path: /home/me/go/src/bayaa
+Repo: reposcan
+Path: /home/me/projects/reposcan
   - api/handlers.go
 ```
 
