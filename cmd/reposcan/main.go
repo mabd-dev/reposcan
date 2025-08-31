@@ -33,11 +33,11 @@ func main() {
 
 	// Step 2: define cli subcommands
 	var roots cli.MultiFlag
-	var jsonStdout cli.BoolFlag
+	var printStdout cli.BoolFlag
 	var onlyFilter cli.StringFlag
 
 	flag.Var(&roots, "root", "Root directory to scan. Defaults to $HOME.")
-	flag.Var(&jsonStdout, "json-stdout", "Write resport to stdout in json format")
+	flag.Var(&printStdout, "print-stdout", "Write resport to stdout in table format")
 	flag.Var(&onlyFilter, "only", "Filter out git repos, options=all|uncommited")
 	flag.Parse()
 
@@ -47,8 +47,8 @@ func main() {
 		configs.Roots = roots
 	}
 
-	if jsonStdout.IsSet {
-		configs.PrintStdOut = jsonStdout.Value
+	if printStdout.IsSet {
+		configs.PrintStdOut = printStdout.Value
 	}
 
 	if onlyFilter.IsSet {
@@ -79,7 +79,7 @@ func main() {
 	repoStates := make([]report.RepoState, 0, len(gitReposPaths))
 
 	for _, repoPath := range gitReposPaths {
-		gitRepo := gitx.CreateGitReposFrom(repoPath)
+		gitRepo := gitx.CreateGitRepoFrom(repoPath)
 
 		uncommitedLines, err := gitRepo.UncommitedFiles()
 		if err != nil {

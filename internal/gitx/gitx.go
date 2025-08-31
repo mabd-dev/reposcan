@@ -9,7 +9,7 @@ import (
 	"strings"
 )
 
-func CreateGitReposFrom(path string) (gitRepo GitRepo) {
+func CreateGitRepoFrom(path string) (gitRepo GitRepo) {
 	repoName, err := getGitRepoName(path)
 	if err != nil {
 		msg := "Failed to get repo name, path=" + path + " error=" + err.Error() + "\n"
