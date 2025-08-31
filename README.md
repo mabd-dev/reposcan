@@ -76,7 +76,6 @@ reposcan --root ~/Code --root ~/work
 Flags
 ```graphql
 --root PATH         # add a directory to scan (repeatable)
---print-stdout      # print report to stdout in a human readable table
 --only TYPE         # filter repos: all|dirty
 --output TYPE       # stdout, options=table|json|none
 ```
