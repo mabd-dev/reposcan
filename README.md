@@ -132,9 +132,8 @@ check [sample/config.toml](sample) for detailed configuration with examples
 - [x] Read user customizable `config.toml` file
 - [x] Support ahead of remote
 - [x] Export Report to json file
+- [x] Support dirignore
 - [ ] Support behind remote
-- [ ] Support dirignore
-- [ ] Detect ahead/behind commits
 - [ ] Worker pool for speed
 - [ ] Support git worktrees
 - [ ] Use cobra for better cli support
