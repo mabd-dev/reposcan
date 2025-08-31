@@ -1,7 +1,15 @@
-package utils
+package render
 
 import (
 	"github.com/fatih/color"
+)
+
+const (
+	RepoW   = 24
+	BranchW = 25
+	UncommW = 12
+	AheadW  = 6
+	BehindW = 6
 )
 
 var (

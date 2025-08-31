@@ -2,106 +2,61 @@ package render
 
 import (
 	"fmt"
-	"strings"
 	"time"
 	"unicode/utf8"
 
-	. "github.com/MABD-dev/RepoScan/internal/utils"
 	"github.com/MABD-dev/RepoScan/pkg/report"
 )
 
 // Prebuilt color formatters (format first, then color)
 
+// Table setup (Path last, not truncated)
 func RenderScanReport(r report.ScanReport) {
-	total := len(r.RepoStates)
-	dirty := 0
+	totalRepos := len(r.RepoStates)
+	dirtyRepos := 0
 	for _, rs := range r.RepoStates {
 		if rs.IsDirty() {
-			dirty++
+			dirtyRepos++
 		}
 	}
 
-	// Header
+	Warnings(r.Warnings)
+	renderReportHeader(r, totalRepos, dirtyRepos)
+
+	if len(r.RepoStates) > 0 {
+		RenderReposTable(r)
+	}
+
+	if dirtyRepos > 0 {
+		renderDirtyReposDetails(r)
+	}
+}
+
+func renderReportHeader(r report.ScanReport, totalRepos int, dirtyRepos int) {
 	fmt.Printf("\n\n")
 	fmt.Printf("%s\n", BoldS("Repo Scan Report"))
 	fmt.Printf("%s %s\n", DimS("Generated at:"), GrayS(r.GeneratedAt.Format(time.RFC3339)))
-	if dirty > 0 {
+	if dirtyRepos > 0 {
 		fmt.Printf("Total repositories: %s  |  Dirty: %s\n\n",
-			BoldS("%d", total), RedS("%d", dirty))
+			BoldS("%d", totalRepos), RedS("%d", dirtyRepos))
 	} else {
 		fmt.Printf("Total repositories: %s  |  Dirty: %s\n\n",
-			BoldS("%d", total), GreenS("%d", dirty))
+			BoldS("%d", totalRepos), GreenS("%d", dirtyRepos))
 	}
+}
 
-	// Table setup (Path last, not truncated)
-	const (
-		repoW   = 24
-		branchW = 25
-		uncommW = 12
-		aheadW  = 6
-		behindW = 6
-	)
-	// Header row (use SprintfFunc so widths are applied before coloring)
-
-	if len(r.RepoStates) > 0 {
-		fmt.Printf("%s %s %s %s %s\n",
-			CyanBold("%-*s", repoW, "Repo"),
-			CyanBold("%-*s", branchW, "Branch"),
-			CyanBold("%-*s", uncommW, "Not-Commited"),
-			CyanBold("%-*s", aheadW, "Ahead"),
-			//CyanBold("%-*s", behindW, "Behind"),
-			CyanBold("%s", "Path"),
-		)
-		fmt.Println(strings.Repeat("─", repoW+1+branchW+aheadW+behindW+1+uncommW+1+60-2))
-	}
-
-	// Rows
+func renderDirtyReposDetails(r report.ScanReport) {
+	fmt.Printf("\n%s\n", CyanBold("Details:"))
 	for _, rs := range r.RepoStates {
-		uc := len(rs.UncommitedFiles)
-		ucCell := GrayS("%-*d", uncommW, uc)
-		if uc > 0 {
-			ucCell = RedS("%-*d", uncommW, uc)
+		if len(rs.UncommitedFiles) == 0 {
+			continue
 		}
-
-		aheadCell := GrayS("%-*d", aheadW, rs.Ahead)
-		if rs.Ahead > 0 {
-			aheadCell = GreenS("%-*d", aheadW, rs.Ahead)
-		} else if rs.Ahead < 0 {
-			aheadCell = RedS("%-*d", aheadW, rs.Ahead)
-		}
-
-		// behindCell := GrayS("%-*d", behindW, rs.Behind)
-		// if rs.Behind > 0 || rs.Behind < 0 {
-		// 	behindCell = RedS("%-*d", behindW, rs.Behind)
-		// }
-
-		repoCell := fmt.Sprintf("%-*s", repoW, truncateRunes(rs.Repo, repoW))
-		branchCell := BlueS("%-*s", branchW, truncateRunes(rs.Branch, branchW))
-
-		fmt.Printf("%s %s %s %s %s\n",
-			repoCell,
-			branchCell,
-			ucCell,
-			aheadCell,
-			//behindCell,
-			rs.Path, // full path, no truncation
+		fmt.Printf("\n%s %s\n%s %s\n",
+			MagBold("Repo:"), rs.Repo,
+			MagBold("Path:"), rs.Path,
 		)
-	}
-
-	// Details (only if dirty)
-	if dirty > 0 {
-		fmt.Printf("\n%s\n", CyanBold("Details:"))
-		for _, rs := range r.RepoStates {
-			if len(rs.UncommitedFiles) == 0 {
-				continue
-			}
-			fmt.Printf("\n%s %s\n%s %s\n",
-				MagBold("Repo:"), rs.Repo,
-				MagBold("Path:"), rs.Path,
-			)
-			for _, f := range rs.UncommitedFiles {
-				fmt.Printf("  %s\n", GrayS("- %s", f))
-			}
+		for _, f := range rs.UncommitedFiles {
+			fmt.Printf("  %s\n", GrayS("- %s", f))
 		}
 	}
 }

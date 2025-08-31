@@ -3,7 +3,6 @@ package gitx
 import (
 	"bytes"
 	"errors"
-	"github.com/MABD-dev/RepoScan/internal/render"
 	"net/url"
 	"os/exec"
 	"path"
@@ -12,23 +11,23 @@ import (
 	"strings"
 )
 
-func CreateGitRepoFrom(path string) (gitRepo GitRepo) {
+func CreateGitRepoFrom(path string) (gitRepo GitRepo, warnings []string) {
 	repoName, err := getGitRepoName(path)
 	if err != nil {
 		msg := "Failed to get repo name, path=" + path + " error=" + err.Error() + "\n"
-		render.Warning(msg)
+		warnings = append(warnings, msg)
 	}
 
 	branch, err := getGitRepoBranch(path)
 	if err != nil {
 		msg := "Failed to get branch name, path=" + path + ", error=" + err.Error() + "\n"
-		render.Warning(msg)
+		warnings = append(warnings, msg)
 	}
 
 	ahead, behind, err := getUpstreamStatus(path)
 	if err != nil {
 		msg := "Failed to get upstream status, path=" + path + ", error=" + err.Error() + "\n"
-		render.Warning(msg)
+		warnings = append(warnings, msg)
 	}
 
 	return GitRepo{
@@ -37,7 +36,7 @@ func CreateGitRepoFrom(path string) (gitRepo GitRepo) {
 		Branch:   branch,
 		Ahead:    ahead,
 		Behind:   behind,
-	}
+	}, warnings
 }
 
 // getGitRepoName tries to extract the repo name from a remote URL,

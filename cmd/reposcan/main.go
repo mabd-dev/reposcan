@@ -15,6 +15,8 @@ import (
 )
 
 func main() {
+	reportWarnings := []string{}
+
 	paths := config.DefaultPaths()
 
 	// Step 1: Reading config and create default file if not exists
@@ -70,19 +72,18 @@ func main() {
 
 	// Step 3: find git repos at defined configs.Roots
 	gitReposPaths, warnings := scan.FindGitRepos(configs.Roots)
-
-	for _, warning := range warnings {
-		render.Warning(warning)
-	}
+	reportWarnings = append(reportWarnings, warnings...)
 
 	repoStates := make([]report.RepoState, 0, len(gitReposPaths))
 
 	for _, repoPath := range gitReposPaths {
-		gitRepo := gitx.CreateGitRepoFrom(repoPath)
+		gitRepo, warnings := gitx.CreateGitRepoFrom(repoPath)
+		reportWarnings = append(reportWarnings, warnings...)
 
 		uncommitedLines, err := gitRepo.UncommitedFiles()
 		if err != nil {
-			render.Warning("Failed to get uncommited files=" + err.Error())
+			msg := "Failed to get uncommited files=" + err.Error()
+			reportWarnings = append(reportWarnings, msg)
 			continue
 		}
 
@@ -105,6 +106,7 @@ func main() {
 		Version:     configs.Version,
 		GeneratedAt: time.Now(),
 		RepoStates:  repoStates,
+		Warnings:    reportWarnings,
 	}
 
 	if configs.PrintStdOut {

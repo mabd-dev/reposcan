@@ -2,9 +2,13 @@ package render
 
 import (
 	"fmt"
-
-	. "github.com/MABD-dev/RepoScan/internal/utils"
 )
+
+func Warnings(warnings []string) {
+	for _, warn := range warnings {
+		fmt.Printf("%s %s", YellowS("Warning:"), warn)
+	}
+}
 
 func Warning(warning string) {
 	fmt.Printf("%s %s", YellowS("Warning:"), warning)

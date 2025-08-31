@@ -18,6 +18,7 @@ type ScanReport struct {
 	Version     int         `json:"version"`
 	RepoStates  []RepoState `json:"repoStates"`
 	GeneratedAt time.Time   `json:"generatedAt"`
+	Warnings    []string    `json:"warnings"`
 }
 
 func (r *RepoState) IsDirty() bool {
