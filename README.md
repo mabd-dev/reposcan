@@ -13,12 +13,12 @@ It outputs results in both **human-friendly tables** and **machine-friendly JSON
 ```sh
 Repo Scan Report
 Generated at: 2025-08-31T08:44:54+03:00
-Total repositories: 3  |  Dirty: 3
+Total repositories: 3  |  Dirty: 2
 
 Repo                     Branch                    Not-Commited Ahead  Path
 ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-empty                    main                      2            0      /home/me/projects/empty
-habitsss                 master                    1            1     /home/me/projects/habitsss
+empty                    main                      0            0      /home/me/projects/empty
+habitsss                 master                    1            1      /home/me/projects/habitsss
 reposcan                 main                      1            3      /home/me/projects/reposcan
 
 
