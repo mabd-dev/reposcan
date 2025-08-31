@@ -14,19 +14,19 @@ import (
 func CreateGitRepoFrom(path string) (gitRepo GitRepo, warnings []string) {
 	repoName, err := getGitRepoName(path)
 	if err != nil {
-		msg := "Failed to get repo name, path=" + path + " error=" + err.Error() + "\n"
+		msg := "Failed to get repo name, path=" + path + " error=" + err.Error()
 		warnings = append(warnings, msg)
 	}
 
 	branch, err := getGitRepoBranch(path)
 	if err != nil {
-		msg := "Failed to get branch name, path=" + path + ", error=" + err.Error() + "\n"
+		msg := "Failed to get branch name, path=" + path + ", error=" + err.Error()
 		warnings = append(warnings, msg)
 	}
 
 	ahead, behind, err := getUpstreamStatus(path)
 	if err != nil {
-		msg := "Failed to get upstream status, path=" + path + ", error=" + err.Error() + "\n"
+		msg := "Failed to get upstream status, path=" + path + ", error=" + err.Error()
 		warnings = append(warnings, msg)
 	}
 

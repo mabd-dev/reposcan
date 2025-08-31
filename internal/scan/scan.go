@@ -25,7 +25,6 @@ func FindGitRepos(
 			if err != nil {
 				// possible errors: permission denied
 				warnings = append(warnings, err.Error())
-				// fmt.Println("Warning: " + err.Error())
 				return nil
 			}
 

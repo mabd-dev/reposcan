@@ -6,14 +6,14 @@ import (
 
 func Warnings(warnings []string) {
 	for _, warn := range warnings {
-		fmt.Printf("%s %s", YellowS("Warning:"), warn)
+		fmt.Printf("%s %s\n", YellowS("Warning:"), warn)
 	}
 }
 
 func Warning(warning string) {
-	fmt.Printf("%s %s", YellowS("Warning:"), warning)
+	fmt.Printf("%s %s\n", YellowS("Warning:"), warning)
 }
 
 func Error(msg string) {
-	fmt.Printf("%s %s", RedB("Error:"), msg)
+	fmt.Printf("%s %s\n", RedB("Error:"), msg)
 }
