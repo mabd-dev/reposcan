@@ -109,7 +109,7 @@ only = "dirty"
 #   1. `json`: json object containing scan report struct
 #   2. `table`: human readable representation of scan report
 #   3. `non`: prints nothing
-OutputFormat = 'table'
+Output = "table"
 ```
 > You can still override everything via CLI flags.
 
