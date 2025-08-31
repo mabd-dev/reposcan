@@ -1,8 +1,8 @@
 package reposcan
 
 import (
-	"github.com/MABD-dev/RepoScan/internal/config"
-	"github.com/MABD-dev/RepoScan/pkg/report"
+	"github.com/MABD-dev/reposcan/internal/config"
+	"github.com/MABD-dev/reposcan/pkg/report"
 )
 
 // Filter repoState based on config only filter

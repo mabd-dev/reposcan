@@ -7,7 +7,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/MABD-dev/RepoScan/pkg/report"
+	"github.com/MABD-dev/reposcan/pkg/report"
 )
 
 func RenderScanReportAsJson(r report.ScanReport) error {

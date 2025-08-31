@@ -1,8 +1,8 @@
 package config
 
 import (
-	"github.com/MABD-dev/RepoScan/internal/render"
-	"github.com/MABD-dev/RepoScan/internal/utils"
+	"github.com/MABD-dev/reposcan/internal/render"
+	"github.com/MABD-dev/reposcan/internal/utils"
 	"strings"
 )
 

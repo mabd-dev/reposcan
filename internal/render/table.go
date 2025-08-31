@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/MABD-dev/RepoScan/pkg/report"
+	"github.com/MABD-dev/reposcan/pkg/report"
 )
 
 func RenderReposTable(r report.ScanReport) {
