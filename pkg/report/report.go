@@ -10,6 +10,8 @@ type RepoState struct {
 	Repo            string   `json:"repo"`
 	Branch          string   `json:"branch"`
 	UncommitedFiles []string `json:"uncommitedFiles"`
+	Ahead           int      `json:"ahead"`
+	Behind          int      `json:"behind"`
 }
 
 type ScanReport struct {

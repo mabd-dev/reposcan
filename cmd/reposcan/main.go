@@ -1,7 +1,6 @@
 package main
 
 import (
-	//"encoding/json"
 	"flag"
 	"fmt"
 	cli "github.com/MABD-dev/RepoScan/internal/cliFlags"
@@ -93,6 +92,8 @@ func main() {
 			Repo:            gitRepo.RepoName,
 			Branch:          gitRepo.Branch,
 			UncommitedFiles: uncommitedLines,
+			Ahead:           gitRepo.Ahead,
+			Behind:          gitRepo.Behind,
 		}
 
 		if Filter(configs.Only, repoState) {
@@ -106,14 +107,7 @@ func main() {
 		RepoStates:  repoStates,
 	}
 
-	// jsonReport, err := json.MarshalIndent(report, "", "    ")
-	// if err != nil {
-	// 	fmt.Println("Error convert report to json, message=", err)
-	// 	os.Exit(1)
-	// }
-
 	if configs.PrintStdOut {
-		//fmt.Println(string(jsonReport))
 		render.RenderScanReport(report)
 	}
 

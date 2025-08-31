@@ -38,34 +38,52 @@ func RenderScanReport(r report.ScanReport) {
 		repoW   = 24
 		branchW = 25
 		uncommW = 12
+		aheadW  = 6
+		behindW = 6
 	)
 	// Header row (use SprintfFunc so widths are applied before coloring)
 
 	if len(r.RepoStates) > 0 {
-		fmt.Printf("%s %s %s %s\n",
+		fmt.Printf("%s %s %s %s %s %s\n",
 			CyanBold("%-*s", repoW, "Repo"),
 			CyanBold("%-*s", branchW, "Branch"),
 			CyanBold("%-*s", uncommW, "Uncommitted"),
+			CyanBold("%-*s", aheadW, "Ahead"),
+			CyanBold("%-*s", behindW, "Behind"),
 			CyanBold("%s", "Path"),
 		)
-		fmt.Println(strings.Repeat("─", repoW+1+branchW+1+uncommW+1+60-2))
+		fmt.Println(strings.Repeat("─", repoW+1+branchW+aheadW+behindW+1+uncommW+1+60-2))
 	}
 
 	// Rows
 	for _, rs := range r.RepoStates {
 		uc := len(rs.UncommitedFiles)
-		ucCell := GreenS("%-*d", uncommW, uc)
+		ucCell := GrayS("%-*d", uncommW, uc)
 		if uc > 0 {
 			ucCell = RedS("%-*d", uncommW, uc)
+		}
+
+		aheadCell := GrayS("%-*d", aheadW, rs.Ahead)
+		if rs.Ahead > 0 {
+			aheadCell = GreenS("%-*d", aheadW, rs.Ahead)
+		} else if rs.Ahead < 0 {
+			aheadCell = RedS("%-*d", aheadW, rs.Ahead)
+		}
+
+		behindCell := GrayS("%-*d", behindW, rs.Behind)
+		if rs.Behind > 0 || rs.Behind < 0 {
+			behindCell = RedS("%-*d", behindW, rs.Behind)
 		}
 
 		repoCell := fmt.Sprintf("%-*s", repoW, truncateRunes(rs.Repo, repoW))
 		branchCell := BlueS("%-*s", branchW, truncateRunes(rs.Branch, branchW))
 
-		fmt.Printf("%s %s %s %s\n",
+		fmt.Printf("%s %s %s %s %s %s\n",
 			repoCell,
 			branchCell,
 			ucCell,
+			aheadCell,
+			behindCell,
 			rs.Path, // full path, no truncation
 		)
 	}
