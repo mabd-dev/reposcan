@@ -89,6 +89,8 @@ By default, `reposcan` looks for a config file in:
 Example
 ```toml
 version = 1
+
+# directories to search for git repos inside
 roots = ["~/Code", "~/work"]
 
 # Skip these directories (glob patterns)
@@ -99,9 +101,11 @@ dirIgnore = [
 ]
 
 # options: 
-#  dirty: git repos with un-commited changes or unpushed changes
+#     1. `dirty`: git repos with un-commited changes or unpushed changes
+#     2. `all`: all git repos
 only = "dirty"
 
+# if true, table with scan results will appear. Otherwise, only exist status will be returned 
 PrintStdOut = true
 ```
 > You can still override everything via CLI flags.
