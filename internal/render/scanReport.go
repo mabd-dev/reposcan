@@ -1,6 +1,8 @@
 package render
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 	"unicode/utf8"
@@ -8,10 +10,19 @@ import (
 	"github.com/MABD-dev/RepoScan/pkg/report"
 )
 
-// Prebuilt color formatters (format first, then color)
+func RenderScanReportAsJson(r report.ScanReport) error {
+	reportJson, err := json.MarshalIndent(r, "", "    ")
+	if err != nil {
+		return errors.New("Error convert report to json, message=" + err.Error())
+	}
+
+	fmt.Println(string(reportJson))
+
+	return nil
+}
 
 // Table setup (Path last, not truncated)
-func RenderScanReport(r report.ScanReport) {
+func RenderScanReportAsTable(r report.ScanReport) {
 	totalRepos := len(r.RepoStates)
 	dirtyRepos := 0
 	for _, rs := range r.RepoStates {

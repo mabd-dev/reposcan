@@ -78,6 +78,7 @@ Flags
 --root PATH         # add a directory to scan (repeatable)
 --print-stdout      # print report to stdout in a human readable table
 --only TYPE         # filter repos: all|dirty
+--output TYPE       # stdout, options=table|json|none
 ```
 
 ## ⚙️ Configuration
@@ -101,12 +102,15 @@ dirIgnore = [
 ]
 
 # options: 
-#     1. `dirty`: git repos with un-commited changes or unpushed changes
-#     2. `all`: all git repos
+#   1. `dirty`: git repos with un-commited changes or unpushed changes
+#   2. `all`: all git repos
 only = "dirty"
 
-# if true, table with scan results will appear. Otherwise, only exist status will be returned 
-PrintStdOut = true
+# print scan result to stdout. Options:
+#   1. `json`: json object containing scan report struct
+#   2. `table`: human readable representation of scan report
+#   3. `non`: prints nothing
+OutputFormat = 'table'
 ```
 > You can still override everything via CLI flags.
 
@@ -118,7 +122,7 @@ PrintStdOut = true
 ## 🛣 Roadmap
 - [x] Scan filesystem for repos
 - [x] Detect uncommitted files
-- [x] Detect uncommitted files
+- [x] Stdout Ouput in 3 formats: json, table, none
 - [x] Read user customizable `config.toml` file
 - [x] Support ahead of remote
 - [ ] Support behind remote

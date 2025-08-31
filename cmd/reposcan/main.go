@@ -34,11 +34,11 @@ func main() {
 
 	// Step 2: define cli subcommands
 	var roots cli.MultiFlag
-	var printStdout cli.BoolFlag
+	var outputFormat cli.StringFlag
 	var onlyFilter cli.StringFlag
 
 	flag.Var(&roots, "root", "Root directory to scan. Defaults to $HOME.")
-	flag.Var(&printStdout, "print-stdout", "Write resport to stdout in table format")
+	flag.Var(&outputFormat, "output", "Output, option=json|table|none")
 	flag.Var(&onlyFilter, "only", "Filter out git repos, options=all|dirty")
 	flag.Parse()
 
@@ -48,8 +48,13 @@ func main() {
 		configs.Roots = roots
 	}
 
-	if printStdout.IsSet {
-		configs.PrintStdOut = printStdout.Value
+	if outputFormat.IsSet {
+		outputFormat, err := config.CreateOutputFormat(outputFormat.Value)
+		if err != nil {
+			fmt.Println(err.Error())
+			os.Exit(1)
+		}
+		configs.Output = outputFormat
 	}
 
 	if onlyFilter.IsSet {
@@ -109,8 +114,17 @@ func main() {
 		Warnings:    reportWarnings,
 	}
 
-	if configs.PrintStdOut {
-		render.RenderScanReport(report)
+	switch configs.Output {
+	case config.OutputJson:
+		err = render.RenderScanReportAsJson(report)
+		if err != nil {
+			render.Error(err.Error())
+			os.Exit(1)
+		}
+	case config.OutputTable:
+		render.RenderScanReportAsTable(report)
+	case config.OutputNone:
+		break
 	}
 
 	for _, repoState := range report.RepoStates {

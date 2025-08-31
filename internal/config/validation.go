@@ -41,7 +41,15 @@ func Validate(config Config) Validation {
 	if !config.Only.IsValid() {
 		issue := Issue{
 			Field:   "Only",
-			Message: "'" + string(config.Only) + "' is not a valid OnlyFilter value",
+			Message: "'" + string(config.Only) + "' is not a valid OnlyFilter",
+		}
+		errors = append(errors, issue)
+	}
+
+	if !config.Output.IsValid() {
+		issue := Issue{
+			Field:   "Output",
+			Message: "'" + string(config.Output) + "' is not a valid OutputFormat",
 		}
 		errors = append(errors, issue)
 	}
