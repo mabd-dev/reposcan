@@ -16,7 +16,7 @@ func RenderScanReport(r report.ScanReport) {
 	total := len(r.RepoStates)
 	dirty := 0
 	for _, rs := range r.RepoStates {
-		if len(rs.UncommitedFiles) > 0 {
+		if rs.IsDirty() {
 			dirty++
 		}
 	}
@@ -26,10 +26,10 @@ func RenderScanReport(r report.ScanReport) {
 	fmt.Printf("%s\n", BoldS("Repo Scan Report"))
 	fmt.Printf("%s %s\n", DimS("Generated at:"), GrayS(r.GeneratedAt.Format(time.RFC3339)))
 	if dirty > 0 {
-		fmt.Printf("Total repositories: %s  |  With uncommitted changes: %s\n\n",
+		fmt.Printf("Total repositories: %s  |  Dirty: %s\n\n",
 			BoldS("%d", total), RedS("%d", dirty))
 	} else {
-		fmt.Printf("Total repositories: %s  |  With uncommitted changes: %s\n\n",
+		fmt.Printf("Total repositories: %s  |  Dirty: %s\n\n",
 			BoldS("%d", total), GreenS("%d", dirty))
 	}
 
