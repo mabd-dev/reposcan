@@ -81,7 +81,7 @@ Flags
 ```
 
 ## ⚙️ Configuration
-By default, `reposcan` looks for a config file in:
+By default, `reposcan` looks for a config file in: 
 ```sh
 ~/.config/reposcan/config.toml
 ```
@@ -109,6 +109,10 @@ only = "dirty"
 PrintStdOut = true
 ```
 > You can still override everything via CLI flags.
+
+### Config lookup order
+1.  check config in `~/.config/reposcan/config.toml`
+2. check cli flags and override those in step 1
 
 
 ## 🛣 Roadmap
