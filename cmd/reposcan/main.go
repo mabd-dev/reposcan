@@ -1,9 +1,7 @@
 package reposcan
 
 import (
-	"flag"
 	"fmt"
-	cli "github.com/MABD-dev/reposcan/internal/cliFlags"
 	"github.com/MABD-dev/reposcan/internal/config"
 	"github.com/MABD-dev/reposcan/internal/gitx"
 	"github.com/MABD-dev/reposcan/internal/render/file"
@@ -35,44 +33,10 @@ func Run() {
 	}
 
 	// Step 2: define cli subcommands
-	var roots cli.MultiFlag
-	var outputFormat cli.StringFlag
-	var onlyFilter cli.StringFlag
-	var jsonOutputPath cli.StringFlag
-
-	flag.Var(&roots, "root", "Root directory to scan. Defaults to $HOME.")
-	flag.Var(&outputFormat, "output", "Output, option=json|table|none")
-	flag.Var(&onlyFilter, "only", "Filter out git repos, options=all|dirty")
-	flag.Var(&jsonOutputPath, "json-output-path", "Save scan report into json file")
-	flag.Parse()
-
-	if len(roots) == 0 {
-		roots = configs.Roots
-	} else {
-		configs.Roots = roots
-	}
-
-	if outputFormat.IsSet {
-		outputFormat, err := config.CreateOutputFormat(outputFormat.Value)
-		if err != nil {
-			fmt.Println(err.Error())
-			os.Exit(1)
-		}
-		configs.Output = outputFormat
-	}
-
-	if onlyFilter.IsSet {
-		onlyFilter, err := config.CreateOnlyFilter(onlyFilter.Value)
-		if err != nil {
-			fmt.Println(err.Error())
-			os.Exit(1)
-		}
-		configs.Only = onlyFilter
-	}
-
-	if jsonOutputPath.IsSet {
-		path := strings.TrimSpace(jsonOutputPath.Value)
-		configs.JsonOutputPath = path
+	err = AddFlagsAndApply(&configs)
+	if err != nil {
+		fmt.Println(err.Error())
+		os.Exit(1)
 	}
 
 	// validate after applied cli commands to config
