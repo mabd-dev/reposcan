@@ -1,0 +1,35 @@
+Look into roots=[/home/mabd/]
+Warning: Failed to get upstream status, path=/home/mabd/Documents/code/test, error=exit status 128
+
+
+Repo Scan Report
+Generated at: 2025-09-03T17:31:30+03:00
+Total repositories: 3  |  Dirty: 3
+
+Repo                     Branch                    Not-Commited Ahead  Path
+──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+new-mind-map             main                      2            0      /home/mabd/Documents/Obsidian Vault
+RepoScan                 feature/betterUi          8            0      /home/mabd/Documents/code/projects/Go/reposcan
+test                     master                    1            -1     /home/mabd/Documents/code/test
+
+Details:
+
+Repo: new-mind-map
+Path: /home/mabd/Documents/Obsidian Vault
+  -  M "Daily Todo.md"
+  -  M "Linux Command Line Tools.md"
+
+Repo: RepoScan
+Path: /home/mabd/Documents/code/projects/Go/reposcan
+  -  M cmd/reposcan/main.go
+  -  M go.mod
+  -  M go.sum
+  -  M main.go
+  - ?? freeze.png
+  - ?? internal/render/stdout/learning.go
+  - ?? internal/render/stdout/tui.go
+  - ?? reposcan_output.log
+
+Repo: test
+Path: /home/mabd/Documents/code/test
+  - ?? a.txt

@@ -95,7 +95,11 @@ func Run() {
 			os.Exit(1)
 		}
 	case config.OutputTable:
-		stdout.RenderScanReportAsTable(report)
+		if err := stdout.ShowReportTUI(report); err != nil {
+			fmt.Fprintf(os.Stderr, "tui error: %v\n", err)
+			os.Exit(1)
+		}
+		//stdout.RenderScanReportAsTable(report)
 	case config.OutputNone:
 		break
 	}
