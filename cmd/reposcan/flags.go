@@ -12,11 +12,13 @@ func AddFlagsAndApply(c *config.Config) error {
 	var outputFormat cli.StringFlag
 	var onlyFilter cli.StringFlag
 	var jsonOutputPath cli.StringFlag
+	var maxWorkers cli.IntFlag
 
 	flag.Var(&roots, "root", "Root directory to scan. Defaults to $HOME.")
 	flag.Var(&outputFormat, "output", "Output, option=json|table|none")
 	flag.Var(&onlyFilter, "only", "Filter out git repos, options=all|dirty")
 	flag.Var(&jsonOutputPath, "json-output-path", "Save scan report into json file")
+	flag.Var(&maxWorkers, "max-workers", "number of concurrent git checks")
 	flag.Parse()
 
 	if len(roots) != 0 {
@@ -42,6 +44,10 @@ func AddFlagsAndApply(c *config.Config) error {
 	if jsonOutputPath.IsSet {
 		path := strings.TrimSpace(jsonOutputPath.Value)
 		c.JsonOutputPath = path
+	}
+
+	if maxWorkers.IsSet {
+		c.MaxWorkers = maxWorkers.Value
 	}
 
 	return nil

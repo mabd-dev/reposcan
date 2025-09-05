@@ -15,6 +15,9 @@ type Config struct {
 	// Print json on std out,
 	Output OutputFormat `json:"output"`
 
+	// Max git checker workers
+	MaxWorkers int `json:"maxWorkers"`
+
 	Version int `json:"version"`
 }
 
@@ -79,6 +82,7 @@ func Defaults() Config {
 		Only:           OnlyDirty,
 		JsonOutputPath: "",
 		Output:         OutputTable,
+		MaxWorkers:     8,
 		Version:        1,
 	}
 }
