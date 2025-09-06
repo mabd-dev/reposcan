@@ -109,7 +109,7 @@ only = "dirty"
 # print scan result to stdout. Options:
 #   1. `json`: json object containing scan report struct
 #   2. `table`: human readable representation of scan report
-#   3. `non`: prints nothing
+#   3. `none`: prints nothing
 Output = "table"
 
 # output scan reports to this folder. All nested folders will be created
@@ -121,8 +121,10 @@ JsonOutputPath = '/home/me/Documents/code/projects/Go/reposcan/output-samples'
 check [sample/config.toml](sample) for detailed configuration with examples
 
 ### Config lookup order
-1.  check config in `~/.config/reposcan/config.toml`
-2. check cli flags and override those in step 1
+1. Load default values
+1. Config in `~/.config/reposcan/config.toml` (if exists)
+2. Cli flags (if exists)
+Each step overrides the one before it
 
 
 ## 🛣 Roadmap
