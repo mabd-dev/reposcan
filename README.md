@@ -5,7 +5,7 @@ It helps you quickly find:
 
 - Repositories with **uncommitted files**  
 - Repositories with **unpushed commits** (ahead of upstream)  
-- Repositories with **unpulled changes** (behind upstream)  (todo)
+- Repositories with **unpulled changes** (behind upstream)
 
 It outputs results in both **human-friendly tables** and **machine-friendly JSON**, so you can use it interactively or integrate with scripts and future UIs.
 
@@ -130,13 +130,11 @@ Each step overrides the one before it
 
 ## 🛣 Roadmap
 - [x] Scan filesystem for repos
-- [x] Detect uncommitted files
+- [x] Detect uncommitted files, unpushed commits and unpulled commits
 - [x] Stdout Ouput in 3 formats: json, table, none
 - [x] Read user customizable `config.toml` file
-- [x] Support ahead of remote
 - [x] Export Report to json file
 - [x] Support dirignore
-- [ ] Support behind remote
 - [ ] Worker pool for speed
 - [ ] Support git worktrees
 - [ ] Use cobra for better cli support
