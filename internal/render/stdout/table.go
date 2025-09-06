@@ -54,7 +54,7 @@ func getStateColumnStr(rs report.RepoState) string {
 	}
 
 	if rs.Behind > 0 {
-		stateStr.WriteString(GreenS("↑%-*d", BehindW, rs.Behind))
+		stateStr.WriteString(GreenS("↓%-*d", BehindW, rs.Behind))
 	} else if rs.Behind < 0 {
 		stateStr.WriteString(RedS("%-*s ", BehindW, "x"))
 	} else {
