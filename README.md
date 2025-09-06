@@ -9,17 +9,18 @@ It helps you quickly find:
 
 It outputs results in both **human-friendly tables** and **machine-friendly JSON**, so you can use it interactively or integrate with scripts and future UIs.
 
+
 🖼 Example output
 ```sh
 Repo Scan Report
 Generated at: 2025-08-31T08:44:54+03:00
 Total repositories: 3  |  Dirty: 2
 
-Repo                     Branch                    Not-Commited Ahead  Path
+Repo                     Branch                State            Path
 ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-empty                    main                      0            0      /home/me/projects/empty
-habitsss                 master                    1            1      /home/me/projects/habitsss
-reposcan                 main                      1            3      /home/me/projects/reposcan
+empty                    main                  ⏳0  ↑0  ↓0      /home/me/projects/empty
+habitsss                 master                ⏳2  ↑0  ↓2      /home/me/projects/habitsss
+reposcan                 main                  ⏳1  ↑1  ↓0      /home/me/projects/reposcan
 
 
 Details:
