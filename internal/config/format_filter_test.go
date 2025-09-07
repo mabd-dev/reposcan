@@ -18,7 +18,7 @@ func TestCreateOutputFormat_InvalidValue(t *testing.T) {
 }
 
 func TestCreateOnlyFilter_ValidValues(t *testing.T) {
-    cases := []string{"all", "dirty", "ALL", "Dirty"}
+    cases := []string{"all", "dirty", "uncommitted", "unpushed", "unpulled", "ALL", "Dirty", "Uncommitted"}
     for _, c := range cases {
         if _, err := CreateOnlyFilter(c); err != nil {
             t.Fatalf("expected valid only filter for %q, got error: %v", c, err)
@@ -31,4 +31,3 @@ func TestCreateOnlyFilter_InvalidValue(t *testing.T) {
         t.Fatalf("expected error for invalid only filter")
     }
 }
-

@@ -77,7 +77,7 @@ reposcan -r ~/Code -r ~/work
 Common flags
 ```sh
 -d, --dirIgnore stringArray     # (default [$HOME])
--f, --filter string             # Repository filter: all|dirty (default "dirty")
+-f, --filter string             # Repository filter: all|dirty|uncommitted|unpushed|unpulled (default "dirty")
 -h, --help                      # help for reposcan
     --json-output-path string   # Write scan report JSON files to this directory (optional)
 -w, --max-workers int           # Number of concurrent git checks (default 8)
@@ -112,9 +112,12 @@ dirIgnore = [
   "/.local/"
 ]
 
-# options: 
-#   1. `dirty`: git repos with un-commited changes or unpushed changes
-#   2. `all`: all git repos
+# options:
+#   1. `dirty`: any of uncommitted files, unpushed commits, or unpulled changes
+#   2. `uncommitted`: working tree has uncommitted files
+#   3. `unpushed`: local branch is ahead of upstream
+#   4. `unpulled`: local branch is behind upstream
+#   5. `all`: include all git repos
 only = "dirty"
 
 # print scan result to stdout. Options:

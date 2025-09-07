@@ -61,7 +61,7 @@ var RootCmd = &cobra.Command{
 //   - root (-r)            : repeatable directory roots to scan
 //   - dirIgnore (-d)       : repeatable glob patterns to ignore during scan
 //   - output (-o)          : output format: json|table|none
-//   - filter (-f)          : repository filter: all|dirty
+//   - filter (-f)          : repository filter: all|dirty|uncommitted|unpushed|unpulled
 //   - json-output-path     : directory to write JSON report files
 //   - max-workers (-w)     : number of concurrent git checks
 func readFlags(cmd *cobra.Command, configs *config.Config) error {
@@ -179,14 +179,26 @@ func run(configs config.Config) error {
 // Filter repoState based on config only filter
 // Returns true if repoState should be in output, false otherwise
 func filter(f config.OnlyFilter, repoState report.RepoState) bool {
-	switch f {
-	case config.OnlyAll:
-		return true
-	case config.OnlyDirty:
-		if repoState.IsDirty() {
-			return true
-		}
-	}
+    switch f {
+    case config.OnlyAll:
+        return true
+    case config.OnlyDirty:
+        if repoState.IsDirty() {
+            return true
+        }
+    case config.OnlyUncommitted:
+        if len(repoState.UncommitedFiles) > 0 {
+            return true
+        }
+    case config.OnlyUnpushed:
+        if repoState.Ahead > 0 {
+            return true
+        }
+    case config.OnlyUnpulled:
+        if repoState.Behind > 0 {
+            return true
+        }
+    }
 
-	return false
+    return false
 }

@@ -25,11 +25,18 @@ This document explains each CLI flag, its equivalent `config.toml` field, what i
       ```
 
 - `-f, --filter TYPE`
-  - Config: `only = "dirty" | "all"`
+  - Config: `only = "dirty" | "all" | "uncommitted" | "unpushed" | "unpulled"`
   - Description: Filter which repositories to include in the report.
-    - `dirty`: only repos with uncommitted changes or ahead/behind.
+    - `dirty`: any of uncommitted files, ahead, or behind.
+    - `uncommitted`: only repos with uncommitted files.
+    - `unpushed`: only repos with commits ahead of upstream.
+    - `unpulled`: only repos with commits behind upstream.
     - `all`: all repos discovered.
-  - Example: `reposcan --filter dirty`
+  - Examples:
+    - `reposcan --filter dirty`
+    - `reposcan --filter uncommitted`
+    - `reposcan --filter unpushed`
+    - `reposcan --filter unpulled`
 
 - `-o, --output TYPE`
   - Config: `Output = "table" | "json" | "none"`
