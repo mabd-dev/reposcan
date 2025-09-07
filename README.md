@@ -90,6 +90,8 @@ Help
 reposcan --help
 ```
 
+More details on flags and config mapping can be found in [docs/cli-flags.md](docs/cli-flags.md).
+
 ## ⚙️ Configuration
 By default, `reposcan` looks for a config file in: 
 ```sh
