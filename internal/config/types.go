@@ -32,6 +32,17 @@ func Defaults() Config {
 		"**/.m2/**",
 		"**/.gradle/**",
 		"**/.cargo/**",
+		"**/.gradle/**",
+		"**/.kotlin/**",
+		"**/.java/**",
+		"**/.cargo/**",
+		"**/.zen/**",
+		"**/.bun/**",
+		"**/.codex/**",
+		"**/.android/**",
+		"**/.config/Google/**",
+		"**/.config/JetBrains/**",
+
 		"**/target/**",
 
 		// --- Build / dist ---
