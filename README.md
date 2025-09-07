@@ -66,20 +66,28 @@ go build -o reposcan ./cmd/reposcan
 ## 🚀 Usage
 Scan your home directory
 ```sh
-reposcan --root $HOME
+reposcan -r $HOME
 ```
 
 Multiple roots
 ```sh
-reposcan --root ~/Code --root ~/work
+reposcan -r ~/Code -r ~/work
 ```
 
-Flags
-```graphql
---root PATH                 # add a directory to scan (repeatable)
---only TYPE                 # filter repos: all|dirty
---output TYPE               # stdout, options=table|json|none
---json-output-path PATH     # output scan report in json format to desired location
+Common flags
+```sh
+-d, --dirIgnore stringArray     # (default [$HOME])
+-f, --filter string             # Repository filter: all|dirty (default "dirty")
+-h, --help                      # help for reposcan
+    --json-output-path string   # Write scan report JSON files to this directory (optional)
+-w, --max-workers int           # Number of concurrent git checks (default 8)
+-o, --output string             # Output format: json|table|none (default "table")
+-r, --root stringArray          # Root directory to scan (repeatable). Defaults to $HOME if unset in config. (default [$HOME])
+```
+
+Help
+```sh
+reposcan --help
 ```
 
 ## ⚙️ Configuration

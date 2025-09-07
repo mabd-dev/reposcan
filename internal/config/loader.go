@@ -28,7 +28,7 @@ func Load(conf *Config, path string) error {
 	return toml.Unmarshal(b, conf)
 }
 
-// Get config file if exists and load it's data. Or create new one with
+// Get config file (if exists) and load it's data. Or create new one with
 // Defaults() function, then save that into newly created file
 func CreateOrReadConfigs(configFilePath string) (Config, error) {
 	home, err := os.UserHomeDir()

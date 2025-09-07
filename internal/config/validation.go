@@ -3,6 +3,7 @@ package config
 import (
 	"github.com/MABD-dev/reposcan/internal/render/stdout"
 	"github.com/MABD-dev/reposcan/internal/utils"
+	"os"
 	"strings"
 )
 
@@ -11,17 +12,22 @@ type Issue struct {
 	Message string
 }
 
-type Validation struct {
+type ValidationResult struct {
 	Warnings []Issue
 	Errors   []Issue
 }
 
-func Validate(config Config) Validation {
+func (v *ValidationResult) IsValid() bool {
+	return len(v.Errors) > 0
+}
+
+func Validate(config Config) ValidationResult {
 	warnings := []Issue{}
 	errors := []Issue{}
 
 	// validate roots are valid paths
-	for _, root := range config.Roots {
+	for _, r := range config.Roots {
+		root := os.ExpandEnv(r)
 		exists, err := utils.DirExists(root)
 		if err != nil {
 			issue := Issue{
@@ -71,14 +77,14 @@ func Validate(config Config) Validation {
 		}
 	}
 
-	return Validation{
+	return ValidationResult{
 		Warnings: warnings,
 		Errors:   errors,
 	}
 }
 
 // Print out warnings and errors to stdout if they exist
-func (v Validation) Print() {
+func (v ValidationResult) Print() {
 	for _, w := range v.Warnings {
 		msg := "Confg\tfield=" + w.Field + " , message=" + w.Message + "\n"
 		stdout.Warning(msg)

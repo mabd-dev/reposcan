@@ -1,9 +1,5 @@
 package config
 
-import (
-	"os"
-)
-
 type Config struct {
 	Roots     []string   `json:"roots,omitempty"`
 	DirIgnore []string   `json:"dirignore,omitempty"`
@@ -22,12 +18,10 @@ type Config struct {
 }
 
 func Defaults() Config {
-	home, err := os.UserHomeDir()
+	//home, err := os.UserHomeDir()
 
 	var roots []string = nil
-	if err == nil {
-		roots = []string{home}
-	}
+	roots = []string{"$HOME"}
 
 	defaultDirIgnore := []string{
 		// --- Package managers / deps ---

@@ -5,5 +5,5 @@ import (
 )
 
 func main() {
-	reposcan.Run()
+	reposcan.Execute()
 }
