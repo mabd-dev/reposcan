@@ -42,7 +42,6 @@ func Defaults() Config {
 		"**/.android/**",
 		"**/.config/Google/**",
 		"**/.config/JetBrains/**",
-
 		"**/target/**",
 
 		// --- Build / dist ---
