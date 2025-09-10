@@ -3,25 +3,38 @@ package config
 import (
 	"github.com/MABD-dev/reposcan/internal/render/stdout"
 	"github.com/MABD-dev/reposcan/internal/utils"
+	"os"
 	"strings"
 )
 
+// Issue represents a validation warning or error for a configuration field.
 type Issue struct {
 	Field   string
 	Message string
 }
 
-type Validation struct {
+// ValidationResult aggregates validation warnings and errors discovered while
+// checking a Config value.
+type ValidationResult struct {
 	Warnings []Issue
 	Errors   []Issue
 }
 
-func Validate(config Config) Validation {
+// IsValid reports whether the configuration contains any errors.
+// It returns true when there is at least one error.
+func (v *ValidationResult) IsValid() bool {
+	return len(v.Errors) > 0
+}
+
+// Validate checks a Config for common issues such as non-existent roots,
+// invalid enum values, and unusable output paths.
+func Validate(config Config) ValidationResult {
 	warnings := []Issue{}
 	errors := []Issue{}
 
 	// validate roots are valid paths
-	for _, root := range config.Roots {
+	for _, r := range config.Roots {
+		root := os.ExpandEnv(r)
 		exists, err := utils.DirExists(root)
 		if err != nil {
 			issue := Issue{
@@ -71,14 +84,14 @@ func Validate(config Config) Validation {
 		}
 	}
 
-	return Validation{
+	return ValidationResult{
 		Warnings: warnings,
 		Errors:   errors,
 	}
 }
 
-// Print out warnings and errors to stdout if they exist
-func (v Validation) Print() {
+// Print writes warnings and errors to stdout using the stdout renderer.
+func (v ValidationResult) Print() {
 	for _, w := range v.Warnings {
 		msg := "Confg\tfield=" + w.Field + " , message=" + w.Message + "\n"
 		stdout.Warning(msg)

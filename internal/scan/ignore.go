@@ -38,6 +38,14 @@ func NewIgnoreMatcher(roots []string, raw []string) *IgnoreMatcher {
 			p = p + "**"
 		}
 
+		// Special case: patterns like "cache/" should also match the directory itself.
+		// doublestar PathMatch("**/cache/**", "/proj/tmp/cache") returns false, so we
+		// add a sibling pattern without the trailing "/**" to match the folder path.
+		if strings.HasSuffix(p, "/**") {
+			base := strings.TrimSuffix(p, "/**")
+			pats = append(pats, base)
+		}
+
 		pats = append(pats, p)
 	}
 

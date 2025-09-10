@@ -5,9 +5,10 @@ It helps you quickly find:
 
 - Repositories with **uncommitted files**  
 - Repositories with **unpushed commits** (ahead of upstream)  
-- Repositories with **unpulled changes** (behind upstream)  (todo)
+- Repositories with **unpulled changes** (behind upstream)
 
 It outputs results in both **human-friendly tables** and **machine-friendly JSON**, so you can use it interactively or integrate with scripts and future UIs.
+
 
 🖼 Example output
 ```sh
@@ -15,11 +16,11 @@ Repo Scan Report
 Generated at: 2025-08-31T08:44:54+03:00
 Total repositories: 3  |  Dirty: 2
 
-Repo                     Branch                    Not-Commited Ahead  Path
+Repo                     Branch                State            Path
 ──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-empty                    main                      0            0      /home/me/projects/empty
-habitsss                 master                    1            1      /home/me/projects/habitsss
-reposcan                 main                      1            3      /home/me/projects/reposcan
+empty                    main                  ⏳0  ↑0  ↓0      /home/me/projects/empty
+habitsss                 master                ⏳2  ↑0  ↓2      /home/me/projects/habitsss
+reposcan                 main                  ⏳1  ↑1  ↓0      /home/me/projects/reposcan
 
 
 Details:
@@ -65,21 +66,31 @@ go build -o reposcan ./cmd/reposcan
 ## 🚀 Usage
 Scan your home directory
 ```sh
-reposcan --root $HOME
+reposcan -r $HOME
 ```
 
 Multiple roots
 ```sh
-reposcan --root ~/Code --root ~/work
+reposcan -r ~/Code -r ~/work
 ```
 
-Flags
-```graphql
---root PATH                 # add a directory to scan (repeatable)
---only TYPE                 # filter repos: all|dirty
---output TYPE               # stdout, options=table|json|none
---json-output-path PATH     # output scan report in json format to desired location
+Common flags
+```sh
+-d, --dirIgnore stringArray     # (default [$HOME])
+-f, --filter string             # Repository filter: all|dirty|uncommitted|unpushed|unpulled (default "dirty")
+-h, --help                      # help for reposcan
+    --json-output-path string   # Write scan report JSON files to this directory (optional)
+-w, --max-workers int           # Number of concurrent git checks (default 8)
+-o, --output string             # Output format: json|table|none (default "table")
+-r, --root stringArray          # Root directory to scan (repeatable). Defaults to $HOME if unset in config. (default [$HOME])
 ```
+
+Help
+```sh
+reposcan --help
+```
+
+More details on flags and config mapping can be found in [docs/cli-flags.md](docs/cli-flags.md).
 
 ## ⚙️ Configuration
 By default, `reposcan` looks for a config file in: 
@@ -101,15 +112,18 @@ dirIgnore = [
   "/.local/"
 ]
 
-# options: 
-#   1. `dirty`: git repos with un-commited changes or unpushed changes
-#   2. `all`: all git repos
+# options:
+#   1. `dirty`: any of uncommitted files, unpushed commits, or unpulled changes
+#   2. `uncommitted`: working tree has uncommitted files
+#   3. `unpushed`: local branch is ahead of upstream
+#   4. `unpulled`: local branch is behind upstream
+#   5. `all`: include all git repos
 only = "dirty"
 
 # print scan result to stdout. Options:
 #   1. `json`: json object containing scan report struct
 #   2. `table`: human readable representation of scan report
-#   3. `non`: prints nothing
+#   3. `none`: prints nothing
 Output = "table"
 
 # output scan reports to this folder. All nested folders will be created
@@ -121,19 +135,19 @@ JsonOutputPath = '/home/me/Documents/code/projects/Go/reposcan/output-samples'
 check [sample/config.toml](sample) for detailed configuration with examples
 
 ### Config lookup order
-1.  check config in `~/.config/reposcan/config.toml`
-2. check cli flags and override those in step 1
+1. Load default values
+1. Config in `~/.config/reposcan/config.toml` (if exists)
+2. Cli flags (if exists)
+Each step overrides the one before it
 
 
 ## 🛣 Roadmap
 - [x] Scan filesystem for repos
-- [x] Detect uncommitted files
+- [x] Detect uncommitted files, unpushed commits and unpulled commits
 - [x] Stdout Ouput in 3 formats: json, table, none
 - [x] Read user customizable `config.toml` file
-- [x] Support ahead of remote
 - [x] Export Report to json file
 - [x] Support dirignore
-- [ ] Support behind remote
 - [ ] Worker pool for speed
 - [ ] Support git worktrees
 - [ ] Use cobra for better cli support

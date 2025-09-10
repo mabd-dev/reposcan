@@ -5,19 +5,21 @@ import (
 	"strings"
 )
 
+// OutputFormat controls how scan results are rendered.
 type OutputFormat string
 
 const (
-	// Print json object representing ScanReport
-	OutputJson OutputFormat = "json"
+    // OutputJson prints a JSON object representing a ScanReport to stdout.
+    OutputJson OutputFormat = "json"
 
-	// Print human readable table representing ScanReport
-	OutputTable OutputFormat = "table"
+    // OutputTable prints a human-readable table to stdout.
+    OutputTable OutputFormat = "table"
 
-	// Print nothing
-	OutputNone OutputFormat = "none"
+    // OutputNone suppresses all stdout output.
+    OutputNone OutputFormat = "none"
 )
 
+// IsValid reports whether o is a recognized OutputFormat value.
 func (o OutputFormat) IsValid() bool {
 	switch o {
 	case OutputJson, OutputTable, OutputNone:
@@ -26,6 +28,8 @@ func (o OutputFormat) IsValid() bool {
 	return false
 }
 
+// CreateOutputFormat parses s into an OutputFormat, returning an error for
+// unrecognized values. Matching is case-insensitive and trims whitespace.
 func CreateOutputFormat(s string) (OutputFormat, error) {
 	str := strings.ToLower(strings.TrimSpace(s))
 
