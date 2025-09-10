@@ -3,8 +3,8 @@ package file
 import (
 	"encoding/json"
 	"errors"
-	"github.com/MABD-dev/reposcan/internal/utils"
-	"github.com/MABD-dev/reposcan/pkg/report"
+	"github.com/mabd-dev/reposcan/internal/utils"
+	"github.com/mabd-dev/reposcan/pkg/report"
 	"strings"
 )
 

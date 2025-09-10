@@ -1,4 +1,4 @@
-module github.com/MABD-dev/reposcan
+module github.com/mabd-dev/reposcan
 
 go 1.24.6
 

@@ -6,12 +6,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/MABD-dev/reposcan/internal/config"
-	"github.com/MABD-dev/reposcan/internal/gitx"
-	"github.com/MABD-dev/reposcan/internal/render/file"
-	"github.com/MABD-dev/reposcan/internal/render/stdout"
-	"github.com/MABD-dev/reposcan/internal/scan"
-	"github.com/MABD-dev/reposcan/pkg/report"
+	"github.com/mabd-dev/reposcan/internal/config"
+	"github.com/mabd-dev/reposcan/internal/gitx"
+	"github.com/mabd-dev/reposcan/internal/render/file"
+	"github.com/mabd-dev/reposcan/internal/render/stdout"
+	"github.com/mabd-dev/reposcan/internal/scan"
+	"github.com/mabd-dev/reposcan/pkg/report"
 	"github.com/spf13/cobra"
 )
 
@@ -181,26 +181,26 @@ func run(configs config.Config) error {
 // Filter repoState based on config only filter
 // Returns true if repoState should be in output, false otherwise
 func filter(f config.OnlyFilter, repoState report.RepoState) bool {
-    switch f {
-    case config.OnlyAll:
-        return true
-    case config.OnlyDirty:
-        if repoState.IsDirty() {
-            return true
-        }
-    case config.OnlyUncommitted:
-        if len(repoState.UncommitedFiles) > 0 {
-            return true
-        }
-    case config.OnlyUnpushed:
-        if repoState.Ahead > 0 {
-            return true
-        }
-    case config.OnlyUnpulled:
-        if repoState.Behind > 0 {
-            return true
-        }
-    }
+	switch f {
+	case config.OnlyAll:
+		return true
+	case config.OnlyDirty:
+		if repoState.IsDirty() {
+			return true
+		}
+	case config.OnlyUncommitted:
+		if len(repoState.UncommitedFiles) > 0 {
+			return true
+		}
+	case config.OnlyUnpushed:
+		if repoState.Ahead > 0 {
+			return true
+		}
+	case config.OnlyUnpulled:
+		if repoState.Behind > 0 {
+			return true
+		}
+	}
 
-    return false
+	return false
 }

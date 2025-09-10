@@ -7,7 +7,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/MABD-dev/reposcan/pkg/report"
+	"github.com/mabd-dev/reposcan/pkg/report"
 )
 
 // RenderScanReportAsJson prints the ScanReport to stdout as pretty-printed JSON.

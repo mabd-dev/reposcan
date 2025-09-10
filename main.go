@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/MABD-dev/reposcan/cmd/reposcan"
+	"github.com/mabd-dev/reposcan/cmd/reposcan"
 )
 
 func main() {

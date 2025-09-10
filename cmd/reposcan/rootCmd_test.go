@@ -3,8 +3,8 @@ package reposcan
 import (
 	"testing"
 
-	"github.com/MABD-dev/reposcan/internal/config"
-	"github.com/MABD-dev/reposcan/pkg/report"
+	"github.com/mabd-dev/reposcan/internal/config"
+	"github.com/mabd-dev/reposcan/pkg/report"
 )
 
 // helper to build a RepoState with desired dirty state

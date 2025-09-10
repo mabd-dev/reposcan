@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/MABD-dev/reposcan/pkg/report"
+	"github.com/mabd-dev/reposcan/pkg/report"
 )
 
 func TestWriteScanReport_WritesFileWithTimestampedName(t *testing.T) {

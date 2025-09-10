@@ -2,7 +2,7 @@ package stdout
 
 import (
 	"fmt"
-	"github.com/MABD-dev/reposcan/pkg/report"
+	"github.com/mabd-dev/reposcan/pkg/report"
 	"strings"
 )
 

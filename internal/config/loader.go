@@ -2,7 +2,7 @@ package config
 
 import (
 	"fmt"
-	"github.com/MABD-dev/reposcan/internal/utils"
+	"github.com/mabd-dev/reposcan/internal/utils"
 	"github.com/pelletier/go-toml/v2"
 	"os"
 	"path/filepath"

@@ -1,7 +1,7 @@
 package gitx
 
 import (
-	"github.com/MABD-dev/reposcan/pkg/report"
+	"github.com/mabd-dev/reposcan/pkg/report"
 	"sort"
 	"sync"
 )
