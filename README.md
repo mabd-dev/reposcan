@@ -50,7 +50,7 @@ Path: /home/me/projects/reposcan
 
 ### Go install (latest)
 ```sh
-go install github.com/mabd-dev/reposcan/cmd/reposcan@latest
+go install github.com/mabd-dev/reposcan@latest
 ```
 
 Make sure $GOPATH/bin (or $HOME/go/bin) is in your $PATH.
