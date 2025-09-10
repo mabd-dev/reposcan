@@ -6,6 +6,7 @@ import (
 	"strings"
 )
 
+// RenderReposTable renders the per-repository rows for a ScanReport as a table.
 func RenderReposTable(r report.ScanReport) {
 	// Table header
 	fmt.Printf("%s %s %s %s\n",

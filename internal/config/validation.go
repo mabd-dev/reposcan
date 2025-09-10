@@ -7,20 +7,27 @@ import (
 	"strings"
 )
 
+// Issue represents a validation warning or error for a configuration field.
 type Issue struct {
 	Field   string
 	Message string
 }
 
+// ValidationResult aggregates validation warnings and errors discovered while
+// checking a Config value.
 type ValidationResult struct {
 	Warnings []Issue
 	Errors   []Issue
 }
 
+// IsValid reports whether the configuration contains any errors.
+// It returns true when there is at least one error.
 func (v *ValidationResult) IsValid() bool {
 	return len(v.Errors) > 0
 }
 
+// Validate checks a Config for common issues such as non-existent roots,
+// invalid enum values, and unusable output paths.
 func Validate(config Config) ValidationResult {
 	warnings := []Issue{}
 	errors := []Issue{}
@@ -83,7 +90,7 @@ func Validate(config Config) ValidationResult {
 	}
 }
 
-// Print out warnings and errors to stdout if they exist
+// Print writes warnings and errors to stdout using the stdout renderer.
 func (v ValidationResult) Print() {
 	for _, w := range v.Warnings {
 		msg := "Confg\tfield=" + w.Field + " , message=" + w.Message + "\n"

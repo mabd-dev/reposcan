@@ -1,5 +1,7 @@
 package config
 
+// Config holds all runtime options used by reposcan.
+// Values may come from a config file and/or be overridden by CLI flags.
 type Config struct {
 	Roots     []string   `json:"roots,omitempty"`
 	DirIgnore []string   `json:"dirignore,omitempty"`
@@ -17,6 +19,8 @@ type Config struct {
 	Version int `json:"version"`
 }
 
+// Defaults returns a Config populated with sensible defaults suitable for
+// typical local development machines.
 func Defaults() Config {
 	//home, err := os.UserHomeDir()
 

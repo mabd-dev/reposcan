@@ -11,6 +11,7 @@ import (
 	"strings"
 )
 
+// GetRepoBranch returns the current branch name for the Git repository at path.
 func GetRepoBranch(path string) (branchName string, err error) {
 	str, err := RunGitCommand(path, "branch", "--show-current")
 	if err != nil {
@@ -19,6 +20,8 @@ func GetRepoBranch(path string) (branchName string, err error) {
 	return strings.TrimSpace(str), nil
 }
 
+// GetUncommitedFiles returns the list of uncommitted files (status porcelain)
+// for the Git repository at path.
 func GetUncommitedFiles(path string) (changes []string, err error) {
 	str, err := RunGitCommand(path, "status", "--porcelain=v1", "-uall")
 	if err != nil {
@@ -31,6 +34,8 @@ func GetUncommitedFiles(path string) (changes []string, err error) {
 	return changes, nil
 }
 
+// GetUpstreamStatus returns the ahead/behind counts relative to the upstream
+// tracking branch for the repository at path.
 func GetUpstreamStatus(path string) (ahead int, behind int, err error) {
 	lrc, err := RunGitCommand(path, "rev-list", "--left-right", "--count", "@{u}...HEAD")
 	if err != nil {
@@ -45,8 +50,8 @@ func GetUpstreamStatus(path string) (ahead int, behind int, err error) {
 	return ahead, behind, nil
 }
 
-// getRepoName tries to extract the repo name from a remote URL,
-// falling back to first remote or local folder name if needed.
+// GetRepoName tries to extract the repository name from its remote URL,
+// falling back to the first remote name or the local folder name if needed.
 func GetRepoName(repoPath string) (string, error) {
 	// 1. Try "origin" first
 	remote, err := RunGitCommand(repoPath, "remote", "get-url", "origin")
@@ -105,6 +110,8 @@ func parseRepoName(remote string) (string, bool) {
 	return "", false
 }
 
+// RunGitCommand executes a git command in dir and returns its stdout as a string.
+// Stderr is discarded, and non-zero exit codes are returned as errors.
 func RunGitCommand(dir string, args ...string) (string, error) {
 	cmd := exec.Command("git", append([]string{"-C", dir}, args...)...)
 

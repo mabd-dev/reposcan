@@ -6,6 +6,8 @@ import (
 	"os"
 )
 
+// Execute runs the root Cobra command for the reposcan CLI.
+// It exits the process with a non-zero status on error.
 func Execute() {
 	err := RootCmd.Execute()
 	if err != nil {

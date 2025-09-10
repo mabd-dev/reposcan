@@ -11,8 +11,8 @@ type gitRepoResult struct {
 	Warnings []string
 }
 
-// GetGitRepoStatesConcurrent runs Checker.Check over repo paths in parallel and
-// returns the states (sorted by Path) and all collected warnings.
+// GetGitRepoStatesConcurrent gathers RepoState for each path concurrently using
+// up to maxWorkers goroutines. It returns states sorted by Path and any warnings.
 func GetGitRepoStatesConcurrent(
 	paths []string,
 	maxWorkers int,

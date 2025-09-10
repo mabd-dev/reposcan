@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+// CheckRepoState inspects the Git repository at path and returns its RepoState
+// along with any non-fatal warnings encountered while collecting information.
 func CheckRepoState(path string) (repoState report.RepoState, warnings []string) {
 	repoName, err := GetRepoName(path)
 	if err != nil {

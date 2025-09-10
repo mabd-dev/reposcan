@@ -5,8 +5,8 @@ import (
 	"hash/fnv"
 )
 
-// StringID returns a stable hash for a given string.
-// Same input always produces the same ID.
+// Hash returns a stable hexadecimal FNV-1a 64-bit hash for s.
+// The same input always produces the same identifier string.
 func Hash(s string) string {
 	h := fnv.New64a()
 	_, _ = h.Write([]byte(s)) // Write never returns error for fnv

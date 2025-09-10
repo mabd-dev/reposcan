@@ -15,6 +15,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+// RootCmd is the root Cobra command implementing the reposcan CLI.
+// It parses flags, loads configuration, runs the scan, and renders output.
 var RootCmd = &cobra.Command{
 	Use:           "reposcan",
 	Short:         "Scan directories for Git repositories and report status",
