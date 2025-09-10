@@ -50,14 +50,14 @@ Path: /home/me/projects/reposcan
 
 ### Go install (latest)
 ```sh
-go install github.com/you/reposcan/cmd/reposcan@latest
+go install github.com/mabd-dev/reposcan/cmd/reposcan@latest
 ```
 
 Make sure $GOPATH/bin (or $HOME/go/bin) is in your $PATH.
 
 ### From source
 ```sh
-git clone https://github.com/MABD-dev/reposcan.git
+git clone https://github.com/mabd-dev/reposcan.git
 cd reposcan
 go build -o reposcan ./cmd/reposcan
 ```
@@ -148,9 +148,9 @@ Each step overrides the one before it
 - [x] Read user customizable `config.toml` file
 - [x] Export Report to json file
 - [x] Support dirignore
+- [x] Use cobra for better cli support
 - [ ] Worker pool for speed
 - [ ] Support git worktrees
-- [ ] Use cobra for better cli support
 
 
 ## 🤝 Contributing
