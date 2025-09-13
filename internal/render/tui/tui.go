@@ -2,14 +2,74 @@ package tui
 
 import (
 	"fmt"
-	"strconv"
-	"strings"
+	"os"
 	"time"
 
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/mabd-dev/reposcan/pkg/report"
 )
+
+type Model struct {
+	report        report.ScanReport
+	tbl           table.Model
+	showDetails   bool
+	isPushing     bool
+	width         int
+	height        int
+	contentHeight int
+}
+
+// ShowReportTUI runs a Bubble Tea UI that renders the ScanReport in a table.
+func ShowReportTUI(r report.ScanReport) error {
+	cols := createColumns(100)
+	rows := createRows(r)
+
+	// Now create the table with columns BEFORE rows
+	t := table.New(
+		table.WithColumns(cols),
+		table.WithRows(rows),
+		table.WithHeight(12),
+	)
+	t.Focus()
+
+	km := table.DefaultKeyMap()
+	setKeymaps(km)
+
+	// if no repos, show an empty placeholder row so the table renders nicely
+	if len(rows) == 0 {
+		t.SetRows([]table.Row{{"", "", "", ""}})
+	}
+
+	t.SetStyles(table.Styles{
+		Header:   HeaderStyle,
+		Selected: SelectedStyle,
+		Cell:     lipgloss.NewStyle(),
+	})
+
+	m := Model{
+		report:        r,
+		tbl:           t,
+		showDetails:   false,
+		width:         100,
+		height:        30,
+		contentHeight: 18,
+	}
+
+	p := tea.NewProgram(m, tea.WithOutput(os.Stdout), tea.WithAltScreen())
+	_, err := p.Run()
+	return err
+}
+
+func setKeymaps(km table.KeyMap) {
+	km.LineUp.SetKeys("up", "k")
+	km.LineDown.SetKeys("down", "j")
+	km.PageUp.SetKeys("pgup", "ctrl+u")
+	km.PageDown.SetKeys("pgdn", "ctrl+d")
+	km.GotoTop.SetKeys("home", "g")
+	km.GotoBottom.SetKeys("end", "G")
+}
 
 func (m Model) Init() tea.Cmd { return nil }
 
@@ -19,7 +79,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width, m.height = msg.Width, msg.Height
 		m.contentHeight = max(6, m.height-6) // leave room for title+footer
 		m.tbl.SetHeight(min(18, m.contentHeight))
-		m.reflowColumns()
+		cols := createColumns(m.width)
+		m.tbl.SetColumns(cols)
 		return m, nil
 
 	case tea.KeyMsg:
@@ -71,62 +132,6 @@ func (m Model) View() string {
 		body,
 		footer,
 	)
-}
-
-func (m Model) detailsView() string {
-	if len(m.report.RepoStates) == 0 {
-		return ""
-	}
-	idx := m.tbl.Cursor()
-	if idx < 0 || idx >= len(m.report.RepoStates) {
-		return ""
-	}
-	rs := m.report.RepoStates[idx]
-
-	uc := len(rs.UncommitedFiles)
-	ucStr := CleanStyle.Render(strconv.Itoa(uc))
-	if uc > 0 {
-		ucStr = DirtyStyle.Render(strconv.Itoa(uc))
-	}
-
-	lines := []string{
-		SectionStyle.Render("\nDetails"),
-		fmt.Sprintf("%s %s", HeaderStyle.Render("Repo:"), rs.Repo),
-		fmt.Sprintf("%s %s", HeaderStyle.Render("Branch:"), rs.Branch),
-		fmt.Sprintf("%s %s", HeaderStyle.Render("Uncommitted:"), ucStr),
-		fmt.Sprintf("%s %s", HeaderStyle.Render("Path:"), rs.Path),
-	}
-	if uc > 0 {
-		lines = append(lines, HeaderStyle.Render("Files:"))
-		for _, f := range rs.UncommitedFiles {
-			lines = append(lines, "  "+lipgloss.NewStyle().Faint(true).Render(f))
-		}
-	}
-	return strings.Join(lines, "\n")
-}
-
-func (m *Model) reflowColumns() {
-	// Compute widths based on terminal width, prioritizing Path.
-	w := max(60, m.width)
-	repoW := 22
-	branchW := 18
-	ucW := 12
-	pathW := w - (repoW + 1 + branchW + 1 + ucW + 3)
-	if pathW < 20 {
-		// shrink others proportionally
-		delta := 20 - pathW
-		repoW = max(12, repoW-delta/2)
-		branchW = max(10, branchW-delta/2)
-		pathW = 20
-	}
-
-	cols := []table.Column{
-		{Title: HeaderStyle.Render("Repo"), Width: repoW},
-		{Title: HeaderStyle.Render("Branch"), Width: branchW},
-		{Title: HeaderStyle.Render("Uncommitted"), Width: ucW},
-		{Title: HeaderStyle.Render("Path"), Width: pathW},
-	}
-	m.tbl.SetColumns(cols)
 }
 
 func min(a, b int) int {
