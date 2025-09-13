@@ -1,11 +1,9 @@
 package main
 
 import (
-	"github.com/MABD-dev/reposcan/cmd/reposcan"
-	//"github.com/MABD-dev/reposcan/internal/render/stdout"
+	"github.com/mabd-dev/reposcan/cmd/reposcan"
 )
 
 func main() {
-	reposcan.Run()
-	//stdout.Start()
+	reposcan.Execute()
 }

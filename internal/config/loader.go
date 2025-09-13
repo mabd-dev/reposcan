@@ -2,14 +2,14 @@ package config
 
 import (
 	"fmt"
-	"github.com/MABD-dev/reposcan/internal/utils"
+	"github.com/mabd-dev/reposcan/internal/utils"
 	"github.com/pelletier/go-toml/v2"
 	"os"
 	"path/filepath"
 )
 
-// Creates config file at [SourceDefaultConfigPath], then write [config] to it
-// If file already exist, do nothing
+// WriteToFile serializes config to TOML and writes it to path.
+// Parent directories are created if necessary.
 func WriteToFile(config Config, path string) error {
 
 	data, err := toml.Marshal(config)
@@ -20,6 +20,7 @@ func WriteToFile(config Config, path string) error {
 	return utils.WriteToFile(data, path)
 }
 
+// Load reads a TOML configuration file from path into conf.
 func Load(conf *Config, path string) error {
 	b, err := os.ReadFile(path)
 	if err != nil {
@@ -28,8 +29,9 @@ func Load(conf *Config, path string) error {
 	return toml.Unmarshal(b, conf)
 }
 
-// Get config file if exists and load it's data. Or create new one with
-// Defaults() function, then save that into newly created file
+// CreateOrReadConfigs loads configuration from the user's home directory.
+// If the config file does not exist, it writes a Defaults() config to disk
+// and returns that default configuration.
 func CreateOrReadConfigs(configFilePath string) (Config, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {

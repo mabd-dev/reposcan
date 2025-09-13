@@ -3,6 +3,7 @@ bin/
 dist/
 *.out
 *.test
+.gocache/
 # Editors
 .idea/
 .vscode/

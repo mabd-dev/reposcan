@@ -1,9 +1,7 @@
 package config
 
-import (
-	"os"
-)
-
+// Config holds all runtime options used by reposcan.
+// Values may come from a config file and/or be overridden by CLI flags.
 type Config struct {
 	Roots     []string   `json:"roots,omitempty"`
 	DirIgnore []string   `json:"dirignore,omitempty"`
@@ -15,16 +13,19 @@ type Config struct {
 	// Print json on std out,
 	Output OutputFormat `json:"output"`
 
+	// Max git checker workers
+	MaxWorkers int `json:"maxWorkers"`
+
 	Version int `json:"version"`
 }
 
+// Defaults returns a Config populated with sensible defaults suitable for
+// typical local development machines.
 func Defaults() Config {
-	home, err := os.UserHomeDir()
+	//home, err := os.UserHomeDir()
 
 	var roots []string = nil
-	if err == nil {
-		roots = []string{home}
-	}
+	roots = []string{"$HOME"}
 
 	defaultDirIgnore := []string{
 		// --- Package managers / deps ---
@@ -35,6 +36,16 @@ func Defaults() Config {
 		"**/.m2/**",
 		"**/.gradle/**",
 		"**/.cargo/**",
+		"**/.gradle/**",
+		"**/.kotlin/**",
+		"**/.java/**",
+		"**/.cargo/**",
+		"**/.zen/**",
+		"**/.bun/**",
+		"**/.codex/**",
+		"**/.android/**",
+		"**/.config/Google/**",
+		"**/.config/JetBrains/**",
 		"**/target/**",
 
 		// --- Build / dist ---
@@ -79,6 +90,7 @@ func Defaults() Config {
 		Only:           OnlyDirty,
 		JsonOutputPath: "",
 		Output:         OutputTable,
+		MaxWorkers:     8,
 		Version:        1,
 	}
 }

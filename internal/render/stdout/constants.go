@@ -5,11 +5,12 @@ import (
 )
 
 const (
-	RepoW   = 24
-	BranchW = 25
-	UncommW = 12
-	AheadW  = 6
-	BehindW = 6
+	RepoW        = 24
+	BranchW      = 20
+	UncommW      = 3
+	AheadW       = 3
+	BehindW      = 3
+	RemoteStateW = 3 + 3 + 3 + 4 //(uncommited files count + aheadW + behindW + 4 space)
 )
 
 var (

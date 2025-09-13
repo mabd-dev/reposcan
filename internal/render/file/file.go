@@ -3,11 +3,13 @@ package file
 import (
 	"encoding/json"
 	"errors"
-	"github.com/MABD-dev/reposcan/internal/utils"
-	"github.com/MABD-dev/reposcan/pkg/report"
+	"github.com/mabd-dev/reposcan/internal/utils"
+	"github.com/mabd-dev/reposcan/pkg/report"
 	"strings"
 )
 
+// WriteScanReport writes the given ScanReport as a JSON file into dirPath.
+// The file name is derived from the report timestamp. Parent directories are ensured.
 func WriteScanReport(
 	report report.ScanReport,
 	dirPath string,

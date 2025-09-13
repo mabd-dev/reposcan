@@ -7,9 +7,10 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/MABD-dev/reposcan/pkg/report"
+	"github.com/mabd-dev/reposcan/pkg/report"
 )
 
+// RenderScanReportAsJson prints the ScanReport to stdout as pretty-printed JSON.
 func RenderScanReportAsJson(r report.ScanReport) error {
 	reportJson, err := json.MarshalIndent(r, "", "    ")
 	if err != nil {
@@ -21,7 +22,8 @@ func RenderScanReportAsJson(r report.ScanReport) error {
 	return nil
 }
 
-// Table setup (Path last, not truncated)
+// RenderScanReportAsTable prints a human-readable table view of the ScanReport
+// to stdout. The Path column is printed last and not truncated.
 func RenderScanReportAsTable(r report.ScanReport) {
 	totalRepos := len(r.RepoStates)
 	dirtyRepos := 0

@@ -1,10 +1,12 @@
-module github.com/MABD-dev/reposcan
+module github.com/mabd-dev/reposcan
 
 go 1.24.6
 
 require (
+	github.com/bmatcuk/doublestar/v4 v4.9.1
 	github.com/fatih/color v1.18.0
 	github.com/pelletier/go-toml/v2 v2.2.4
+	github.com/spf13/cobra v1.8.0
 )
 
 require (
@@ -31,4 +33,5 @@ require (
 	golang.org/x/sync v0.15.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/text v0.3.8 // indirect
+	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 )

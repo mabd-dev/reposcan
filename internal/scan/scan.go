@@ -18,6 +18,8 @@ func FindGitRepos(
 ) (gitReposPaths []string, warnings []string) {
 	matcher := NewIgnoreMatcher(roots, dirignore)
 
+	visitedDir := map[string]struct{}{}
+
 	for _, root := range roots {
 		root = os.ExpandEnv(root)
 
@@ -35,6 +37,11 @@ func FindGitRepos(
 			if matcher.ShouldIgnore(path) {
 				return fs.SkipDir
 			}
+
+			if _, visited := visitedDir[path]; visited {
+				return fs.SkipDir
+			}
+			visitedDir[path] = struct{}{}
 
 			if isGitRepo(path) {
 				gitReposPaths = append(gitReposPaths, path)

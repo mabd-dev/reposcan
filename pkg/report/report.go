@@ -1,9 +1,13 @@
+// Package report defines public types representing the output of a repository
+// scan. Renderers and external tools consume these types to display or persist
+// results.
 package report
 
 import (
 	"time"
 )
 
+// RepoState describes the state of a single Git repository discovered during a scan.
 type RepoState struct {
 	ID              string   `json:"id"`
 	Path            string   `json:"path"`
@@ -14,6 +18,8 @@ type RepoState struct {
 	Behind          int      `json:"behind"`
 }
 
+// ScanReport aggregates the results of scanning one or more directories for
+// Git repositories and summarizing their status.
 type ScanReport struct {
 	Version     int         `json:"version"`
 	RepoStates  []RepoState `json:"repoStates"`
@@ -21,6 +27,7 @@ type ScanReport struct {
 	Warnings    []string    `json:"warnings"`
 }
 
+// IsDirty reports whether the repository has uncommitted changes or is ahead/behind.
 func (r *RepoState) IsDirty() bool {
 	return len(r.UncommitedFiles) > 0 || r.Ahead > 0 || r.Behind > 0
 }
