@@ -9,20 +9,22 @@ import (
 type OutputFormat string
 
 const (
-    // OutputJson prints a JSON object representing a ScanReport to stdout.
-    OutputJson OutputFormat = "json"
+	// OutputJson prints a JSON object representing a ScanReport to stdout.
+	OutputJson OutputFormat = "json"
 
-    // OutputTable prints a human-readable table to stdout.
-    OutputTable OutputFormat = "table"
+	// OutputTable prints a human-readable table to stdout.
+	OutputTable OutputFormat = "table"
 
-    // OutputNone suppresses all stdout output.
-    OutputNone OutputFormat = "none"
+	OutputInteractive OutputFormat = "interactive"
+
+	// OutputNone suppresses all stdout output.
+	OutputNone OutputFormat = "none"
 )
 
 // IsValid reports whether o is a recognized OutputFormat value.
 func (o OutputFormat) IsValid() bool {
 	switch o {
-	case OutputJson, OutputTable, OutputNone:
+	case OutputJson, OutputTable, OutputNone, OutputInteractive:
 		return true
 	}
 	return false
@@ -40,6 +42,8 @@ func CreateOutputFormat(s string) (OutputFormat, error) {
 		return OutputTable, nil
 	case string(OutputNone):
 		return OutputNone, nil
+	case string(OutputInteractive):
+		return OutputInteractive, nil
 	}
 
 	return OutputTable, errors.New(s + " is not valid output format")

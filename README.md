@@ -81,7 +81,7 @@ Common flags
 -h, --help                      # help for reposcan
     --json-output-path string   # Write scan report JSON files to this directory (optional)
 -w, --max-workers int           # Number of concurrent git checks (default 8)
--o, --output string             # Output format: json|table|none (default "table")
+-o, --output string             # Output format: json|table|interactive|none (default "table")
 -r, --root stringArray          # Root directory to scan (repeatable). Defaults to $HOME if unset in config. (default [$HOME])
 ```
 
@@ -123,7 +123,8 @@ only = "dirty"
 # print scan result to stdout. Options:
 #   1. `json`: json object containing scan report struct
 #   2. `table`: human readable representation of scan report
-#   3. `none`: prints nothing
+#   3. `interactive`: human readable representation of scan report with keymaps actions
+#   4. `none`: prints nothing
 Output = "table"
 
 # output scan reports to this folder. All nested folders will be created

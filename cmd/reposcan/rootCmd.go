@@ -157,6 +157,11 @@ func run(configs config.Config) error {
 		}
 	case config.OutputTable:
 		stdout.RenderScanReportAsTable(report)
+	case config.OutputInteractive:
+		// if err := tui.ShowReportTUI(report); err != nil {
+		// 	fmt.Fprintf(os.Stderr, "tui error: %v\n", err)
+		// 	os.Exit(1)
+		// }
 	case config.OutputNone:
 		// no-output
 	}
