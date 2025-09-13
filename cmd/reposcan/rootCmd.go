@@ -3,6 +3,7 @@ package reposcan
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strings"
 	"time"
 
@@ -10,6 +11,7 @@ import (
 	"github.com/mabd-dev/reposcan/internal/gitx"
 	"github.com/mabd-dev/reposcan/internal/render/file"
 	"github.com/mabd-dev/reposcan/internal/render/stdout"
+	"github.com/mabd-dev/reposcan/internal/render/tui"
 	"github.com/mabd-dev/reposcan/internal/scan"
 	"github.com/mabd-dev/reposcan/pkg/report"
 	"github.com/spf13/cobra"
@@ -158,10 +160,10 @@ func run(configs config.Config) error {
 	case config.OutputTable:
 		stdout.RenderScanReportAsTable(report)
 	case config.OutputInteractive:
-		// if err := tui.ShowReportTUI(report); err != nil {
-		// 	fmt.Fprintf(os.Stderr, "tui error: %v\n", err)
-		// 	os.Exit(1)
-		// }
+		if err := tui.ShowReportTUI(report); err != nil {
+			fmt.Fprintf(os.Stderr, "tui error: %v\n", err)
+			os.Exit(1)
+		}
 	case config.OutputNone:
 		// no-output
 	}
