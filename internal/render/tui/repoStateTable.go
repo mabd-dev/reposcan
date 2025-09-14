@@ -70,14 +70,12 @@ func getStateColumnStr(rs report.RepoState) string {
 
 	uc := len(rs.UncommitedFiles)
 	if uc > 0 {
-		//
 		stateStr.WriteString(DirtyStyle.Render(fmt.Sprintf("⏳%-d", uc)))
 	} else if uc == 0 {
 		stateStr.WriteString(FooterStyle.Render(fmt.Sprintf("⏳%-d", uc)))
 	}
 
 	if rs.Ahead > 0 {
-		//
 		stateStr.WriteString(CleanStyle.Render(fmt.Sprintf(" ↑%-d", rs.Ahead)))
 	} else if rs.Ahead < 0 {
 		stateStr.WriteString(DirtyStyle.Render(fmt.Sprintf(" %-s ", "x")))

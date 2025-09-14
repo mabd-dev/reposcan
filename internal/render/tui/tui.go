@@ -106,14 +106,9 @@ func (m Model) View() string {
 			len(m.report.RepoStates), m.report.GeneratedAt.Format(time.RFC3339))),
 	)
 
-	var dirty int
-	for _, rs := range m.report.RepoStates {
-		if len(rs.UncommitedFiles) > 0 {
-			dirty++
-		}
-	}
-	summary := fmt.Sprintf("Total: %d  |  Uncommitted: %d", len(m.report.RepoStates), dirty)
-	if dirty > 0 {
+	dirtyRepos := m.report.DirtyReposCount()
+	summary := fmt.Sprintf("Total: %d  |  Uncommitted: %d", len(m.report.RepoStates), dirtyRepos)
+	if dirtyRepos > 0 {
 		summary = DirtyStyle.Render(summary)
 	} else {
 		summary = CleanStyle.Render(summary)

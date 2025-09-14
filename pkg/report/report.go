@@ -31,3 +31,14 @@ type ScanReport struct {
 func (r *RepoState) IsDirty() bool {
 	return len(r.UncommitedFiles) > 0 || r.Ahead > 0 || r.Behind > 0
 }
+
+// DirtyReposCount count all dirty repos based on [IsDirty] function on RepoState struct
+func (sc *ScanReport) DirtyReposCount() int {
+	dirtyRepos := 0
+	for _, rs := range sc.RepoStates {
+		if rs.IsDirty() {
+			dirtyRepos++
+		}
+	}
+	return dirtyRepos
+}
