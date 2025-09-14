@@ -11,6 +11,23 @@ import (
 	"strings"
 )
 
+// GitPush pushed git repo at given path using `git push` command and returns stdout of the command + error if any
+func GitPush(path string) (string, error) {
+	str, err := RunGitCommand(path, "push", "--porcelain")
+	if err != nil {
+		return "", err
+	}
+	return str, nil
+}
+
+func GitPull(path string) (string, error) {
+	str, err := RunGitCommand(path, "pull")
+	if err != nil {
+		return "", err
+	}
+	return str, nil
+}
+
 // GetRepoBranch returns the current branch name for the Git repository at path.
 func GetRepoBranch(path string) (branchName string, err error) {
 	str, err := RunGitCommand(path, "branch", "--show-current")

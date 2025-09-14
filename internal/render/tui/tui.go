@@ -87,10 +87,21 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "q", "esc", "ctrl+c":
 			return m, tea.Quit
+		case "p":
+			return m, gitPush(m)
+		case "P":
+			return m, gitPull(m)
 		case "enter":
 			m.showDetails = !m.showDetails
 			return m, nil
 		}
+
+	case gitPushResultMsg:
+		fmt.Println("git push result msg", msg)
+
+	case gitPullResultMsg:
+		fmt.Println("git pull result msg", msg)
+
 	}
 
 	var cmd tea.Cmd
@@ -119,7 +130,7 @@ func (m Model) View() string {
 		body = lipgloss.JoinVertical(lipgloss.Left, body, m.detailsView())
 	}
 
-	footer := FooterStyle.Render("↑/↓ to move • enter to toggle details • q to quit")
+	footer := FooterStyle.Render("↑/↓ to move • enter to toggle details • q to quit • p push changes • P pull changes")
 
 	return lipgloss.JoinVertical(lipgloss.Left,
 		header,
