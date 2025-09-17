@@ -1,7 +1,6 @@
 package tui
 
 import (
-	"fmt"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/mabd-dev/reposcan/internal/gitx"
 )
@@ -28,9 +27,4 @@ func gitPush(m Model) tea.Cmd {
 			Output: stdout,
 		}
 	}
-}
-
-func (msg gitPushResultMsg) updateUi(m Model) Model {
-	m.messages = append(m.messages, fmt.Sprintf("git push result msg=%s", msg))
-	return m
 }

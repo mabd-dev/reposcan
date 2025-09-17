@@ -109,7 +109,6 @@ func (m Model) View() string {
 		messages.WriteString("\n")
 	}
 	stdMessages := FooterStyle.Render(messages.String())
-	fmt.Printf("messages length=%d\b", len(m.messages))
 
 	return lipgloss.JoinVertical(lipgloss.Left,
 		header,

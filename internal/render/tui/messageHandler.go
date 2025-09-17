@@ -1,12 +1,9 @@
 package tui
 
 import (
+	"fmt"
 	tea "github.com/charmbracelet/bubbletea"
 )
-
-type MsgHandler interface {
-	updateUi(m Model) Model
-}
 
 func handleMsg(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
@@ -33,8 +30,53 @@ func handleMsg(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, gitFetch(m)
 		}
 
-	case MsgHandler:
-		m = msg.updateUi(m)
+	// Git functions
+	case gitPushResultMsg:
+		m.messages = append(m.messages, fmt.Sprintf("git push result msg=%s", msg))
+		return m, gitRefreshRepo(m)
+
+	case gitPullResultMsg:
+		if len(msg.Err) != 0 {
+			// TODO: handle error
+			fmt.Println("error pulling git repo=", msg)
+			return m, nil
+		}
+
+		m.messages = append(m.messages, fmt.Sprintf("git pull result msg=%s", msg))
+
+		idx := m.tbl.Cursor()
+		rs := m.report.RepoStates[idx]
+
+		index := getRepoIndex(m.reposBeingUpdated, rs.ID)
+		if index != -1 {
+			m.reposBeingUpdated = deleteRepo(m.reposBeingUpdated, index)
+		}
+		return m, gitRefreshRepo(m)
+
+	case gitFetchResultMsg:
+		if len(msg.Err) != 0 {
+			return m, nil
+		}
+
+		m.messages = append(m.messages, fmt.Sprintf("git fetch result msg=%s", msg))
+
+		idx := m.tbl.Cursor()
+		rs := m.report.RepoStates[idx]
+
+		index := getRepoIndex(m.reposBeingUpdated, rs.ID)
+		if index != -1 {
+			m.reposBeingUpdated = deleteRepo(m.reposBeingUpdated, index)
+		}
+
+		return m, gitRefreshRepo(m)
+
+	case gitRefreshRepoResultMsg:
+		m.report.RepoStates[msg.index] = msg.newRepoState
+
+		rows := createRows(m.report)
+		m.tbl.SetRows(rows)
+
+		return m, nil
 	}
 
 	var cmd tea.Cmd
