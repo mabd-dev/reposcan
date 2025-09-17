@@ -13,7 +13,7 @@ const (
 )
 
 var style = lipgloss.NewStyle().
-	Align(lipgloss.Center)
+	Align(lipgloss.Left)
 
 var (
 	TitleStyle    = style.Bold(true)

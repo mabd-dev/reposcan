@@ -28,6 +28,14 @@ func GitPull(path string) (string, error) {
 	return str, nil
 }
 
+func GitFetch(path string) (string, error) {
+	str, err := RunGitCommand(path, "fetch", "--porcelain")
+	if err != nil {
+		return "", err
+	}
+	return str, nil
+}
+
 // GetRepoBranch returns the current branch name for the Git repository at path.
 func GetRepoBranch(path string) (branchName string, err error) {
 	str, err := RunGitCommand(path, "branch", "--show-current")

@@ -3,6 +3,7 @@ package tui
 import (
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/charmbracelet/bubbles/table"
@@ -12,13 +13,15 @@ import (
 )
 
 type Model struct {
-	report        report.ScanReport
-	tbl           table.Model
-	showDetails   bool
-	isPushing     bool
-	width         int
-	height        int
-	contentHeight int
+	report            report.ScanReport
+	tbl               table.Model
+	showDetails       bool
+	isPushing         bool
+	width             int
+	height            int
+	contentHeight     int
+	reposBeingUpdated []string
+	messages          []string
 }
 
 // ShowReportTUI runs a Bubble Tea UI that renders the ScanReport in a table.
@@ -74,39 +77,7 @@ func setKeymaps(km table.KeyMap) {
 func (m Model) Init() tea.Cmd { return nil }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.WindowSizeMsg:
-		m.width, m.height = msg.Width, msg.Height
-		m.contentHeight = max(6, m.height-6) // leave room for title+footer
-		m.tbl.SetHeight(min(18, m.contentHeight))
-		cols := createColumns(m.width)
-		m.tbl.SetColumns(cols)
-		return m, nil
-
-	case tea.KeyMsg:
-		switch msg.String() {
-		case "q", "esc", "ctrl+c":
-			return m, tea.Quit
-		case "p":
-			return m, gitPush(m)
-		case "P":
-			return m, gitPull(m)
-		case "enter":
-			m.showDetails = !m.showDetails
-			return m, nil
-		}
-
-	case gitPushResultMsg:
-		fmt.Println("git push result msg", msg)
-
-	case gitPullResultMsg:
-		fmt.Println("git pull result msg", msg)
-
-	}
-
-	var cmd tea.Cmd
-	m.tbl, cmd = m.tbl.Update(msg)
-	return m, cmd
+	return handleMsg(m, msg)
 }
 
 func (m Model) View() string {
@@ -130,13 +101,22 @@ func (m Model) View() string {
 		body = lipgloss.JoinVertical(lipgloss.Left, body, m.detailsView())
 	}
 
-	footer := FooterStyle.Render("↑/↓ to move • enter to toggle details • q to quit • p push changes • P pull changes")
+	footer := FooterStyle.Render("↑/↓ to move • enter to toggle details • q to quit • p push changes • P pull changes • f fetch remote")
+
+	var messages strings.Builder
+	for _, msg := range m.messages {
+		messages.WriteString(msg)
+		messages.WriteString("\n")
+	}
+	stdMessages := FooterStyle.Render(messages.String())
+	fmt.Printf("messages length=%d\b", len(m.messages))
 
 	return lipgloss.JoinVertical(lipgloss.Left,
 		header,
 		summary,
 		body,
 		footer,
+		stdMessages,
 	)
 }
 
