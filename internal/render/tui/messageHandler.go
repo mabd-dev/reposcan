@@ -15,18 +15,10 @@ func handleMsg(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case tea.KeyMsg:
-		switch msg.String() {
-		case "q", "esc", "ctrl+c":
-			return m, tea.Quit
-		case "enter":
-			m.showDetails = !m.showDetails
-			return m, nil
-		case "p":
-			return m, gitPush(m)
-		case "P":
-			return m, gitPull(m)
-		case "f":
-			return m, gitFetch(m)
+		if m.showHelp {
+			return handlePopupKeymaps(m, msg)
+		} else {
+			return handleRepoTableKeymaps(m, msg)
 		}
 
 	// Git functions
@@ -72,6 +64,41 @@ func handleMsg(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
+	var cmd tea.Cmd
+	m.tbl, cmd = m.tbl.Update(msg)
+	return m, cmd
+}
+
+func handlePopupKeymaps(m Model, msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "q", "esc":
+		m.showHelp = false
+		return m, nil
+	}
+	return defaultUpdateReturn(m, msg)
+}
+
+func handleRepoTableKeymaps(m Model, msg tea.KeyMsg) (tea.Model, tea.Cmd) {
+	switch msg.String() {
+	case "q", "esc", "ctrl+c":
+		return m, tea.Quit
+	case "enter":
+		m.showDetails = !m.showDetails
+		return m, nil
+	case "p":
+		return m, gitPull(m)
+	case "P":
+		return m, gitPush(m)
+	case "f":
+		return m, gitFetch(m)
+	case "?":
+		m.showHelp = true
+		return m, nil
+	}
+	return defaultUpdateReturn(m, msg)
+}
+
+func defaultUpdateReturn(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	m.tbl, cmd = m.tbl.Update(msg)
 	return m, cmd

@@ -22,6 +22,7 @@ type Model struct {
 	contentHeight     int
 	reposBeingUpdated []string
 	messages          []string
+	showHelp          bool
 }
 
 // ShowReportTUI runs a Bubble Tea UI that renders the ScanReport in a table.
@@ -81,6 +82,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) View() string {
+	if m.showHelp {
+		return generateHelpPopup(m)
+	}
+
 	header := lipgloss.JoinHorizontal(lipgloss.Left,
 		TitleStyle.Render("reposcan"),
 		" ",
@@ -101,7 +106,8 @@ func (m Model) View() string {
 		body = lipgloss.JoinVertical(lipgloss.Left, body, m.detailsView())
 	}
 
-	footer := FooterStyle.Render("↑/↓ to move • enter to toggle details • q to quit • p push changes • P pull changes • f fetch remote")
+	// TODO: show most important keybindings here as well
+	footer := FooterStyle.Render("↑/↓ to move • ? keybindings")
 
 	var messages strings.Builder
 	for _, msg := range m.messages {
@@ -110,13 +116,14 @@ func (m Model) View() string {
 	}
 	stdMessages := FooterStyle.Render(messages.String())
 
-	return lipgloss.JoinVertical(lipgloss.Left,
+	base := lipgloss.JoinVertical(lipgloss.Left,
 		header,
 		summary,
 		body,
 		footer,
 		stdMessages,
 	)
+	return base
 }
 
 func min(a, b int) int {

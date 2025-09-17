@@ -26,4 +26,14 @@ var (
 	FooterStyle   = style.Faint(true)
 	SectionStyle  = style.Bold(true).Foreground(lipgloss.Color("5"))
 	SelectedStyle = style.Foreground(lipgloss.Color("0")).Background(lipgloss.Color("12"))
+	DimStyle      = lipgloss.NewStyle().
+			Background(lipgloss.Color("#1f1f1f")).
+			Foreground(lipgloss.Color("#777")) // soft gray
+
+	PopupStyle = lipgloss.NewStyle().
+			Border(lipgloss.RoundedBorder()).
+			BorderForeground(lipgloss.Color("62")).
+			Padding(1, 2).
+		// Width(120).
+		Align(lipgloss.Left)
 )
