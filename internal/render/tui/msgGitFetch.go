@@ -19,7 +19,7 @@ func gitFetch(m Model) tea.Cmd {
 	m.reposBeingUpdated = append(m.reposBeingUpdated, rs.ID)
 
 	return func() tea.Msg {
-		stdout, err := gitx.GitPull(repoPath)
+		stdout, err := gitx.GitFetch(repoPath)
 
 		errMessage := ""
 		if err != nil {

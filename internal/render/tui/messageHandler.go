@@ -15,6 +15,9 @@ func handleMsg(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case tea.KeyMsg:
+		// Clear warning on each keybinding click
+		m.warnings = []string{}
+
 		if m.showHelp {
 			return handlePopupKeymaps(m, msg)
 		} else {
@@ -28,6 +31,7 @@ func handleMsg(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case gitPullResultMsg:
 		if len(msg.Err) != 0 {
+			m.addWarning(msg.Err)
 			return m, nil
 		}
 
@@ -42,6 +46,7 @@ func handleMsg(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case gitFetchResultMsg:
 		if len(msg.Err) != 0 {
+			m.addWarning(msg.Err)
 			return m, nil
 		}
 

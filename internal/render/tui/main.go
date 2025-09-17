@@ -21,8 +21,12 @@ type Model struct {
 	height            int
 	contentHeight     int
 	reposBeingUpdated []string
-	messages          []string
+	warnings          []string
 	showHelp          bool
+}
+
+func (m Model) addWarning(msg string) {
+	m.warnings = append(m.warnings, msg)
 }
 
 // ShowReportTUI runs a Bubble Tea UI that renders the ScanReport in a table.
@@ -43,7 +47,7 @@ func ShowReportTUI(r report.ScanReport) error {
 
 	// if no repos, show an empty placeholder row so the table renders nicely
 	if len(rows) == 0 {
-		t.SetRows([]table.Row{{"", "", "", ""}})
+		t.SetRows([]table.Row{{"", "", ""}})
 	}
 
 	t.SetStyles(table.Styles{
@@ -110,7 +114,7 @@ func (m Model) View() string {
 	footer := FooterStyle.Render("↑/↓ to move • ? keybindings")
 
 	var messages strings.Builder
-	for _, msg := range m.messages {
+	for _, msg := range m.warnings {
 		messages.WriteString(msg)
 		messages.WriteString("\n")
 	}

@@ -7,7 +7,6 @@ import (
 )
 
 type gitRefreshRepoResultMsg struct {
-	warnings     []string
 	newRepoState report.RepoState
 	index        int
 }
@@ -17,10 +16,9 @@ func gitRefreshRepo(m Model) tea.Cmd {
 	repoPath := m.report.RepoStates[index].Path
 
 	return func() tea.Msg {
-		newRepoState, warnings := gitx.CheckRepoState(repoPath)
+		newRepoState, _ := gitx.CheckRepoState(repoPath)
 
 		return gitRefreshRepoResultMsg{
-			warnings:     warnings,
 			newRepoState: newRepoState,
 			index:        index,
 		}
