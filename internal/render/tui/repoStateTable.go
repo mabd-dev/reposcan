@@ -54,7 +54,7 @@ func (m Model) detailsView() string {
 		fmt.Sprintf("%s %s", HeaderStyle.Render("Path:"), rs.Path),
 	}
 	if uc > 0 {
-		lines = append(lines, HeaderStyle.Render("Files:"))
+		lines = append(lines, HeaderStyle.Render("Uncommited Files:"))
 		for _, f := range rs.UncommitedFiles {
 			lines = append(lines, "  "+lipgloss.NewStyle().Faint(true).Render(f))
 		}
