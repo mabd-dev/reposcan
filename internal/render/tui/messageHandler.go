@@ -1,7 +1,6 @@
 package tui
 
 import (
-	"fmt"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -31,18 +30,14 @@ func handleMsg(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 
 	// Git functions
+
 	case gitPushResultMsg:
-		m.messages = append(m.messages, fmt.Sprintf("git push result msg=%s", msg))
 		return m, gitRefreshRepo(m)
 
 	case gitPullResultMsg:
 		if len(msg.Err) != 0 {
-			// TODO: handle error
-			fmt.Println("error pulling git repo=", msg)
 			return m, nil
 		}
-
-		m.messages = append(m.messages, fmt.Sprintf("git pull result msg=%s", msg))
 
 		idx := m.tbl.Cursor()
 		rs := m.report.RepoStates[idx]
@@ -57,8 +52,6 @@ func handleMsg(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 		if len(msg.Err) != 0 {
 			return m, nil
 		}
-
-		m.messages = append(m.messages, fmt.Sprintf("git fetch result msg=%s", msg))
 
 		idx := m.tbl.Cursor()
 		rs := m.report.RepoStates[idx]
