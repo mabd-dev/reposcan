@@ -8,7 +8,7 @@ func generateHelpPopup(m Model) string {
 	helpBox := PopupStyle.
 		Render(`
 Keybindings:
-  ↑/↓    - Navigate up and down (or using j/k)
+  ↑/↓    - Navigate up and down (or j/k)
   Enter  - Open git repository report details
   ?      - Keybindings
   p	  - Pull changes
