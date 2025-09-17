@@ -6,10 +6,9 @@ import (
 
 // TODO: move github.com/mabd-dev/internal/render/constants/ module
 const (
-	RepoW        = 15
-	BranchW      = 15
+	RepoW        = 20
+	BranchW      = 20
 	RemoteStateW = 20 //(uncommited files count + aheadW + behindW + 4 space)
-	PathW        = 50
 )
 
 var style = lipgloss.NewStyle().

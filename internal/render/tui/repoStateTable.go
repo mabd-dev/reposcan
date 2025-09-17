@@ -18,7 +18,6 @@ func createRows(r report.ScanReport) []table.Row {
 			RepoStyle.Render(rs.Repo),
 			BranchStyle.Render(rs.Branch),
 			state,
-			RepoStyle.Render(rs.Path),
 		})
 	}
 	return rows
@@ -28,13 +27,11 @@ func createColumns(maxWidth int) []table.Column {
 	repoW := maxWidth * RepoW / 100
 	branchW := maxWidth * BranchW / 100
 	remoteStateW := maxWidth * RemoteStateW / 100
-	pathW := maxWidth * PathW / 100
 
 	return []table.Column{
 		{Title: HeaderStyle.Render("Repo"), Width: repoW},
 		{Title: HeaderStyle.Render("Branch"), Width: branchW},
 		{Title: HeaderStyle.Render("State"), Width: remoteStateW},
-		{Title: HeaderStyle.Render("Path"), Width: pathW},
 	}
 }
 
