@@ -14,6 +14,7 @@ func generateHelpPopup(width int, height int) string {
 			HeaderStyle.Render("p"),
 			HeaderStyle.Render("P"),
 			HeaderStyle.Render("f"),
+			HeaderStyle.Render("c"),
 			HeaderStyle.Render("q"),
 		),
 		lipgloss.JoinVertical(
@@ -23,6 +24,7 @@ func generateHelpPopup(width int, height int) string {
 			RepoStyle.Render(" - Pull changes"),
 			RepoStyle.Render(" - Push changes"),
 			RepoStyle.Render(" - Fetch changes"),
+			RepoStyle.Render(" - Copy repo path to clipboard"),
 			RepoStyle.Render(" - Quit"),
 		),
 	)

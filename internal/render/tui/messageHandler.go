@@ -2,6 +2,7 @@ package tui
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
+	"golang.design/x/clipboard"
 )
 
 func handleMsg(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -35,8 +36,7 @@ func handleMsg(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 
-		idx := m.tbl.Cursor()
-		rs := m.report.RepoStates[idx]
+		rs := m.getReportAtCursor()
 
 		index := getRepoIndex(m.reposBeingUpdated, rs.ID)
 		if index != -1 {
@@ -50,8 +50,7 @@ func handleMsg(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 
-		idx := m.tbl.Cursor()
-		rs := m.report.RepoStates[idx]
+		rs := m.getReportAtCursor()
 
 		index := getRepoIndex(m.reposBeingUpdated, rs.ID)
 		if index != -1 {
@@ -69,9 +68,7 @@ func handleMsg(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
-	var cmd tea.Cmd
-	m.tbl, cmd = m.tbl.Update(msg)
-	return m, cmd
+	return defaultUpdateReturn(m, msg)
 }
 
 func handlePopupKeymaps(m Model, msg tea.KeyMsg) (tea.Model, tea.Cmd) {
@@ -96,6 +93,9 @@ func handleRepoTableKeymaps(m Model, msg tea.KeyMsg) (tea.Model, tea.Cmd) {
 		return m, gitPush(m)
 	case "f":
 		return m, gitFetch(m)
+	case "c":
+		copyPathToClipbard(m)
+		return m, nil
 	case "?":
 		m.showHelp = true
 		return m, nil
@@ -107,4 +107,11 @@ func defaultUpdateReturn(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	m.tbl, cmd = m.tbl.Update(msg)
 	return m, cmd
+}
+
+func copyPathToClipbard(m Model) {
+	rs := m.getReportAtCursor()
+
+	clipboard.Write(clipboard.FmtText, []byte(rs.Path))
+	// show notification or something to tell user that copy to clipboard worked
 }

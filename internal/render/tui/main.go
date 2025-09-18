@@ -10,6 +10,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/mabd-dev/reposcan/pkg/report"
+	"golang.design/x/clipboard"
 )
 
 type Model struct {
@@ -25,8 +26,13 @@ type Model struct {
 	showHelp          bool
 }
 
-func (m Model) addWarning(msg string) {
+func (m *Model) addWarning(msg string) {
 	m.warnings = append(m.warnings, msg)
+}
+
+func (m Model) getReportAtCursor() report.RepoState {
+	idx := m.tbl.Cursor()
+	return m.report.RepoStates[idx]
 }
 
 // ShowReportTUI runs a Bubble Tea UI that renders the ScanReport in a table.
@@ -63,10 +69,16 @@ func ShowReportTUI(r report.ScanReport) error {
 		width:         100,
 		height:        30,
 		contentHeight: 18,
+		warnings:      []string{},
+	}
+
+	err := clipboard.Init()
+	if err != nil {
+		m.warnings = append(m.warnings, err.Error())
 	}
 
 	p := tea.NewProgram(m, tea.WithOutput(os.Stdout), tea.WithAltScreen())
-	_, err := p.Run()
+	_, err = p.Run()
 	return err
 }
 
