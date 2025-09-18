@@ -4,19 +4,31 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-func generateHelpPopup(m Model) string {
-	helpBox := PopupStyle.
-		Render(`
-Keybindings:
-  ↑/↓    - Navigate up and down (or j/k)
-  Enter  - Open git repository report details
-  ?      - Keybindings
-  p	  - Pull changes
-  P	  - Push changes 
-  f	  - Fetch remote
-  q	  - Quit
-        `)
+func generateHelpPopup(width int, height int) string {
+	lines2 := lipgloss.JoinHorizontal(
+		lipgloss.Left,
+		lipgloss.JoinVertical(
+			lipgloss.Right,
+			HeaderStyle.Render("↑/↓"),
+			HeaderStyle.Render("Enter"),
+			HeaderStyle.Render("p"),
+			HeaderStyle.Render("P"),
+			HeaderStyle.Render("f"),
+			HeaderStyle.Render("q"),
+		),
+		lipgloss.JoinVertical(
+			lipgloss.Left,
+			RepoStyle.Render(" - Navigate up and down (or j/k)"),
+			RepoStyle.Render(" - Open git repository report details"),
+			RepoStyle.Render(" - Pull changes"),
+			RepoStyle.Render(" - Push changes"),
+			RepoStyle.Render(" - Fetch changes"),
+			RepoStyle.Render(" - Quit"),
+		),
+	)
 
-	popup := lipgloss.Place(m.width, m.height, lipgloss.Center, lipgloss.Center, helpBox)
+	helpBox := PopupStyle.Render(lines2)
+
+	popup := lipgloss.Place(width, height, lipgloss.Center, lipgloss.Center, helpBox)
 	return popup
 }
