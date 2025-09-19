@@ -28,11 +28,21 @@ var (
 	DimStyle      = lipgloss.NewStyle().
 			Background(lipgloss.Color("#1f1f1f")).
 			Foreground(lipgloss.Color("#777")) // soft gray
+)
 
+// Popup styles
+var (
 	PopupStyle = lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(lipgloss.Color("62")).
 			Padding(1, 2).
 		// Width(120).
 		Align(lipgloss.Left)
+
+	PopupTitleStyle = lipgloss.
+			NewStyle().
+			Bold(true).
+			Padding(0, 2, 0, 2).
+			Italic(true).
+			Margin(1)
 )
