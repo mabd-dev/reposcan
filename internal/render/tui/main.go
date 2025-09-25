@@ -68,9 +68,9 @@ func ShowReportTUI(r report.ScanReport) error {
 	}
 
 	t.SetStyles(table.Styles{
-		Header:   HeaderStyle,
-		Selected: SelectedStyle,
+		Header:   HeaderWithBGStyle,
 		Cell:     lipgloss.NewStyle(),
+		Selected: SelectedStyle,
 	})
 
 	m := Model{
@@ -149,9 +149,10 @@ func (m Model) View() string {
 		summary = CleanStyle.Render(summary)
 	}
 
-	body := m.tbl.View()
+	body := ReposTableStyle.Render(m.tbl.View())
+
 	if m.reposFilter.show {
-		textfieldStr := m.reposFilter.textInput.View()
+		textfieldStr := ReposFilterStyle.Render(m.reposFilter.textInput.View())
 		body = lipgloss.JoinVertical(lipgloss.Top, body, textfieldStr)
 	}
 
@@ -176,6 +177,7 @@ func (m Model) View() string {
 		footer,
 		stdMessages,
 	)
+
 	return base
 }
 

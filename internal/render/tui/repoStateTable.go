@@ -15,8 +15,8 @@ func createRows(repoStates []report.RepoState) []table.Row {
 		state := getStateColumnStr(rs)
 
 		rows = append(rows, table.Row{
-			RepoStyle.Render(rs.Repo),
-			BranchStyle.Render(rs.Branch),
+			rs.Repo,
+			rs.Branch,
 			state,
 		})
 	}
@@ -29,9 +29,9 @@ func createColumns(maxWidth int) []table.Column {
 	remoteStateW := maxWidth * RemoteStateW / 100
 
 	return []table.Column{
-		{Title: HeaderStyle.Render("Repo"), Width: repoW},
-		{Title: HeaderStyle.Render("Branch"), Width: branchW},
-		{Title: HeaderStyle.Render("State"), Width: remoteStateW},
+		{Title: "Repo", Width: repoW},
+		{Title: "Branch", Width: branchW},
+		{Title: "State", Width: remoteStateW},
 	}
 }
 
@@ -67,25 +67,25 @@ func getStateColumnStr(rs report.RepoState) string {
 
 	uc := len(rs.UncommitedFiles)
 	if uc > 0 {
-		stateStr.WriteString(DirtyStyle.Render(fmt.Sprintf("⏳%-d", uc)))
+		stateStr.WriteString(fmt.Sprintf("⏳%-d", uc))
 	} else if uc == 0 {
-		stateStr.WriteString(FooterStyle.Render(fmt.Sprintf("⏳%-d", uc)))
+		stateStr.WriteString(fmt.Sprintf("⏳%-d", uc))
 	}
 
 	if rs.Ahead > 0 {
-		stateStr.WriteString(CleanStyle.Render(fmt.Sprintf(" ↑%-d", rs.Ahead)))
+		stateStr.WriteString(fmt.Sprintf(" ↑%-d", rs.Ahead))
 	} else if rs.Ahead < 0 {
-		stateStr.WriteString(DirtyStyle.Render(fmt.Sprintf(" %-s ", "x")))
+		stateStr.WriteString(fmt.Sprintf(" %-s ", "x"))
 	} else {
-		stateStr.WriteString(FooterStyle.Render(fmt.Sprintf(" ↑%-d", 0)))
+		stateStr.WriteString(fmt.Sprintf(" ↑%-d", 0))
 	}
 
 	if rs.Behind > 0 {
-		stateStr.WriteString(CleanStyle.Render(fmt.Sprintf(" ↓%-d", rs.Behind)))
+		stateStr.WriteString(fmt.Sprintf(" ↓%-d", rs.Behind))
 	} else if rs.Behind < 0 {
-		stateStr.WriteString(DirtyStyle.Render(fmt.Sprintf(" %-s", "x")))
+		stateStr.WriteString(fmt.Sprintf(" %-s", "x"))
 	} else {
-		stateStr.WriteString(FooterStyle.Render(fmt.Sprintf(" ↓%-d", 0)))
+		stateStr.WriteString(fmt.Sprintf(" ↓%-d", 0))
 	}
 
 	return stateStr.String()
