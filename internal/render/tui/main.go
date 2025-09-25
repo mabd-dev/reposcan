@@ -7,11 +7,21 @@ import (
 	"time"
 
 	"github.com/charmbracelet/bubbles/table"
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/mabd-dev/reposcan/pkg/report"
 	"golang.design/x/clipboard"
 )
+
+type reposFilter struct {
+	textInput textinput.Model
+	show      bool
+}
+
+func (rf reposFilter) IsVisible() bool {
+	return rf.show && rf.textInput.Focused()
+}
 
 type Model struct {
 	report            report.ScanReport
@@ -24,6 +34,7 @@ type Model struct {
 	reposBeingUpdated []string
 	warnings          []string
 	showHelp          bool
+	reposFilter       reposFilter
 }
 
 func (m *Model) addWarning(msg string) {
@@ -38,7 +49,7 @@ func (m Model) getReportAtCursor() report.RepoState {
 // ShowReportTUI runs a Bubble Tea UI that renders the ScanReport in a table.
 func ShowReportTUI(r report.ScanReport) error {
 	cols := createColumns(100)
-	rows := createRows(r)
+	rows := createRows(r.RepoStates)
 
 	// Now create the table with columns BEFORE rows
 	t := table.New(
@@ -70,6 +81,7 @@ func ShowReportTUI(r report.ScanReport) error {
 		height:        30,
 		contentHeight: 18,
 		warnings:      []string{},
+		reposFilter:   createRrepoFilter(),
 	}
 
 	err := clipboard.Init()
@@ -85,16 +97,36 @@ func ShowReportTUI(r report.ScanReport) error {
 func setKeymaps(km table.KeyMap) {
 	km.LineUp.SetKeys("up", "k")
 	km.LineDown.SetKeys("down", "j")
-	km.PageUp.SetKeys("pgup", "ctrl+u")
-	km.PageDown.SetKeys("pgdn", "ctrl+d")
+	km.PageUp.SetKeys("pgup", tea.KeyCtrlU.String())
+	km.PageDown.SetKeys("pgdn", tea.KeyCtrlD.String())
 	km.GotoTop.SetKeys("home", "g")
 	km.GotoBottom.SetKeys("end", "G")
+}
+
+func createRrepoFilter() reposFilter {
+	ti := textinput.New()
+	ti.Placeholder = "Filter by repo name"
+	ti.Focus()
+	ti.CharLimit = 156
+	ti.Width = 100
+	return reposFilter{
+		textInput: ti,
+		show:      false,
+	}
 }
 
 func (m Model) Init() tea.Cmd { return nil }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	return handleMsg(m, msg)
+	var focusedModel focusedModel
+	if m.showHelp {
+		focusedModel = popupFM{}
+	} else if m.reposFilter.IsVisible() {
+		focusedModel = reposFilterTextFieldFM{}
+	} else {
+		focusedModel = reposTableFM{}
+	}
+	return focusedModel.update(m, msg)
 }
 
 func (m Model) View() string {
@@ -118,6 +150,11 @@ func (m Model) View() string {
 	}
 
 	body := m.tbl.View()
+	if m.reposFilter.show {
+		textfieldStr := m.reposFilter.textInput.View()
+		body = lipgloss.JoinVertical(lipgloss.Top, body, textfieldStr)
+	}
+
 	if m.showDetails {
 		body = lipgloss.JoinVertical(lipgloss.Left, body, m.detailsView())
 	}

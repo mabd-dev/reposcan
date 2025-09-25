@@ -9,9 +9,9 @@ import (
 	"github.com/mabd-dev/reposcan/pkg/report"
 )
 
-func createRows(r report.ScanReport) []table.Row {
-	rows := make([]table.Row, 0, len(r.RepoStates))
-	for _, rs := range r.RepoStates {
+func createRows(repoStates []report.RepoState) []table.Row {
+	rows := make([]table.Row, 0, len(repoStates))
+	for _, rs := range repoStates {
 		state := getStateColumnStr(rs)
 
 		rows = append(rows, table.Row{
