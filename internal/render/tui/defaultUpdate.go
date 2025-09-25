@@ -49,7 +49,8 @@ func defaultUpdate(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 	case gitRefreshRepoResultMsg:
 		m.report.RepoStates[msg.index] = msg.newRepoState
 
-		rows := createRows(m.report.RepoStates)
+		repos := filterRepos(m.report.RepoStates, m.reposFilter.textInput.Value())
+		rows := createRows(repos)
 		m.tbl.SetRows(rows)
 
 		return m, nil
