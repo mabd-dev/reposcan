@@ -4,13 +4,6 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-// TODO: move github.com/mabd-dev/internal/render/constants/ module
-const (
-	RepoW        = 40
-	BranchW      = 40
-	RemoteStateW = 20 //(uncommited files count + aheadW + behindW + 4 space)
-)
-
 var style = lipgloss.NewStyle().
 	Align(lipgloss.Left)
 

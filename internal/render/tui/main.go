@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"time"
 
-	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/mabd-dev/reposcan/internal/render/tui/reposTable"
+	rth "github.com/mabd-dev/reposcan/internal/render/tui/reposTableHeader"
 	"github.com/mabd-dev/reposcan/pkg/report"
 	"golang.design/x/clipboard"
 )
@@ -24,8 +24,8 @@ func (rf reposFilter) IsVisible() bool {
 }
 
 type Model struct {
-	report            report.ScanReport
-	tbl               table.Model
+	reposTable        reposTable.Table
+	rtHeader          rth.Header
 	showDetails       bool
 	isPushing         bool
 	width             int
@@ -41,41 +41,31 @@ func (m *Model) addWarning(msg string) {
 	m.warnings = append(m.warnings, msg)
 }
 
-func (m Model) getReportAtCursor() report.RepoState {
-	idx := m.tbl.Cursor()
-	return m.report.RepoStates[idx]
-}
-
 // ShowReportTUI runs a Bubble Tea UI that renders the ScanReport in a table.
 func ShowReportTUI(r report.ScanReport) error {
-	cols := createColumns(100)
-	rows := createRows(r.RepoStates)
-
-	// Now create the table with columns BEFORE rows
-	t := table.New(
-		table.WithColumns(cols),
-		table.WithRows(rows),
-		table.WithHeight(12),
-	)
-	t.Focus()
-
-	km := table.DefaultKeyMap()
-	setKeymaps(km)
-
-	// if no repos, show an empty placeholder row so the table renders nicely
-	if len(rows) == 0 {
-		t.SetRows([]table.Row{{"", "", ""}})
+	reposTable := reposTable.Table{
+		Style: reposTable.Style{
+			Header:      HeaderWithBGStyle,
+			SelectedRow: SelectedStyle,
+			Cell:        lipgloss.NewStyle(),
+		},
 	}
+	reposTable.SetReport(r)
+	reposTable.InitUi()
 
-	t.SetStyles(table.Styles{
-		Header:   HeaderWithBGStyle,
-		Cell:     lipgloss.NewStyle(),
-		Selected: SelectedStyle,
-	})
+	reposTableHeader := rth.Header{
+		Style: rth.Style{
+			Title:    TitleStyle,
+			SubTitle: SubtleStyle,
+			Dirty:    DirtyStyle,
+			Clean:    CleanStyle,
+		},
+	}
+	reposTableHeader.SetReport(r)
 
 	m := Model{
-		report:        r,
-		tbl:           t,
+		reposTable:    reposTable,
+		rtHeader:      reposTableHeader,
 		showDetails:   false,
 		width:         100,
 		height:        30,
@@ -92,15 +82,6 @@ func ShowReportTUI(r report.ScanReport) error {
 	p := tea.NewProgram(m, tea.WithOutput(os.Stdout), tea.WithAltScreen())
 	_, err = p.Run()
 	return err
-}
-
-func setKeymaps(km table.KeyMap) {
-	km.LineUp.SetKeys("up", "k")
-	km.LineDown.SetKeys("down", "j")
-	km.PageUp.SetKeys("pgup", tea.KeyCtrlU.String())
-	km.PageDown.SetKeys("pgdn", tea.KeyCtrlD.String())
-	km.GotoTop.SetKeys("home", "g")
-	km.GotoBottom.SetKeys("end", "G")
 }
 
 func createRrepoFilter() reposFilter {
@@ -134,22 +115,8 @@ func (m Model) View() string {
 		return generateHelpPopup(m.width, m.height)
 	}
 
-	header := lipgloss.JoinHorizontal(lipgloss.Left,
-		TitleStyle.Render("reposcan"),
-		" ",
-		SubtleStyle.Render(fmt.Sprintf("• %d repos • generated %s",
-			len(m.report.RepoStates), m.report.GeneratedAt.Format(time.RFC3339))),
-	)
-
-	dirtyRepos := m.report.DirtyReposCount()
-	summary := fmt.Sprintf("Total: %d  |  Uncommitted: %d", len(m.report.RepoStates), dirtyRepos)
-	if dirtyRepos > 0 {
-		summary = DirtyStyle.Render(summary)
-	} else {
-		summary = CleanStyle.Render(summary)
-	}
-
-	body := ReposTableStyle.Render(m.tbl.View())
+	header := m.rtHeader.View()
+	body := m.reposTable.View()
 
 	if m.reposFilter.show {
 		textfieldStr := ReposFilterStyle.Render(m.reposFilter.textInput.View())
@@ -172,13 +139,38 @@ func (m Model) View() string {
 
 	base := lipgloss.JoinVertical(lipgloss.Left,
 		header,
-		summary,
 		body,
 		footer,
 		stdMessages,
 	)
 
 	return base
+}
+
+func (m Model) detailsView() string {
+	// return ""
+	rs := m.reposTable.GetCurrentRepoState()
+	if rs == nil {
+		return ""
+	}
+
+	uc := len(rs.UncommitedFiles)
+
+	// return ""
+
+	lines := []string{
+		SectionStyle.Render("\nDetails"),
+		fmt.Sprintf("%s %s", HeaderStyle.Render("Repo:"), rs.Repo),
+		fmt.Sprintf("%s %s", HeaderStyle.Render("Branch:"), rs.Branch),
+		fmt.Sprintf("%s %s", HeaderStyle.Render("Path:"), rs.Path),
+	}
+	if uc > 0 {
+		lines = append(lines, HeaderStyle.Render("Uncommited Files:"))
+		for _, f := range rs.UncommitedFiles {
+			lines = append(lines, "  "+lipgloss.NewStyle().Faint(true).Render(f))
+		}
+	}
+	return strings.Join(lines, "\n")
 }
 
 func min(a, b int) int {

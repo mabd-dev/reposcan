@@ -50,13 +50,16 @@ func (r reposTableFM) update(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "f":
 			return m, gitFetch(m)
 		case "c":
-			rs := m.getReportAtCursor()
+			rs := m.reposTable.GetCurrentRepoState()
+			if rs == nil {
+				return m, nil
+			}
 			clipboard.Write(clipboard.FmtText, []byte(rs.Path))
 			return m, nil
 		case "/":
 			m.reposFilter.show = true
 			m.reposFilter.textInput.Focus()
-			m.tbl.Blur()
+			m.reposTable.Blur()
 			return m, nil
 		case "?":
 			m.showHelp = true
@@ -71,7 +74,7 @@ func (r reposTableFM) update(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 		return nm, cmd
 	}
 
-	m.tbl, cmd = m.tbl.Update(msg)
+	m.reposTable, cmd = m.reposTable.Update(msg)
 	return m, cmd
 }
 
@@ -86,9 +89,8 @@ func (r reposFilterTextFieldFM) update(m Model, msg tea.Msg) (tea.Model, tea.Cmd
 			m.reposFilter.show = false
 			m.reposFilter.textInput.SetValue("")
 
-			rows := createRows(m.report.RepoStates)
-			m.tbl.SetRows(rows)
-			m.tbl.Focus()
+			m.reposTable.Filter("")
+			m.reposTable.Focus()
 
 			return m, nil
 		case "enter":
@@ -97,7 +99,7 @@ func (r reposFilterTextFieldFM) update(m Model, msg tea.Msg) (tea.Model, tea.Cmd
 			}
 
 			m.reposFilter.textInput.Blur()
-			m.tbl.Focus()
+			m.reposTable.Focus()
 
 			return m, nil
 		}
@@ -107,14 +109,7 @@ func (r reposFilterTextFieldFM) update(m Model, msg tea.Msg) (tea.Model, tea.Cmd
 	var cmd tea.Cmd
 	m.reposFilter.textInput, cmd = m.reposFilter.textInput.Update(msg)
 
-	// Update repos list
-	repos := filterRepos(m.report.RepoStates, m.reposFilter.textInput.Value())
-	rows := createRows(repos)
-	m.tbl.SetRows(rows)
-
-	if len(rows) > 0 {
-		m.tbl.SetCursor(0)
-	}
+	m.reposTable.Filter(m.reposFilter.textInput.Value())
 
 	return m, cmd
 }

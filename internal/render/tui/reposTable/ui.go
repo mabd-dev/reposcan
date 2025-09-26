@@ -1,27 +1,22 @@
-package tui
+package reposTable
 
 import (
 	"fmt"
-	"strings"
-
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/mabd-dev/reposcan/pkg/report"
+	"strings"
 )
 
-func createRows(repoStates []report.RepoState) []table.Row {
-	rows := make([]table.Row, 0, len(repoStates))
-	for _, rs := range repoStates {
-		state := getStateColumnStr(rs)
+const (
+	RepoW        = 40
+	BranchW      = 40
+	RemoteStateW = 20 //(uncommited files count + aheadW + behindW + 4 space)
+)
 
-		rows = append(rows, table.Row{
-			rs.Repo,
-			rs.Branch,
-			state,
-		})
-	}
-	return rows
-}
+var ReposTableStyle = lipgloss.NewStyle().
+	Border(lipgloss.RoundedBorder()).
+	BorderForeground(lipgloss.Color("63"))
 
 func createColumns(maxWidth int) []table.Column {
 	repoW := maxWidth * RepoW / 100
@@ -35,31 +30,18 @@ func createColumns(maxWidth int) []table.Column {
 	}
 }
 
-func (m Model) detailsView() string {
-	if len(m.report.RepoStates) == 0 {
-		return ""
-	}
-	idx := m.tbl.Cursor()
-	if idx < 0 || idx >= len(m.report.RepoStates) {
-		return ""
-	}
-	rs := m.report.RepoStates[idx]
+func createRows(repoStates []report.RepoState) []table.Row {
+	rows := make([]table.Row, 0, len(repoStates))
+	for _, rs := range repoStates {
+		state := getStateColumnStr(rs)
 
-	uc := len(rs.UncommitedFiles)
-
-	lines := []string{
-		SectionStyle.Render("\nDetails"),
-		fmt.Sprintf("%s %s", HeaderStyle.Render("Repo:"), rs.Repo),
-		fmt.Sprintf("%s %s", HeaderStyle.Render("Branch:"), rs.Branch),
-		fmt.Sprintf("%s %s", HeaderStyle.Render("Path:"), rs.Path),
+		rows = append(rows, table.Row{
+			rs.Repo,
+			rs.Branch,
+			state,
+		})
 	}
-	if uc > 0 {
-		lines = append(lines, HeaderStyle.Render("Uncommited Files:"))
-		for _, f := range rs.UncommitedFiles {
-			lines = append(lines, "  "+lipgloss.NewStyle().Faint(true).Render(f))
-		}
-	}
-	return strings.Join(lines, "\n")
+	return rows
 }
 
 func getStateColumnStr(rs report.RepoState) string {

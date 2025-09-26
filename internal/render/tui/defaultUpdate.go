@@ -9,9 +9,7 @@ func defaultUpdate(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width, m.height = msg.Width, msg.Height
 		m.contentHeight = max(6, m.height-6) // leave room for title+footer
-		m.tbl.SetHeight(min(18, m.contentHeight))
-		cols := createColumns(m.width)
-		m.tbl.SetColumns(cols)
+		m.reposTable.UpdateWindowSize(m.width, min(18, m.contentHeight))
 		return m, nil
 
 	case gitPushResultMsg:
@@ -23,7 +21,10 @@ func defaultUpdate(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 
-		rs := m.getReportAtCursor()
+		rs := m.reposTable.GetCurrentRepoState()
+		if rs == nil {
+			return m, nil
+		}
 
 		index := getRepoIndex(m.reposBeingUpdated, rs.ID)
 		if index != -1 {
@@ -37,7 +38,10 @@ func defaultUpdate(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 
-		rs := m.getReportAtCursor()
+		rs := m.reposTable.GetCurrentRepoState()
+		if rs == nil {
+			return m, nil
+		}
 
 		index := getRepoIndex(m.reposBeingUpdated, rs.ID)
 		if index != -1 {
@@ -47,11 +51,7 @@ func defaultUpdate(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, gitRefreshRepo(m)
 
 	case gitRefreshRepoResultMsg:
-		m.report.RepoStates[msg.index] = msg.newRepoState
-
-		repos := filterRepos(m.report.RepoStates, m.reposFilter.textInput.Value())
-		rows := createRows(repos)
-		m.tbl.SetRows(rows)
+		m.reposTable.UpdateRepoState(msg.index, msg.newRepoState)
 
 		return m, nil
 	}
