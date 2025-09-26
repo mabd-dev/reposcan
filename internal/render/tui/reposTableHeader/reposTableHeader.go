@@ -10,8 +10,10 @@ import (
 )
 
 type Header struct {
-	report report.ScanReport
-	Style  Style
+	repoStatesCount int
+	dirtyRepos      int
+	generatedAt     string
+	Style           Style
 }
 
 type Style struct {
@@ -21,17 +23,23 @@ type Style struct {
 	Clean    lipgloss.Style
 }
 
+func (h *Header) SetReport(report report.ScanReport) {
+	h.repoStatesCount = len(report.RepoStates)
+	h.dirtyRepos = report.DirtyReposCount()
+	h.generatedAt = report.GeneratedAt.Format(time.RFC3339)
+
+}
+
 func (h *Header) View() string {
 	header := lipgloss.JoinHorizontal(lipgloss.Left,
 		h.Style.Title.Render("reposcan"),
 		" ",
 		h.Style.SubTitle.Render(fmt.Sprintf("• %d repos • generated %s",
-			len(h.report.RepoStates), h.report.GeneratedAt.Format(time.RFC3339))),
+			h.repoStatesCount, h.generatedAt)),
 	)
 
-	dirtyRepos := h.report.DirtyReposCount()
-	summary := fmt.Sprintf("Total: %d  |  Uncommitted: %d", len(h.report.RepoStates), dirtyRepos)
-	if dirtyRepos > 0 {
+	summary := fmt.Sprintf("Total: %d  |  Uncommitted: %d", h.repoStatesCount, h.dirtyRepos)
+	if h.dirtyRepos > 0 {
 		summary = h.Style.Dirty.Render(summary)
 	} else {
 		summary = h.Style.Clean.Render(summary)
@@ -42,8 +50,4 @@ func (h *Header) View() string {
 		summary,
 	)
 	return base
-}
-
-func (h *Header) SetReport(report report.ScanReport) {
-	h.report = report
 }
