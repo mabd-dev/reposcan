@@ -6,13 +6,11 @@ import (
 	"fmt"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/mabd-dev/reposcan/pkg/report"
-	"time"
 )
 
 type Header struct {
 	repoStatesCount int
 	dirtyRepos      int
-	generatedAt     string
 	Style           Style
 }
 
@@ -26,7 +24,6 @@ type Style struct {
 func (h *Header) SetReport(report report.ScanReport) {
 	h.repoStatesCount = len(report.RepoStates)
 	h.dirtyRepos = report.DirtyReposCount()
-	h.generatedAt = report.GeneratedAt.Format(time.RFC3339)
 
 }
 
@@ -34,20 +31,20 @@ func (h *Header) View() string {
 	header := lipgloss.JoinHorizontal(lipgloss.Left,
 		h.Style.Title.Render("reposcan"),
 		" ",
-		h.Style.SubTitle.Render(fmt.Sprintf("• %d repos • generated %s",
-			h.repoStatesCount, h.generatedAt)),
+		h.Style.SubTitle.Render(fmt.Sprintf("• %d repos",
+			h.repoStatesCount)),
 	)
 
-	summary := fmt.Sprintf("Total: %d  |  Uncommitted: %d", h.repoStatesCount, h.dirtyRepos)
-	if h.dirtyRepos > 0 {
-		summary = h.Style.Dirty.Render(summary)
-	} else {
-		summary = h.Style.Clean.Render(summary)
-	}
+	// summary := fmt.Sprintf("Total: %d  |  Uncommitted: %d", h.repoStatesCount, h.dirtyRepos)
+	// if h.dirtyRepos > 0 {
+	// 	summary = h.Style.Dirty.Render(summary)
+	// } else {
+	// 	summary = h.Style.Clean.Render(summary)
+	// }
 
 	base := lipgloss.JoinVertical(lipgloss.Left,
 		header,
-		summary,
+		// summary,
 	)
 	return base
 }
