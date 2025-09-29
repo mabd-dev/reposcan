@@ -30,7 +30,6 @@ type Model struct {
 	isPushing         bool
 	width             int
 	height            int
-	contentHeight     int
 	reposBeingUpdated []string
 	warnings          []string
 	showHelp          bool
@@ -51,7 +50,7 @@ func ShowReportTUI(r report.ScanReport) error {
 		},
 	}
 	reposTable.SetReport(r)
-	reposTable.InitUi()
+	reposTable.InitUI()
 
 	reposTableHeader := rth.Header{
 		Style: rth.Style{
@@ -64,14 +63,13 @@ func ShowReportTUI(r report.ScanReport) error {
 	reposTableHeader.SetReport(r)
 
 	m := Model{
-		reposTable:    reposTable,
-		rtHeader:      reposTableHeader,
-		showDetails:   false,
-		width:         100,
-		height:        30,
-		contentHeight: 18,
-		warnings:      []string{},
-		reposFilter:   createRrepoFilter(),
+		reposTable:  reposTable,
+		rtHeader:    reposTableHeader,
+		showDetails: false,
+		width:       100,
+		height:      30,
+		warnings:    []string{},
+		reposFilter: createRrepoFilter(),
 	}
 
 	err := clipboard.Init()

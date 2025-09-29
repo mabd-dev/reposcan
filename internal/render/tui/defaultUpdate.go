@@ -8,8 +8,9 @@ func defaultUpdate(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.width, m.height = msg.Width, msg.Height
-		m.contentHeight = max(6, m.height-6) // leave room for title+footer
-		m.reposTable.UpdateWindowSize(m.width, min(18, m.contentHeight))
+
+		availableSpace := m.height
+		m.reposTable.UpdateWindowSize(m.width, availableSpace*50/100)
 		return m, nil
 
 	case gitPushResultMsg:

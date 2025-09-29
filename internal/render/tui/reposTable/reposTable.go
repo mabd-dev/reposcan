@@ -1,4 +1,4 @@
-// reposTable is a Model that renders git repo states in a table. Providing functionality like filterning
+// package reposTable is a Model that renders git repo states in a table. Providing functionality like filterning
 package reposTable
 
 import (
@@ -22,7 +22,7 @@ type Style struct {
 	Cell        lipgloss.Style
 }
 
-func (rt *Table) InitUi() {
+func (rt *Table) InitUI() {
 	cols := createColumns(100)
 	rows := createRows(rt.report.RepoStates)
 
