@@ -43,12 +43,12 @@ func (r reposTableFM) update(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "enter":
 			m.showDetails = !m.showDetails
 			return m, nil
-		case "p":
-			return m, gitPull(m)
-		case "P":
-			return m, gitPush(m)
-		case "f":
-			return m, gitFetch(m)
+		// case "p":
+		// 	return m, gitPull(m)
+		// case "P":
+		// 	return m, gitPush(m)
+		// case "f":
+		// 	return m, gitFetch(m)
 		case "c":
 			rs := m.reposTable.GetCurrentRepoState()
 			if rs == nil {
