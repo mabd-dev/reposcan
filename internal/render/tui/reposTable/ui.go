@@ -5,6 +5,7 @@ import (
 	"github.com/charmbracelet/bubbles/table"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/mabd-dev/reposcan/pkg/report"
+	"strconv"
 	"strings"
 )
 
@@ -32,11 +33,13 @@ func createColumns(maxWidth int) []table.Column {
 
 func createRows(repoStates []report.RepoState) []table.Row {
 	rows := make([]table.Row, 0, len(repoStates))
-	for _, rs := range repoStates {
+	for index, rs := range repoStates {
 		state := getStateColumnStr(rs)
 
+		repoNameCol := strconv.Itoa(index+1) + ") " + rs.Repo
+
 		rows = append(rows, table.Row{
-			rs.Repo,
+			repoNameCol,
 			rs.Branch,
 			state,
 		})
