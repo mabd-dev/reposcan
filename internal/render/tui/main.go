@@ -148,15 +148,12 @@ func (m Model) View() string {
 }
 
 func (m Model) detailsView() string {
-	// return ""
 	rs := m.reposTable.GetCurrentRepoState()
 	if rs == nil {
 		return ""
 	}
 
 	uc := len(rs.UncommitedFiles)
-
-	// return ""
 
 	lines := []string{
 		SectionStyle.Render("\nDetails"),
@@ -166,8 +163,22 @@ func (m Model) detailsView() string {
 	}
 	if uc > 0 {
 		lines = append(lines, HeaderStyle.Render("Uncommited Files:"))
-		for _, f := range rs.UncommitedFiles {
-			lines = append(lines, "  "+lipgloss.NewStyle().Faint(true).Render(f))
+
+		files := rs.UncommitedFiles
+
+		maxUncommitedFilesToShow := 3
+		trimUncommitedFiles := len(files) > maxUncommitedFilesToShow
+
+		if trimUncommitedFiles {
+			files = files[:maxUncommitedFilesToShow]
+		}
+
+		for _, f := range files {
+			lines = append(lines, "  "+FooterStyle.Render(f))
+		}
+
+		if trimUncommitedFiles {
+			lines = append(lines, FooterStyle.Render("  ..."))
 		}
 	}
 	return strings.Join(lines, "\n")
