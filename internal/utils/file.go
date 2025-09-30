@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // FileExists checks if a file exists at the given path.
@@ -40,12 +41,41 @@ func DirExists(path string) (bool, error) {
 	return false, err
 }
 
-// Write data to file and create all parent folders if needed
+// WriteToFile Write data to file and create all parent folders if needed
 func WriteToFile(data []byte, path string) error {
+	path, err := expandPath(path)
+	if err != nil {
+		return err
+	}
+
 	// Create parent directories if needed
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return err
 	}
 
 	return os.WriteFile(path, data, 0o644)
+}
+
+// expandPath expands a filesystem path that may start with '~' into an
+// absolute path using the current user's home directory.
+//
+// Examples:
+//
+//	expandPath("~/Documents/file.txt")   -> "/Users/someone/Documents/file.txt"
+//	expandPath("/tmp/file.txt")          -> "/tmp/file.txt"
+//
+// Only a leading '~' is expanded. If the path does not start with '~',
+// it is returned unchanged.
+//
+// Returns the expanded absolute path or an error if the home directory
+// cannot be determined.
+func expandPath(path string) (string, error) {
+	if strings.HasPrefix(path, "~") {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", err
+		}
+		return filepath.Join(home, path[1:]), nil
+	}
+	return path, nil
 }
