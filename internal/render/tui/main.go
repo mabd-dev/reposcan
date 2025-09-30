@@ -4,72 +4,72 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"time"
 
-	"github.com/charmbracelet/bubbles/table"
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/mabd-dev/reposcan/internal/render/tui/reposTable"
+	rth "github.com/mabd-dev/reposcan/internal/render/tui/reposTableHeader"
 	"github.com/mabd-dev/reposcan/pkg/report"
 	"golang.design/x/clipboard"
 )
 
+type reposFilter struct {
+	textInput textinput.Model
+	show      bool
+}
+
+func (rf reposFilter) IsVisible() bool {
+	return rf.show && rf.textInput.Focused()
+}
+
 type Model struct {
-	report            report.ScanReport
-	tbl               table.Model
+	reposTable        reposTable.Table
+	rtHeader          rth.Header
 	showDetails       bool
 	isPushing         bool
 	width             int
 	height            int
-	contentHeight     int
 	reposBeingUpdated []string
 	warnings          []string
 	showHelp          bool
+	reposFilter       reposFilter
 }
 
 func (m *Model) addWarning(msg string) {
 	m.warnings = append(m.warnings, msg)
 }
 
-func (m Model) getReportAtCursor() report.RepoState {
-	idx := m.tbl.Cursor()
-	return m.report.RepoStates[idx]
-}
-
 // ShowReportTUI runs a Bubble Tea UI that renders the ScanReport in a table.
 func ShowReportTUI(r report.ScanReport) error {
-	cols := createColumns(100)
-	rows := createRows(r)
-
-	// Now create the table with columns BEFORE rows
-	t := table.New(
-		table.WithColumns(cols),
-		table.WithRows(rows),
-		table.WithHeight(12),
-	)
-	t.Focus()
-
-	km := table.DefaultKeyMap()
-	setKeymaps(km)
-
-	// if no repos, show an empty placeholder row so the table renders nicely
-	if len(rows) == 0 {
-		t.SetRows([]table.Row{{"", "", ""}})
+	reposTable := reposTable.Table{
+		Style: reposTable.Style{
+			Header:      HeaderWithBGStyle,
+			SelectedRow: SelectedStyle,
+			Cell:        lipgloss.NewStyle(),
+		},
 	}
+	reposTable.SetReport(r)
+	reposTable.InitUI()
 
-	t.SetStyles(table.Styles{
-		Header:   HeaderStyle,
-		Selected: SelectedStyle,
-		Cell:     lipgloss.NewStyle(),
-	})
+	reposTableHeader := rth.Header{
+		Style: rth.Style{
+			Title:    TitleStyle,
+			SubTitle: SubtleStyle,
+			Dirty:    DirtyStyle,
+			Clean:    CleanStyle,
+		},
+	}
+	reposTableHeader.SetReport(r)
 
 	m := Model{
-		report:        r,
-		tbl:           t,
-		showDetails:   false,
-		width:         100,
-		height:        30,
-		contentHeight: 18,
-		warnings:      []string{},
+		reposTable:  reposTable,
+		rtHeader:    reposTableHeader,
+		showDetails: false,
+		width:       100,
+		height:      30,
+		warnings:    []string{},
+		reposFilter: createRrepoFilter(),
 	}
 
 	err := clipboard.Init()
@@ -82,19 +82,30 @@ func ShowReportTUI(r report.ScanReport) error {
 	return err
 }
 
-func setKeymaps(km table.KeyMap) {
-	km.LineUp.SetKeys("up", "k")
-	km.LineDown.SetKeys("down", "j")
-	km.PageUp.SetKeys("pgup", "ctrl+u")
-	km.PageDown.SetKeys("pgdn", "ctrl+d")
-	km.GotoTop.SetKeys("home", "g")
-	km.GotoBottom.SetKeys("end", "G")
+func createRrepoFilter() reposFilter {
+	ti := textinput.New()
+	ti.Placeholder = "Filter by repo name"
+	ti.Focus()
+	ti.CharLimit = 156
+	ti.Width = 100
+	return reposFilter{
+		textInput: ti,
+		show:      false,
+	}
 }
 
 func (m Model) Init() tea.Cmd { return nil }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	return handleMsg(m, msg)
+	var focusedModel focusedModel
+	if m.showHelp {
+		focusedModel = popupFM{}
+	} else if m.reposFilter.IsVisible() {
+		focusedModel = reposFilterTextFieldFM{}
+	} else {
+		focusedModel = reposTableFM{}
+	}
+	return focusedModel.update(m, msg)
 }
 
 func (m Model) View() string {
@@ -102,22 +113,14 @@ func (m Model) View() string {
 		return generateHelpPopup(m.width, m.height)
 	}
 
-	header := lipgloss.JoinHorizontal(lipgloss.Left,
-		TitleStyle.Render("reposcan"),
-		" ",
-		SubtleStyle.Render(fmt.Sprintf("• %d repos • generated %s",
-			len(m.report.RepoStates), m.report.GeneratedAt.Format(time.RFC3339))),
-	)
+	header := m.rtHeader.View()
+	body := m.reposTable.View()
 
-	dirtyRepos := m.report.DirtyReposCount()
-	summary := fmt.Sprintf("Total: %d  |  Uncommitted: %d", len(m.report.RepoStates), dirtyRepos)
-	if dirtyRepos > 0 {
-		summary = DirtyStyle.Render(summary)
-	} else {
-		summary = CleanStyle.Render(summary)
+	if m.reposFilter.show {
+		textfieldStr := ReposFilterStyle.Render(m.reposFilter.textInput.View())
+		body = lipgloss.JoinVertical(lipgloss.Top, body, textfieldStr)
 	}
 
-	body := m.tbl.View()
 	if m.showDetails {
 		body = lipgloss.JoinVertical(lipgloss.Left, body, m.detailsView())
 	}
@@ -134,12 +137,49 @@ func (m Model) View() string {
 
 	base := lipgloss.JoinVertical(lipgloss.Left,
 		header,
-		summary,
 		body,
 		footer,
 		stdMessages,
 	)
+
 	return base
+}
+
+func (m Model) detailsView() string {
+	rs := m.reposTable.GetCurrentRepoState()
+	if rs == nil {
+		return ""
+	}
+
+	uc := len(rs.UncommitedFiles)
+
+	lines := []string{
+		SectionStyle.Render("\nDetails"),
+		fmt.Sprintf("%s %s", HeaderStyle.Render("Repo:"), rs.Repo),
+		fmt.Sprintf("%s %s", HeaderStyle.Render("Branch:"), rs.Branch),
+		fmt.Sprintf("%s %s", HeaderStyle.Render("Path:"), rs.Path),
+	}
+	if uc > 0 {
+		lines = append(lines, HeaderStyle.Render("Uncommited Files:"))
+
+		files := rs.UncommitedFiles
+
+		maxUncommitedFilesToShow := 3
+		trimUncommitedFiles := len(files) > maxUncommitedFilesToShow
+
+		if trimUncommitedFiles {
+			files = files[:maxUncommitedFilesToShow]
+		}
+
+		for _, f := range files {
+			lines = append(lines, "  "+FooterStyle.Render(f))
+		}
+
+		if trimUncommitedFiles {
+			lines = append(lines, FooterStyle.Render("  ..."))
+		}
+	}
+	return strings.Join(lines, "\n")
 }
 
 func min(a, b int) int {
