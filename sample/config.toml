@@ -7,16 +7,6 @@ Roots = [
 # options: all|dirty
 Only = 'dirty'
 
-
-# folder output path -- this will be used to export report scan to that folder
-# if folder does not exist, it will be created recursively
-JsonOutputPath = '/somewhere/nice'
-
-
-# options: table|json|none
-Output = "table"
-
-
 DirIgnore = [
     # --- Package managers / deps ---
     "**/node_modules/**",
@@ -74,3 +64,12 @@ DirIgnore = [
     "~/Library/**",
 ]
 
+
+[output]
+
+# options: table|json|interactive|none
+type = "interactive"
+
+# folder output path -- this will be used to export report scan to that folder
+# if folder does not exist, it will be created recursively
+jsonPath = "somewhere/nice/"

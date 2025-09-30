@@ -94,7 +94,7 @@ func readFlags(cmd *cobra.Command, configs *config.Config) error {
 	if err != nil {
 		return err
 	}
-	(*configs).Output = outputFormat
+	(*configs).Output.Type = outputFormat
 
 	// Read only-filter flag
 	onlyFilterStr, err := cmd.Flags().GetString("filter")
@@ -112,7 +112,7 @@ func readFlags(cmd *cobra.Command, configs *config.Config) error {
 	if err != nil {
 		return err
 	}
-	(*configs).JsonOutputPath = jsonOutputPath
+	(*configs).Output.JSONPath = jsonOutputPath
 
 	// Read max workers flag
 	maxWorkers, err := cmd.Flags().GetInt("max-workers")
@@ -151,7 +151,7 @@ func run(configs config.Config) error {
 		Warnings:    reportWarnings,
 	}
 
-	switch configs.Output {
+	switch configs.Output.Type {
 	case config.OutputJson:
 		err := stdout.RenderScanReportAsJson(report)
 		if err != nil {
@@ -168,7 +168,7 @@ func run(configs config.Config) error {
 		// no-output
 	}
 
-	trimmedJsonOutputPath := strings.TrimSpace(configs.JsonOutputPath)
+	trimmedJsonOutputPath := strings.TrimSpace(configs.Output.JSONPath)
 	if len(trimmedJsonOutputPath) > 0 {
 		err := file.WriteScanReport(report, trimmedJsonOutputPath)
 		if err != nil {

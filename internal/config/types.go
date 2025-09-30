@@ -7,13 +7,7 @@ type Config struct {
 	DirIgnore []string   `toml:"dirignore,omitempty"`
 	Only      OnlyFilter `toml:"only,omitempty"`
 
-	// Write report json to path, ignored if empty
-	JsonOutputPath string `toml:"jsonOutputPath,omitempty"`
-
-	// Print json on std out,
-	Output OutputFormat `toml:"output"`
-
-	NewOutput Output `toml:"newOutput"`
+	Output Output `toml:"output"`
 
 	// Max git checker workers
 	MaxWorkers int `toml:"maxWorkers"`
@@ -86,13 +80,17 @@ func Defaults() Config {
 		"~/Library/**",
 	}
 
+	newOutput := Output{
+		Type:     OutputTable,
+		JSONPath: "",
+	}
+
 	return Config{
-		Roots:          roots,
-		DirIgnore:      defaultDirIgnore,
-		Only:           OnlyDirty,
-		JsonOutputPath: "",
-		Output:         OutputTable,
-		MaxWorkers:     8,
-		Version:        1,
+		Roots:      roots,
+		DirIgnore:  defaultDirIgnore,
+		Only:       OnlyDirty,
+		Output:     newOutput,
+		MaxWorkers: 8,
+		Version:    1,
 	}
 }

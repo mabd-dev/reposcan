@@ -59,26 +59,26 @@ func Validate(config Config) ValidationResult {
 		errors = append(errors, issue)
 	}
 
-	if !config.Output.IsValid() {
+	if !config.Output.Type.IsValid() {
 		issue := Issue{
 			Field:   "Output",
-			Message: "'" + string(config.Output) + "' is not a valid OutputFormat",
+			Message: "'" + string(config.Output.Type) + "' is not a valid OutputFormat",
 		}
 		errors = append(errors, issue)
 	}
 
-	if len(strings.TrimSpace(config.JsonOutputPath)) > 0 {
-		outputFileExists, err := utils.DirExists(config.JsonOutputPath)
+	if len(strings.TrimSpace(config.Output.JSONPath)) > 0 {
+		outputFileExists, err := utils.DirExists(config.Output.JSONPath)
 		if err != nil {
 			issue := Issue{
 				Field:   "jsonOutputPath",
-				Message: "error reading path: '" + config.JsonOutputPath + "' error=" + err.Error(),
+				Message: "error reading path: '" + config.Output.JSONPath + "' error=" + err.Error(),
 			}
 			warnings = append(warnings, issue)
 		} else if !outputFileExists {
 			issue := Issue{
 				Field:   "jsonOutputPath",
-				Message: "output path '" + config.JsonOutputPath + "' does not exists!",
+				Message: "output path '" + config.Output.JSONPath + "' does not exists!",
 			}
 			warnings = append(warnings, issue)
 		}

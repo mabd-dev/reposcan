@@ -46,14 +46,14 @@ func TestReadFlags_AppliesAllFlags(t *testing.T) {
 	if len(cfg.DirIgnore) != 2 {
 		t.Fatalf("dirIgnore not applied: %#v", cfg.DirIgnore)
 	}
-	if cfg.Output != config.OutputJson {
-		t.Fatalf("output not applied: %v", cfg.Output)
+	if cfg.Output.Type != config.OutputJson {
+		t.Fatalf("output not applied: %v", cfg.Output.Type)
 	}
 	if cfg.Only != config.OnlyAll {
 		t.Fatalf("only filter not applied: %v", cfg.Only)
 	}
-	if cfg.JsonOutputPath != "/tmp/out" {
-		t.Fatalf("json output path not applied: %v", cfg.JsonOutputPath)
+	if cfg.Output.JSONPath != "/tmp/out" {
+		t.Fatalf("json output path not applied: %v", cfg.Output.JSONPath)
 	}
 	if cfg.MaxWorkers != 16 {
 		t.Fatalf("max workers not applied: %d", cfg.MaxWorkers)
