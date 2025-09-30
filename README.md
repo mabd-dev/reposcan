@@ -105,13 +105,6 @@ version = 1
 # directories to search for git repos inside
 roots = ["~/Code", "~/work"]
 
-# Skip these directories (glob patterns)
-dirIgnore = [
-  "/node_modules/",
-  "/.cache/",
-  "/.local/"
-]
-
 # options:
 #   1. `dirty`: any of uncommitted files, unpushed commits, or unpulled changes
 #   2. `uncommitted`: working tree has uncommitted files
@@ -120,20 +113,32 @@ dirIgnore = [
 #   5. `all`: include all git repos
 only = "dirty"
 
+# Skip these directories (glob patterns)
+dirIgnore = [
+  "/node_modules/",
+  "/.cache/",
+  "/.local/"
+]
+
+
+[output]
+
 # print scan result to stdout. Options:
 #   1. `json`: json object containing scan report struct
 #   2. `table`: human readable representation of scan report
 #   3. `interactive`: human readable representation of scan report with keymaps actions
 #   4. `none`: prints nothing
-Output = "table"
+type = "interactive"
 
 # output scan reports to this folder. All nested folders will be created
 # if they don't exist
-JsonOutputPath = '/home/me/Documents/code/projects/Go/reposcan/output-samples'
+jsonPath = "/somewhere/nice"
+
+
 ```
 > You can still override everything via CLI flags.
 
-check [sample/config.toml](sample) for detailed configuration with examples
+check [sample/config.toml](sample/config.toml) for detailed configuration with examples
 
 ### Config lookup order
 1. Load default values
