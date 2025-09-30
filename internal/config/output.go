@@ -5,6 +5,11 @@ import (
 	"strings"
 )
 
+type Output struct {
+	Type     OutputFormat `toml:"type"`
+	JSONPath string       `toml:"jsonPath"`
+}
+
 // OutputFormat controls how scan results are rendered.
 type OutputFormat string
 

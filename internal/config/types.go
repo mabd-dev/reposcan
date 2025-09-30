@@ -13,6 +13,8 @@ type Config struct {
 	// Print json on std out,
 	Output OutputFormat `toml:"output"`
 
+	NewOutput Output `toml:"newOutput"`
+
 	// Max git checker workers
 	MaxWorkers int `toml:"maxWorkers"`
 
