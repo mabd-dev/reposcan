@@ -13,7 +13,7 @@ func generateHelpPopup(width int, height int) string {
 			lipgloss.JoinVertical(
 				lipgloss.Right,
 				HeaderStyle.Render("↑/↓ -"),
-				HeaderStyle.Render("Enter -"),
+				HeaderStyle.Render("<enter> -"),
 				// HeaderStyle.Render("p -"),
 				// HeaderStyle.Render("P -"),
 				// HeaderStyle.Render("f -"),
@@ -29,7 +29,7 @@ func generateHelpPopup(width int, height int) string {
 				// RepoStyle.Render(" Push changes"),
 				// RepoStyle.Render(" Fetch changes"),
 				RepoStyle.Render(" Copy repo path to clipboard"),
-				RepoStyle.Render(" Filter repos by name"),
+				RepoStyle.Render(" Filter by repo/branch name"),
 				RepoStyle.Render(" Quit"),
 			),
 		),

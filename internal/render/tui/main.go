@@ -88,7 +88,7 @@ func ShowReportTUI(r report.ScanReport) error {
 
 func createRrepoFilter() reposFilter {
 	ti := textinput.New()
-	ti.Placeholder = "Filter by repo name"
+	ti.Placeholder = "Filter by repo/branch name"
 	ti.Focus()
 	ti.CharLimit = 156
 	ti.Width = 100

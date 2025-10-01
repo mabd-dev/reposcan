@@ -1,4 +1,4 @@
-// package reposTable is a Model that renders git repo states in a table. Providing functionality like filterning
+// Package reposTable is a Model that renders git repo states in a table. Providing functionality like filterning
 package reposTable
 
 import (
@@ -94,7 +94,8 @@ func (rt *Table) Filter(query string) {
 	} else {
 		rt.filteredRepos = []report.RepoState{}
 		for _, rs := range rt.report.RepoStates {
-			if strings.Contains(strings.ToLower(rs.Repo), q) {
+			if strings.Contains(strings.ToLower(rs.Repo), q) ||
+				strings.Contains(strings.ToLower(rs.Branch), q) {
 				rt.filteredRepos = append(rt.filteredRepos, rs)
 			}
 		}
