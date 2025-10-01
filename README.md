@@ -105,12 +105,6 @@ version = 1
 # directories to search for git repos inside
 roots = ["~/Code", "~/work"]
 
-# options:
-#   1. `dirty`: any of uncommitted files, unpushed commits, or unpulled changes
-#   2. `uncommitted`: working tree has uncommitted files
-#   3. `unpushed`: local branch is ahead of upstream
-#   4. `unpulled`: local branch is behind upstream
-#   5. `all`: include all git repos
 only = "dirty"
 
 # Skip these directories (glob patterns)
@@ -122,16 +116,7 @@ dirIgnore = [
 
 
 [output]
-
-# print scan result to stdout. Options:
-#   1. `json`: json object containing scan report struct
-#   2. `table`: human readable representation of scan report
-#   3. `interactive`: human readable representation of scan report with keymaps actions
-#   4. `none`: prints nothing
 type = "interactive"
-
-# output scan reports to this folder. All nested folders will be created
-# if they don't exist
 jsonPath = "/somewhere/nice"
 
 
@@ -150,13 +135,14 @@ Each step overrides the one before it
 ## 🛣 Roadmap
 - [x] Scan filesystem for repos
 - [x] Detect uncommitted files, unpushed commits and unpulled commits
-- [x] Stdout Ouput in 3 formats: json, table, none
+- [x] Stdout Ouput in 3 formats: json, table, interactive, none
 - [x] Read user customizable `config.toml` file
 - [x] Export Report to json file
 - [x] Support dirignore
-- [x] Use cobra for better cli support
 - [ ] Worker pool for speed
 - [ ] Support git worktrees
+- [ ] Perform git push/pull/fetch on repos
+- [ ] Show branches with their states on each repo
 
 
 ## 🤝 Contributing
