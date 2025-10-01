@@ -54,7 +54,9 @@ func (r reposTableFM) update(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 			if rs == nil {
 				return m, nil
 			}
-			clipboard.Write(clipboard.FmtText, []byte(rs.Path))
+
+			path := shellEscapePath(rs.Path)
+			clipboard.Write(clipboard.FmtText, []byte(path))
 			return m, nil
 		case "/":
 			m.reposFilter.show = true
