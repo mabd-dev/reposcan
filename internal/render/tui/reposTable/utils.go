@@ -1,4 +1,4 @@
-package reposTable
+package repostable
 
 import (
 	"github.com/mabd-dev/reposcan/pkg/report"

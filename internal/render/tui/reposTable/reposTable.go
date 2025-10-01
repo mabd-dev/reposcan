@@ -1,5 +1,5 @@
-// Package reposTable is a Model that renders git repo states in a table. Providing functionality like filterning
-package reposTable
+// Package repostable is a Model that renders git repo states in a table. Providing functionality like filterning
+package repostable
 
 import (
 	"github.com/charmbracelet/bubbles/table"

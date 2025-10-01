@@ -1,4 +1,4 @@
-package reposTable
+package repostable
 
 import (
 	"fmt"

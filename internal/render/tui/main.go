@@ -8,8 +8,8 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	"github.com/mabd-dev/reposcan/internal/render/tui/reposTable"
 	rth "github.com/mabd-dev/reposcan/internal/render/tui/reposTableHeader"
+	"github.com/mabd-dev/reposcan/internal/render/tui/repostable"
 	"github.com/mabd-dev/reposcan/pkg/report"
 	"golang.design/x/clipboard"
 )
@@ -24,7 +24,7 @@ func (rf reposFilter) IsVisible() bool {
 }
 
 type Model struct {
-	reposTable        reposTable.Table
+	reposTable        repostable.Table
 	rtHeader          rth.Header
 	showDetails       bool
 	isPushing         bool
@@ -42,8 +42,8 @@ func (m *Model) addWarning(msg string) {
 
 // ShowReportTUI runs a Bubble Tea UI that renders the ScanReport in a table.
 func ShowReportTUI(r report.ScanReport) error {
-	reposTable := reposTable.Table{
-		Style: reposTable.Style{
+	reposTable := repostable.Table{
+		Style: repostable.Style{
 			Header:      HeaderWithBGStyle,
 			SelectedRow: SelectedStyle,
 			Cell:        lipgloss.NewStyle(),
