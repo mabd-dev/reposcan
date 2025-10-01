@@ -22,14 +22,17 @@ type Style struct {
 	Cell        lipgloss.Style
 }
 
-func (rt *Table) InitUI() {
-	cols := createColumns(100)
+func (rt *Table) InitUI(
+	width int,
+	height int,
+) {
+	cols := createColumns(width)
 	rows := createRows(rt.report.RepoStates)
 
 	t := table.New(
 		table.WithColumns(cols),
 		table.WithRows(rows),
-		table.WithHeight(12),
+		table.WithHeight(height),
 	)
 	t.Focus()
 

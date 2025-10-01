@@ -9,8 +9,10 @@ func defaultUpdate(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width, m.height = msg.Width, msg.Height
 
-		availableSpace := m.height
-		m.reposTable.UpdateWindowSize(m.width, availableSpace*50/100)
+		m.reposTable.UpdateWindowSize(
+			m.width*sizeReposTableWidthPercent/100,
+			m.height*sizeReposTableHeightPercent/100,
+		)
 		return m, nil
 
 	case gitPushResultMsg:

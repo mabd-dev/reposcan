@@ -4,6 +4,17 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
+var (
+	totalWidth  int = 100
+	totalHeight int = 30
+
+	// width with respect to total window width
+	sizeReposTableWidthPercent int = 90
+
+	// height with respect to total window height
+	sizeReposTableHeightPercent int = 50
+)
+
 var style = lipgloss.NewStyle().
 	Align(lipgloss.Left)
 

@@ -50,7 +50,11 @@ func ShowReportTUI(r report.ScanReport) error {
 		},
 	}
 	reposTable.SetReport(r)
-	reposTable.InitUI()
+
+	reposTable.InitUI(
+		totalWidth*sizeReposTableWidthPercent/100,
+		totalHeight*sizeReposTableHeightPercent/100,
+	)
 
 	reposTableHeader := rth.Header{
 		Style: rth.Style{
@@ -66,8 +70,8 @@ func ShowReportTUI(r report.ScanReport) error {
 		reposTable:  reposTable,
 		rtHeader:    reposTableHeader,
 		showDetails: false,
-		width:       100,
-		height:      30,
+		width:       totalWidth,
+		height:      totalHeight,
 		warnings:    []string{},
 		reposFilter: createRrepoFilter(),
 	}
