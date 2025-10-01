@@ -11,9 +11,9 @@ It outputs results in both **human-friendly tables** and **machine-friendly JSON
 
 
 🖼 Demo
-![Demo](docs/media/demo.mp3)
+![Demo](docs/media/demo.mp4)
 
-[![Watch the video]](docs/media/demo.mp3)
+[![Watch the video]](docs/media/demo.mp4)
 
 ---
 
