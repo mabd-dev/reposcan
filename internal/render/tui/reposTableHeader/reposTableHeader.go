@@ -1,6 +1,6 @@
-// reposTableHeader is a Model for repos table. It uses scan report to generate it's
+// Package repostableheader is a Model for repos table. It uses scan report to generate it's
 // content and return it to the main Model to render it
-package reposTableHeader
+package repostableheader
 
 import (
 	"fmt"

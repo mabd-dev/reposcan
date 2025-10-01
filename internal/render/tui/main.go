@@ -8,8 +8,8 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-	rth "github.com/mabd-dev/reposcan/internal/render/tui/reposTableHeader"
 	"github.com/mabd-dev/reposcan/internal/render/tui/repostable"
+	rth "github.com/mabd-dev/reposcan/internal/render/tui/repostableheader"
 	"github.com/mabd-dev/reposcan/pkg/report"
 	"golang.design/x/clipboard"
 )
