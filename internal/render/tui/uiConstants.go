@@ -9,7 +9,7 @@ var (
 	totalHeight int = 30
 
 	// width with respect to total window width
-	sizeReposTableWidthPercent int = 98
+	sizeReposTableWidthPercent int = 90
 
 	// height with respect to total window height
 	sizeReposTableHeightPercent int = 50
