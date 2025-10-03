@@ -117,7 +117,6 @@ func (m Model) View() string {
 		return generateHelpPopup(m.width, m.height)
 	}
 
-	header := m.rtHeader.View()
 	body := m.reposTable.View()
 
 	if m.reposFilter.show {
@@ -139,14 +138,13 @@ func (m Model) View() string {
 	}
 	stdMessages := FooterStyle.Render(messages.String())
 
-	base := lipgloss.JoinVertical(lipgloss.Left,
+	header := m.rtHeader.View()
+	return lipgloss.JoinVertical(lipgloss.Left,
 		header,
 		body,
 		footer,
 		stdMessages,
 	)
-
-	return base
 }
 
 func (m Model) detailsView() string {
