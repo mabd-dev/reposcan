@@ -117,7 +117,14 @@ func (m Model) View() string {
 		return generateHelpPopup(m.width, m.height)
 	}
 
-	body := m.reposTable.View()
+	tableView := m.reposTable.View()
+	body := lipgloss.Place(
+		m.width,
+		lipgloss.Height(tableView),
+		lipgloss.Center,
+		lipgloss.Top,
+		tableView,
+	)
 
 	if m.reposFilter.show {
 		textfieldStr := ReposFilterStyle.Render(m.reposFilter.textInput.View())
