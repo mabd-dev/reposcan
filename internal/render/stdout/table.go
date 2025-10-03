@@ -9,13 +9,12 @@ import (
 // RenderReposTable renders the per-repository rows for a ScanReport as a table.
 func RenderReposTable(r report.ScanReport) {
 	// Table header
-	fmt.Printf("%s %s %s %s\n",
+	fmt.Printf("%s %s %s\n",
 		CyanBold("%-*s", RepoW, "Repo"),
 		CyanBold("%-*s", BranchW, "Branch"),
 		CyanBold("%-*s", RemoteStateW, "State"),
-		CyanBold("%s", "Path"),
 	)
-	fmt.Println(strings.Repeat("─", RepoW+1+BranchW+RemoteStateW+1+60-2))
+	fmt.Println(strings.Repeat("─", RepoW+1+BranchW+RemoteStateW+1))
 
 	for _, rs := range r.RepoStates {
 		renderRepoState(rs)
@@ -28,11 +27,10 @@ func renderRepoState(rs report.RepoState) {
 
 	remoteStateStr := getStateColumnStr(rs)
 
-	fmt.Printf("%s %s %s %s\n",
+	fmt.Printf("%s %s %s\n",
 		repoCell,
 		branchCell,
 		remoteStateStr,
-		rs.Path, // full path, no truncation
 	)
 }
 

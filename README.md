@@ -10,30 +10,7 @@ It helps you quickly find:
 It outputs results in both **human-friendly tables** and **machine-friendly JSON**, so you can use it interactively or integrate with scripts and future UIs.
 
 
-🖼 Example output
-```sh
-Repo Scan Report
-Generated at: 2025-08-31T08:44:54+03:00
-Total repositories: 3  |  Dirty: 2
-
-Repo                     Branch                State            Path
-──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-empty                    main                  ⏳0  ↑0  ↓0      /home/me/projects/empty
-habitsss                 master                ⏳2  ↑0  ↓2      /home/me/projects/habitsss
-reposcan                 main                  ⏳1  ↑1  ↓0      /home/me/projects/reposcan
-
-
-Details:
-
-Repo: habitsss
-Path: /home/me/projects/habitsss
-  - internal/db/models.go
-  - README.md
-
-Repo: reposcan
-Path: /home/me/projects/reposcan
-  - api/handlers.go
-```
+🖼 Demo
 
 ---
 
@@ -81,7 +58,7 @@ Common flags
 -h, --help                      # help for reposcan
     --json-output-path string   # Write scan report JSON files to this directory (optional)
 -w, --max-workers int           # Number of concurrent git checks (default 8)
--o, --output string             # Output format: json|table|none (default "table")
+-o, --output string             # Output format: json|table|interactive|none (default "table")
 -r, --root stringArray          # Root directory to scan (repeatable). Defaults to $HOME if unset in config. (default [$HOME])
 ```
 
@@ -105,6 +82,8 @@ version = 1
 # directories to search for git repos inside
 roots = ["~/Code", "~/work"]
 
+only = "dirty"
+
 # Skip these directories (glob patterns)
 dirIgnore = [
   "/node_modules/",
@@ -112,27 +91,16 @@ dirIgnore = [
   "/.local/"
 ]
 
-# options:
-#   1. `dirty`: any of uncommitted files, unpushed commits, or unpulled changes
-#   2. `uncommitted`: working tree has uncommitted files
-#   3. `unpushed`: local branch is ahead of upstream
-#   4. `unpulled`: local branch is behind upstream
-#   5. `all`: include all git repos
-only = "dirty"
 
-# print scan result to stdout. Options:
-#   1. `json`: json object containing scan report struct
-#   2. `table`: human readable representation of scan report
-#   3. `none`: prints nothing
-Output = "table"
+[output]
+type = "interactive"
+jsonPath = "/somewhere/nice"
 
-# output scan reports to this folder. All nested folders will be created
-# if they don't exist
-JsonOutputPath = '/home/me/Documents/code/projects/Go/reposcan/output-samples'
+
 ```
 > You can still override everything via CLI flags.
 
-check [sample/config.toml](sample) for detailed configuration with examples
+check [sample/config.toml](sample/config.toml) for detailed configuration with examples
 
 ### Config lookup order
 1. Load default values
@@ -144,13 +112,14 @@ Each step overrides the one before it
 ## 🛣 Roadmap
 - [x] Scan filesystem for repos
 - [x] Detect uncommitted files, unpushed commits and unpulled commits
-- [x] Stdout Ouput in 3 formats: json, table, none
+- [x] Stdout Ouput in 3 formats: json, table, interactive, none
 - [x] Read user customizable `config.toml` file
 - [x] Export Report to json file
 - [x] Support dirignore
-- [x] Use cobra for better cli support
 - [ ] Worker pool for speed
 - [ ] Support git worktrees
+- [ ] Perform git push/pull/fetch on repos
+- [ ] Show branches with their states on each repo
 
 
 ## 🤝 Contributing

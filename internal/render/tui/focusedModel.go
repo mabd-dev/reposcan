@@ -1,0 +1,117 @@
+package tui
+
+import (
+	tea "github.com/charmbracelet/bubbletea"
+	"golang.design/x/clipboard"
+	"strings"
+)
+
+// focusModel defined how each group of ui-elements handles tui.Update function
+type focusedModel interface {
+	update(m Model, msg tea.Msg) (tea.Model, tea.Cmd)
+}
+
+type popupFM struct{}
+
+func (r popupFM) update(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "q", "esc":
+			m.showHelp = false
+			return m, nil
+		}
+	}
+
+	var cmd tea.Cmd
+	nm, cmd := defaultUpdate(m, msg)
+
+	if nm != nil {
+		return nm, cmd
+	}
+	return m, nil
+}
+
+type reposTableFM struct{}
+
+func (r reposTableFM) update(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "q", "esc", "ctrl+c":
+			return m, tea.Quit
+		case "enter":
+			m.showDetails = !m.showDetails
+			return m, nil
+		// case "p":
+		// 	return m, gitPull(m)
+		// case "P":
+		// 	return m, gitPush(m)
+		// case "f":
+		// 	return m, gitFetch(m)
+		case "c":
+			rs := m.reposTable.GetCurrentRepoState()
+			if rs == nil {
+				return m, nil
+			}
+
+			path := shellEscapePath(rs.Path)
+			clipboard.Write(clipboard.FmtText, []byte(path))
+			return m, nil
+		case "/":
+			m.reposFilter.show = true
+			m.reposFilter.textInput.Focus()
+			m.reposTable.Blur()
+			return m, nil
+		case "?":
+			m.showHelp = true
+			return m, nil
+		}
+	}
+
+	var cmd tea.Cmd
+	nm, cmd := defaultUpdate(m, msg)
+
+	if nm != nil {
+		return nm, cmd
+	}
+
+	m.reposTable, cmd = m.reposTable.Update(msg)
+	return m, cmd
+}
+
+type reposFilterTextFieldFM struct{}
+
+func (r reposFilterTextFieldFM) update(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "esc", "ctrl+c":
+			// refresh to original state
+			m.reposFilter.show = false
+			m.reposFilter.textInput.SetValue("")
+
+			m.reposTable.Filter("")
+			m.reposTable.Focus()
+
+			return m, nil
+		case "enter":
+			if len(strings.TrimSpace(m.reposFilter.textInput.Value())) == 0 {
+				m.reposFilter.show = false
+			}
+
+			m.reposFilter.textInput.Blur()
+			m.reposTable.Focus()
+
+			return m, nil
+		}
+	}
+
+	// on each keystorke, update repos list
+	var cmd tea.Cmd
+	m.reposFilter.textInput, cmd = m.reposFilter.textInput.Update(msg)
+
+	m.reposTable.Filter(m.reposFilter.textInput.Value())
+
+	return m, cmd
+}

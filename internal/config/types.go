@@ -3,20 +3,16 @@ package config
 // Config holds all runtime options used by reposcan.
 // Values may come from a config file and/or be overridden by CLI flags.
 type Config struct {
-	Roots     []string   `json:"roots,omitempty"`
-	DirIgnore []string   `json:"dirignore,omitempty"`
-	Only      OnlyFilter `json:"only,omitempty"`
+	Roots     []string   `toml:"roots,omitempty"`
+	DirIgnore []string   `toml:"dirignore,omitempty"`
+	Only      OnlyFilter `toml:"only,omitempty"`
 
-	// Write report json to path, ignored if empty
-	JsonOutputPath string `json:"jsonOutputPath,omitempty"`
-
-	// Print json on std out,
-	Output OutputFormat `json:"output"`
+	Output Output `toml:"output"`
 
 	// Max git checker workers
-	MaxWorkers int `json:"maxWorkers"`
+	MaxWorkers int `toml:"maxWorkers"`
 
-	Version int `json:"version"`
+	Version int `toml:"version"`
 }
 
 // Defaults returns a Config populated with sensible defaults suitable for
@@ -84,13 +80,17 @@ func Defaults() Config {
 		"~/Library/**",
 	}
 
+	newOutput := Output{
+		Type:     OutputTable,
+		JSONPath: "",
+	}
+
 	return Config{
-		Roots:          roots,
-		DirIgnore:      defaultDirIgnore,
-		Only:           OnlyDirty,
-		JsonOutputPath: "",
-		Output:         OutputTable,
-		MaxWorkers:     8,
-		Version:        1,
+		Roots:      roots,
+		DirIgnore:  defaultDirIgnore,
+		Only:       OnlyDirty,
+		Output:     newOutput,
+		MaxWorkers: 8,
+		Version:    1,
 	}
 }

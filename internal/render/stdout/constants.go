@@ -6,7 +6,7 @@ import (
 
 const (
 	RepoW        = 24
-	BranchW      = 20
+	BranchW      = 30
 	UncommW      = 3
 	AheadW       = 3
 	BehindW      = 3
