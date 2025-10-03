@@ -12,6 +12,10 @@ It outputs results in both **human-friendly tables** and **machine-friendly JSON
 
 🖼 Demo
 
+https://github.com/user-attachments/assets/657fa614-4234-4daf-890b-03012c0c64ca
+
+
+
 ---
 
 ## ✨ Use cases
