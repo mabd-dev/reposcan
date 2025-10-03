@@ -12,14 +12,38 @@ on:
 jobs:
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        go: ['1.24.x']
     steps:
     - uses: actions/checkout@v4
+
+    - name: Install Linux dependencies
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt update
+        sudo apt install -y xvfb libx11-dev x11-utils
 
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
-        go-version: '1.24.6'
+        go-version: ${{ matrix.go }}
 
-    - name: Test
-      run: go test -v ./...
+    # CGO_ENABLED is for clipboard package, check this https://github.com/golang-design/clipboard/pull/78
+    - name: Run Tests with CGO_ENABLED=1 (${{ matrix.go }})
+      if: runner.os == 'Linux' || runner.os == 'macOS'
+      run: |
+        CGO_ENABLED=1 go test -v -covermode=atomic .
+
+    - name: Run Tests with CGO_ENABLED=0 (${{ matrix.go }})
+      if: runner.os == 'Linux' || runner.os == 'macOS'
+      run: |
+        CGO_ENABLED=0 go test -v -covermode=atomic .
+
+    - name: Run Tests on Windows (${{ matrix.go }})
+      if: runner.os == 'Windows'
+      run: |
+        go test -v -covermode=atomic .

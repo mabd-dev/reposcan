@@ -16,10 +16,15 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
+      - name: Install Linux dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y libx11-dev
+
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.24.6'  # or your current version
+          go-version: '1.24.x'
 
       - name: Download Dependencies
         run: go mod tidy
@@ -33,11 +38,12 @@ jobs:
           REPO_LOWER=$(echo "$REPO" | tr '[:upper:]' '[:lower:]')
           curl -X GET "https://proxy.golang.org/github.com/$REPO_LOWER/@v/${{ github.ref_name }}.info"
 
-
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           token: ${{ secrets.GITHUB_TOKEN }}
+          body_path: docs/release-notes/${{ github.ref_name }}.md
+          generate_release_notes: false
 
 

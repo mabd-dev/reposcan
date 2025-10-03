@@ -26,12 +26,7 @@ func RenderScanReportAsJson(r report.ScanReport) error {
 // to stdout. The Path column is printed last and not truncated.
 func RenderScanReportAsTable(r report.ScanReport) {
 	totalRepos := len(r.RepoStates)
-	dirtyRepos := 0
-	for _, rs := range r.RepoStates {
-		if rs.IsDirty() {
-			dirtyRepos++
-		}
-	}
+	dirtyRepos := r.DirtyReposCount()
 
 	Warnings(r.Warnings)
 	renderReportHeader(r, totalRepos, dirtyRepos)

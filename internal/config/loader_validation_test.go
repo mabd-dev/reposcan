@@ -50,7 +50,7 @@ func TestCreateOrReadConfigs_ReadsExistingFile(t *testing.T) {
 	// Seed a custom config
 	seeded := Defaults()
 	seeded.Roots = []string{"/tmp/foo", "/tmp/bar"}
-	seeded.Output = OutputJson
+	seeded.Output.Type = OutputJson
 	if err := WriteToFile(seeded, cfgAbs); err != nil {
 		t.Fatalf("seed write error: %v", err)
 	}
@@ -60,7 +60,7 @@ func TestCreateOrReadConfigs_ReadsExistingFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if strings.Join(got.Roots, ",") != strings.Join(seeded.Roots, ",") || got.Output != OutputJson {
+	if strings.Join(got.Roots, ",") != strings.Join(seeded.Roots, ",") || got.Output.Type != OutputJson {
 		t.Fatalf("expected to read seeded config, got: %+v", got)
 	}
 }
@@ -77,7 +77,7 @@ func TestValidate(t *testing.T) {
 
 	// JsonOutputPath: expect warning when dir missing (non-empty)
 	cfg = Defaults()
-	cfg.JsonOutputPath = "/definitely/missing/dir"
+	cfg.Output.JSONPath = "/definitely/missing/dir"
 	v = Validate(cfg)
 	if len(v.Warnings) == 0 {
 		t.Fatalf("expected a warning when JsonOutputPath does not exist")

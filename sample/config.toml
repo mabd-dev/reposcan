@@ -7,16 +7,6 @@ Roots = [
 # options: all|dirty
 Only = 'dirty'
 
-
-# folder output path -- this will be used to export report scan to that folder
-# if folder does not exist, it will be created recursively
-JsonOutputPath = '/somewhere/nice'
-
-
-# options: table|json|none
-Output = "table"
-
-
 DirIgnore = [
     # --- Package managers / deps ---
     "**/node_modules/**",
@@ -74,3 +64,16 @@ DirIgnore = [
     "~/Library/**",
 ]
 
+
+[output]
+
+# print scan result to stdout. Options:
+#   1. `json`: json object containing scan report struct
+#   2. `table`: human readable representation of scan report
+#   3. `interactive`: human readable representation of scan report with keymaps actions
+#   4. `none`: prints nothing
+type = "interactive"
+
+# output scan reports to this folder. All nested folders will be created
+# if they don't exist
+jsonPath = "somewhere/nice/"
