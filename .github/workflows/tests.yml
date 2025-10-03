@@ -21,16 +21,18 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
+    - name: Install Linux dependencies
+      if: runner.os == 'Linux'
+      run: |
+        sudo apt update
+        sudo apt install -y xvfb libx11-dev x11-utils
+
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
         go-version: ${{ matrix.go }}
 
     # CGO_ENABLED is for clipboard package, check this https://github.com/golang-design/clipboard/pull/78
-    - name: Test
-      run: |
-        CGO_ENABLED=0 go test -v ./...
-
     - name: Run Tests with CGO_ENABLED=1 (${{ matrix.go }})
       if: runner.os == 'Linux' || runner.os == 'macOS'
       run: |
