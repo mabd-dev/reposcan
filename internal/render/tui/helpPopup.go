@@ -4,7 +4,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 )
 
-func generateHelpPopup(width int, height int) string {
+func generateHelpPopup() string {
 	lines := lipgloss.JoinVertical(
 		lipgloss.Center,
 		PopupTitleStyle.Render("Keybindings"),
@@ -12,31 +12,28 @@ func generateHelpPopup(width int, height int) string {
 			lipgloss.Left,
 			lipgloss.JoinVertical(
 				lipgloss.Right,
-				HeaderStyle.Render("↑/↓ -"),
-				HeaderStyle.Render("<enter> -"),
-				// HeaderStyle.Render("p -"),
-				// HeaderStyle.Render("P -"),
-				// HeaderStyle.Render("f -"),
-				HeaderStyle.Render("c -"),
-				HeaderStyle.Render("/ -"),
-				HeaderStyle.Render("q -"),
+				PopupKeybindingStyle.Render("↑/↓ -"),
+				PopupKeybindingStyle.Render("<enter> -"),
+				// KeybindingStyle.Render("p -"),
+				// KeybindingStyle.Render("P -"),
+				// KeybindingStyle.Render("f -"),
+				PopupKeybindingStyle.Render("c -"),
+				PopupKeybindingStyle.Render("/ -"),
+				PopupKeybindingStyle.Render("q -"),
 			),
 			lipgloss.JoinVertical(
 				lipgloss.Left,
-				RepoStyle.Render(" Navigate up and down (or j/k)"),
-				RepoStyle.Render(" Open git repository report details"),
-				// RepoStyle.Render(" Pull changes"),
-				// RepoStyle.Render(" Push changes"),
-				// RepoStyle.Render(" Fetch changes"),
-				RepoStyle.Render(" Copy repo path to clipboard"),
-				RepoStyle.Render(" Filter by repo/branch name"),
-				RepoStyle.Render(" Quit"),
+				PopupDescriptionStyle.Render(" Navigate up and down (or j/k)"),
+				PopupDescriptionStyle.Render(" Open git repository report details"),
+				// DescriptionStyle.Render(" Pull changes"),
+				// DescriptionStyle.Render(" Push changes"),
+				// DescriptionStyle.Render(" Fetch changes"),
+				PopupDescriptionStyle.Render(" Copy repo path to clipboard"),
+				PopupDescriptionStyle.Render(" Filter by repo/branch name"),
+				PopupDescriptionStyle.Render(" Quit"),
 			),
 		),
 	)
 
-	helpBox := PopupStyle.Render(lines)
-
-	popup := lipgloss.Place(width, height, lipgloss.Center, lipgloss.Center, helpBox)
-	return popup
+	return PopupStyle.Render(lines)
 }

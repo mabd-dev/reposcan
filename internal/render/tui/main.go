@@ -113,10 +113,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) View() string {
-	if m.showHelp {
-		return generateHelpPopup(m.width, m.height)
-	}
-
 	body := m.reposTable.View()
 
 	if m.reposFilter.show {
@@ -139,12 +135,31 @@ func (m Model) View() string {
 	stdMessages := FooterStyle.Render(messages.String())
 
 	header := m.rtHeader.View()
-	return lipgloss.JoinVertical(lipgloss.Left,
+	view := lipgloss.JoinVertical(lipgloss.Left,
 		header,
 		body,
 		footer,
 		stdMessages,
 	)
+
+	view = lipgloss.NewStyle().
+		Width(m.width).
+		Height(m.height).
+		Render(view)
+
+	if m.showHelp {
+		helpView := generateHelpPopup()
+
+		view = PlaceOverlayWithPosition(
+			OverlayPositionCenter,
+			m.width, m.height,
+			helpView, view,
+			true,
+			WithWhitespaceChars(" "), // fill empty space
+		)
+	}
+
+	return view
 }
 
 func (m Model) detailsView() string {
