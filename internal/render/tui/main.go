@@ -125,7 +125,7 @@ func (m Model) View() string {
 	}
 
 	// TODO: show most important keybindings here as well
-	footer := FooterStyle.Render("↑/↓ to move • ? keybindings")
+	footer := FooterStyle.Render("Mote: ↑/↓  • keybindings: ?")
 
 	var messages strings.Builder
 	for _, msg := range m.warnings {
