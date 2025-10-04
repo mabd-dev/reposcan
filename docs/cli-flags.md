@@ -57,3 +57,8 @@ This document explains each CLI flag, its equivalent `config.toml` field, what i
   - Description: Concurrency for git state checks when scanning many repos.
   - Example: `reposcan -w 16`
 
+- `--debug true/false`
+  - Config: `debug = true/false`
+  - Description: Enable/disable logging mode. Log file will be in `~/.config/reposcan/logs/`
+  - Example: `--debug=false` or `--debug` same as `--debug=true`
+

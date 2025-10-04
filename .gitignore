@@ -9,4 +9,5 @@ dist/
 .vscode/
 # OS
 .DS_Store
+todo.md
 output-samples/

@@ -1,13 +1,16 @@
-Version = 1
+version = 1
 
-Roots = [
+# When true log file will appear in ~/.config/reposcan/logs/
+debug = false
+
+roots = [
     "/home/mabd/"
 ]
 
 # options: all|dirty
-Only = 'dirty'
+only = 'dirty'
 
-DirIgnore = [
+dirIgnore = [
     # --- Package managers / deps ---
     "**/node_modules/**",
     "**/vendor/**",

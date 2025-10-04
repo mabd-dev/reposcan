@@ -9,6 +9,7 @@ import (
 
 	"github.com/mabd-dev/reposcan/internal/config"
 	"github.com/mabd-dev/reposcan/internal/gitx"
+	"github.com/mabd-dev/reposcan/internal/logger"
 	"github.com/mabd-dev/reposcan/internal/render/file"
 	"github.com/mabd-dev/reposcan/internal/render/stdout"
 	"github.com/mabd-dev/reposcan/internal/render/tui"
@@ -54,6 +55,8 @@ var RootCmd = &cobra.Command{
 			return fmt.Errorf("invalid configuration after flags")
 		}
 
+		logger.Init(configs.Debug, paths.LogFileDir)
+
 		return run(configs)
 	},
 }
@@ -64,10 +67,11 @@ var RootCmd = &cobra.Command{
 // Supported flags:
 //   - root (-r)            : repeatable directory roots to scan
 //   - dirIgnore (-d)       : repeatable glob patterns to ignore during scan
-//   - output (-o)          : output format: json|table|none
+//   - output (-o)          : output format: json|table|interactive|none
 //   - filter (-f)          : repository filter: all|dirty|uncommitted|unpushed|unpulled
 //   - json-output-path     : directory to write JSON report files
 //   - max-workers (-w)     : number of concurrent git checks
+//   - debug (--debug)      : enable/disable debug mode
 func readFlags(cmd *cobra.Command, configs *config.Config) error {
 	// Read roots flags
 	roots, err := cmd.Flags().GetStringArray("root")
@@ -120,6 +124,12 @@ func readFlags(cmd *cobra.Command, configs *config.Config) error {
 		return err
 	}
 	(*configs).MaxWorkers = maxWorkers
+
+	debug, err := cmd.Flags().GetBool("debug")
+	if err != nil {
+		return err
+	}
+	(*configs).Debug = debug
 
 	return nil
 }

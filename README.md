@@ -64,6 +64,7 @@ Common flags
 -w, --max-workers int           # Number of concurrent git checks (default 8)
 -o, --output string             # Output format: json|table|interactive|none (default "table")
 -r, --root stringArray          # Root directory to scan (repeatable). Defaults to $HOME if unset in config. (default [$HOME])
+  , --debug                     # Enable/Disable debug mode
 ```
 
 Help
@@ -82,6 +83,7 @@ By default, `reposcan` looks for a config file in:
 Example
 ```toml
 version = 1
+debug = false
 
 # directories to search for git repos inside
 roots = ["~/Code", "~/work"]
