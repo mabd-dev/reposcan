@@ -18,6 +18,7 @@ func (r popupFM) update(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "q", "esc":
+			m.reposTable.Focus()
 			m.showHelp = false
 			return m, nil
 		}
@@ -65,6 +66,7 @@ func (r reposTableFM) update(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		case "?":
 			m.showHelp = true
+			m.reposTable.Blur()
 			return m, nil
 		}
 	}

@@ -57,6 +57,8 @@ var RootCmd = &cobra.Command{
 
 		logger.Init(configs.Debug, paths.LogFileDir)
 
+		validationResult.Log()
+
 		return run(configs)
 	},
 }
@@ -65,13 +67,14 @@ var RootCmd = &cobra.Command{
 // to the given config. Flags override values loaded from the config file.
 //
 // Supported flags:
-//   - root (-r)            : repeatable directory roots to scan
-//   - dirIgnore (-d)       : repeatable glob patterns to ignore during scan
-//   - output (-o)          : output format: json|table|interactive|none
-//   - filter (-f)          : repository filter: all|dirty|uncommitted|unpushed|unpulled
-//   - json-output-path     : directory to write JSON report files
-//   - max-workers (-w)     : number of concurrent git checks
-//   - debug (--debug)      : enable/disable debug mode
+//   - root (-r)					: repeatable directory roots to scan
+//   - dirIgnore (-d)       		: repeatable glob patterns to ignore during scan
+//   - output (-o)          		: output format: json|table|interactive|none
+//   - filter (-f)          		: repository filter: all|dirty|uncommitted|unpushed|unpulled
+//   - json-output-path     		: directory to write JSON report files
+//   - max-workers (-w)     		: number of concurrent git checks
+//   - debug (--debug)      		: enable/disable debug mode
+//   - colorscheme (--colorscheme)  : enable/disable debug mode
 func readFlags(cmd *cobra.Command, configs *config.Config) error {
 	// Read roots flags
 	roots, err := cmd.Flags().GetStringArray("root")
@@ -117,6 +120,13 @@ func readFlags(cmd *cobra.Command, configs *config.Config) error {
 		return err
 	}
 	(*configs).Output.JSONPath = jsonOutputPath
+
+	// Read output colorscheme
+	// colorscheme, err := cmd.Flags().GetString("colorscheme")
+	// if err != nil {
+	// 	return err
+	// }
+	// (*configs).Output.ColorSchemeName = colorscheme
 
 	// Read max workers flag
 	maxWorkers, err := cmd.Flags().GetInt("max-workers")
@@ -170,7 +180,7 @@ func run(configs config.Config) error {
 	case config.OutputTable:
 		stdout.RenderScanReportAsTable(report)
 	case config.OutputInteractive:
-		if err := tui.ShowReportTUI(report); err != nil {
+		if err := tui.ShowReportTUI(report, configs.Output.ColorSchemeName); err != nil {
 			fmt.Fprintf(os.Stderr, "tui error: %v\n", err)
 			os.Exit(1)
 		}

@@ -108,6 +108,7 @@ jsonPath = "/somewhere/nice"
 
 check [sample/config.toml](sample/config.toml) for detailed configuration with examples
 
+
 ### Config lookup order
 1. Load default values
 1. Config in `~/.config/reposcan/config.toml` (if exists)

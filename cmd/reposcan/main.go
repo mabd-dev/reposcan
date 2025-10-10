@@ -37,4 +37,5 @@ func init() {
 	RootCmd.PersistentFlags().String("json-output-path", configs.Output.JSONPath, "Write scan report JSON files to this directory (optional)")
 	RootCmd.PersistentFlags().IntP("max-workers", "w", configs.MaxWorkers, "Number of concurrent git checks")
 	RootCmd.PersistentFlags().BoolP("debug", "", configs.Debug, "Enable/Disable debug mode")
+	// RootCmd.PersistentFlags().StringP("colorscheme", "", configs.Output.ColorSchemeName, "Used only if 'output' is 'interactive'")
 }

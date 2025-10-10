@@ -19,6 +19,8 @@ func TestReadFlags_AppliesAllFlags(t *testing.T) {
 	cmd.Flags().StringP("filter", "f", "dirty", "")
 	cmd.Flags().String("json-output-path", "", "")
 	cmd.Flags().IntP("max-workers", "w", 8, "")
+	cmd.Flags().StringP("debug", "", "", "")
+	cmd.Flags().StringP("colorscheme", "", "", "")
 
 	args := []string{
 		"-r", "/tmp/root1",
@@ -29,6 +31,8 @@ func TestReadFlags_AppliesAllFlags(t *testing.T) {
 		"-f", "all",
 		"--json-output-path", "/tmp/out",
 		"-w", "16",
+		"--debug", "true",
+		"--colorscheme", "something",
 	}
 	cmd.SetArgs(args)
 
@@ -46,16 +50,22 @@ func TestReadFlags_AppliesAllFlags(t *testing.T) {
 	if len(cfg.DirIgnore) != 2 {
 		t.Fatalf("dirIgnore not applied: %#v", cfg.DirIgnore)
 	}
-	if cfg.Output.Type != config.OutputJson {
-		t.Fatalf("output not applied: %v", cfg.Output.Type)
-	}
 	if cfg.Only != config.OnlyAll {
 		t.Fatalf("only filter not applied: %v", cfg.Only)
+	}
+	if cfg.Output.Type != config.OutputJson {
+		t.Fatalf("output not applied: %v", cfg.Output.Type)
 	}
 	if cfg.Output.JSONPath != "/tmp/out" {
 		t.Fatalf("json output path not applied: %v", cfg.Output.JSONPath)
 	}
+	if cfg.Output.ColorSchemeName != "something" {
+		t.Fatalf("colorscheme not applied: %s", cfg.Output.ColorSchemeName)
+	}
 	if cfg.MaxWorkers != 16 {
 		t.Fatalf("max workers not applied: %d", cfg.MaxWorkers)
+	}
+	if cfg.Debug != true {
+		t.Fatalf("debugnot applied: %t", cfg.Debug)
 	}
 }

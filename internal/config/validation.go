@@ -1,9 +1,12 @@
 package config
 
 import (
+	"github.com/mabd-dev/reposcan/internal/logger"
 	"github.com/mabd-dev/reposcan/internal/render/stdout"
+	"github.com/mabd-dev/reposcan/internal/theme"
 	"github.com/mabd-dev/reposcan/internal/utils"
 	"os"
+	"slices"
 	"strings"
 )
 
@@ -24,6 +27,18 @@ type ValidationResult struct {
 // It returns true when there is at least one error.
 func (v *ValidationResult) IsValid() bool {
 	return len(v.Errors) > 0
+}
+
+func (v *ValidationResult) Log() {
+	for _, warn := range v.Warnings {
+		msg := "Configs Validation Warning: Field=" + warn.Field + ", message=" + warn.Message
+		logger.Warn(msg)
+	}
+
+	for _, err := range v.Errors {
+		msg := "Configs Validation Errors: Field=" + err.Field + ", message=" + err.Message
+		logger.Error(msg)
+	}
 }
 
 // Validate checks a Config for common issues such as non-existent roots,
@@ -79,6 +94,17 @@ func Validate(config Config) ValidationResult {
 			issue := Issue{
 				Field:   "jsonOutputPath",
 				Message: "output path '" + config.Output.JSONPath + "' does not exists!",
+			}
+			warnings = append(warnings, issue)
+		}
+	}
+
+	colorscheme := strings.ToLower(strings.TrimSpace(config.Output.ColorSchemeName))
+	if len(colorscheme) > 0 {
+		if !slices.Contains(theme.Schemes, colorscheme) {
+			issue := Issue{
+				Field:   "output.colorscheme",
+				Message: "colorscheme='" + config.Output.ColorSchemeName + "' is invalid",
 			}
 			warnings = append(warnings, issue)
 		}

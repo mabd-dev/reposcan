@@ -5,20 +5,14 @@ package repostableheader
 import (
 	"fmt"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/mabd-dev/reposcan/internal/theme"
 	"github.com/mabd-dev/reposcan/pkg/report"
 )
 
 type Header struct {
 	repoStatesCount int
 	dirtyRepos      int
-	Style           Style
-}
-
-type Style struct {
-	Title    lipgloss.Style
-	SubTitle lipgloss.Style
-	Dirty    lipgloss.Style
-	Clean    lipgloss.Style
+	Theme           theme.Theme
 }
 
 func (h *Header) SetReport(report report.ScanReport) {
@@ -29,10 +23,11 @@ func (h *Header) SetReport(report report.ScanReport) {
 
 func (h *Header) View() string {
 	header := lipgloss.JoinHorizontal(lipgloss.Left,
-		h.Style.Title.Render("reposcan"),
+		h.Theme.Styles.Base.Render("reposcan"),
 		" ",
-		h.Style.SubTitle.Render(fmt.Sprintf("• %d repos",
-			h.repoStatesCount)),
+		h.Theme.Styles.Base.
+			Foreground(h.Theme.Colors.Muted).
+			Render(fmt.Sprintf("• %d repos", h.repoStatesCount)),
 	)
 
 	// summary := fmt.Sprintf("Total: %d  |  Uncommitted: %d", h.repoStatesCount, h.dirtyRepos)

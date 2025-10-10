@@ -1,3 +1,4 @@
+// Package tui renders scan report in an interactive table
 package tui
 
 import (
@@ -10,8 +11,20 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/mabd-dev/reposcan/internal/render/tui/repostable"
 	rth "github.com/mabd-dev/reposcan/internal/render/tui/repostableheader"
+	"github.com/mabd-dev/reposcan/internal/theme"
 	"github.com/mabd-dev/reposcan/pkg/report"
 	"golang.design/x/clipboard"
+)
+
+var (
+	totalWidth  int = 100
+	totalHeight int = 30
+
+	// width with respect to total window width
+	sizeReposTableWidthPercent int = 90
+
+	// height with respect to total window height
+	sizeReposTableHeightPercent int = 50
 )
 
 type reposFilter struct {
@@ -34,6 +47,7 @@ type Model struct {
 	warnings          []string
 	showHelp          bool
 	reposFilter       reposFilter
+	theme             theme.Theme
 }
 
 func (m *Model) addWarning(msg string) {
@@ -41,13 +55,19 @@ func (m *Model) addWarning(msg string) {
 }
 
 // ShowReportTUI runs a Bubble Tea UI that renders the ScanReport in a table.
-func ShowReportTUI(r report.ScanReport) error {
+func ShowReportTUI(r report.ScanReport, colorSchemeName string) error {
+	colors, err := theme.CreateColors(colorSchemeName)
+	if err != nil {
+		return err
+	}
+
+	theme := theme.Theme{
+		Colors: colors,
+		Styles: theme.CreateStyles(colors),
+	}
+
 	reposTable := repostable.Table{
-		Style: repostable.Style{
-			Header:      HeaderWithBGStyle,
-			SelectedRow: SelectedStyle,
-			Cell:        lipgloss.NewStyle(),
-		},
+		Theme: theme,
 	}
 	reposTable.SetReport(r)
 
@@ -57,12 +77,7 @@ func ShowReportTUI(r report.ScanReport) error {
 	)
 
 	reposTableHeader := rth.Header{
-		Style: rth.Style{
-			Title:    TitleStyle,
-			SubTitle: SubtleStyle,
-			Dirty:    DirtyStyle,
-			Clean:    CleanStyle,
-		},
+		Theme: theme,
 	}
 	reposTableHeader.SetReport(r)
 
@@ -74,9 +89,10 @@ func ShowReportTUI(r report.ScanReport) error {
 		height:      totalHeight,
 		warnings:    []string{},
 		reposFilter: createRrepoFilter(),
+		theme:       theme,
 	}
 
-	err := clipboard.Init()
+	err = clipboard.Init()
 	if err != nil {
 		m.warnings = append(m.warnings, err.Error())
 	}
@@ -116,7 +132,11 @@ func (m Model) View() string {
 	body := m.reposTable.View()
 
 	if m.reposFilter.show {
-		textfieldStr := ReposFilterStyle.Render(m.reposFilter.textInput.View())
+		focused := m.reposFilter.textInput.Focused()
+		textfieldStr := m.theme.Styles.BoxFor(focused).
+			Foreground(m.theme.Colors.Foreground).
+			Render(m.reposFilter.textInput.View())
+
 		body = lipgloss.JoinVertical(lipgloss.Top, body, textfieldStr)
 	}
 
@@ -124,31 +144,31 @@ func (m Model) View() string {
 		body = lipgloss.JoinVertical(lipgloss.Left, body, m.detailsView())
 	}
 
-	// TODO: show most important keybindings here as well
-	footer := FooterStyle.Render("Mote: ↑/↓  • keybindings: ?")
+	footer := m.theme.Styles.Muted.Render("Move: ↑/↓  • keybindings: ?")
 
-	var messages strings.Builder
-	for _, msg := range m.warnings {
-		messages.WriteString(msg)
-		messages.WriteString("\n")
-	}
-	stdMessages := FooterStyle.Render(messages.String())
+	// var messages strings.Builder
+	// for _, msg := range m.warnings {
+	// 	messages.WriteString(msg)
+	// 	messages.WriteString("\n")
+	// }
+	// stdMessages := m.theme.Styles.Muted.Render(messages.String())
 
 	header := m.rtHeader.View()
 	view := lipgloss.JoinVertical(lipgloss.Left,
 		header,
 		body,
 		footer,
-		stdMessages,
+		// stdMessages,
 	)
 
 	view = lipgloss.NewStyle().
 		Width(m.width).
 		Height(m.height).
+		// Background(m.theme.Colors.Background).
 		Render(view)
 
 	if m.showHelp {
-		helpView := generateHelpPopup()
+		helpView := generateHelpPopup(m.theme)
 
 		view = PlaceOverlayWithPosition(
 			OverlayPositionCenter,
@@ -170,14 +190,16 @@ func (m Model) detailsView() string {
 
 	uc := len(rs.UncommitedFiles)
 
+	s := m.theme.Styles.Base.Foreground(m.theme.Colors.Info)
+
 	lines := []string{
-		SectionStyle.Render("\nDetails"),
-		fmt.Sprintf("%s %s", HeaderStyle.Render("Repo:"), rs.Repo),
-		fmt.Sprintf("%s %s", HeaderStyle.Render("Branch:"), rs.Branch),
-		fmt.Sprintf("%s %s", HeaderStyle.Render("Path:"), rs.Path),
+		m.theme.Styles.Base.Foreground(m.theme.Colors.Muted).Italic(true).Render("\nDetails"),
+		fmt.Sprintf("%s %s", s.Render("Repo:"), rs.Repo),
+		fmt.Sprintf("%s %s", s.Render("Branch:"), rs.Branch),
+		fmt.Sprintf("%s %s", s.Render("Path:"), rs.Path),
 	}
 	if uc > 0 {
-		lines = append(lines, HeaderStyle.Render("Uncommited Files:"))
+		lines = append(lines, s.Render("Uncommited Files:"))
 
 		files := rs.UncommitedFiles
 
@@ -189,11 +211,11 @@ func (m Model) detailsView() string {
 		}
 
 		for _, f := range files {
-			lines = append(lines, "  "+FooterStyle.Render(f))
+			lines = append(lines, "  "+m.theme.Styles.Muted.Render(f))
 		}
 
 		if trimUncommitedFiles {
-			lines = append(lines, FooterStyle.Render("  ..."))
+			lines = append(lines, m.theme.Styles.Muted.Render("  ..."))
 		}
 	}
 	return strings.Join(lines, "\n")

@@ -4,7 +4,7 @@ package repostable
 import (
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	"github.com/mabd-dev/reposcan/internal/theme"
 	"github.com/mabd-dev/reposcan/pkg/report"
 	"strings"
 )
@@ -13,13 +13,7 @@ type Table struct {
 	tbl           table.Model
 	report        report.ScanReport
 	filteredRepos []report.RepoState
-	Style         Style
-}
-
-type Style struct {
-	Header      lipgloss.Style
-	SelectedRow lipgloss.Style
-	Cell        lipgloss.Style
+	Theme         theme.Theme
 }
 
 func (rt *Table) InitUI(
@@ -45,9 +39,9 @@ func (rt *Table) InitUI(
 	}
 
 	t.SetStyles(table.Styles{
-		Header:   rt.Style.Header,
-		Selected: rt.Style.SelectedRow,
-		Cell:     rt.Style.Cell,
+		Header:   rt.Theme.Styles.TableHeader,
+		Selected: rt.Theme.Styles.TableSelectedRow,
+		Cell:     rt.Theme.Styles.TableRow,
 	})
 	rt.tbl = t
 }
@@ -71,8 +65,7 @@ func (rt Table) Update(msg tea.Msg) (Table, tea.Cmd) {
 }
 
 func (rt Table) View() string {
-	body := ReposTableStyle.Render(rt.tbl.View())
-	return body
+	return rt.Theme.Styles.BoxFor(rt.tbl.Focused()).Render(rt.tbl.View())
 }
 
 func (rt *Table) UpdateWindowSize(width int, height int) {

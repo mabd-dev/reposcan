@@ -3,7 +3,6 @@ package repostable
 import (
 	"fmt"
 	"github.com/charmbracelet/bubbles/table"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/mabd-dev/reposcan/pkg/report"
 	"strconv"
 	"strings"
@@ -14,10 +13,6 @@ const (
 	BranchW      = 40
 	RemoteStateW = 20 //(uncommited files count + aheadW + behindW + 4 space)
 )
-
-var ReposTableStyle = lipgloss.NewStyle().
-	Border(lipgloss.RoundedBorder()).
-	BorderForeground(lipgloss.Color("63"))
 
 func createColumns(maxWidth int) []table.Column {
 	repoW := maxWidth * RepoW / 100
