@@ -29,8 +29,16 @@ jobs:
       - name: Download Dependencies
         run: go mod tidy
 
-      - name: Build
-        run: go build -v ./...
+      - name: Build Binary
+        run: |
+          VERSION="${{ github.ref_name }}"
+          DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+          
+          echo "Building reposcan ${VERSION} ..."
+          go build -ldflags "-X 'cmd/reposcan.version=${VERSION}'  -X 'cmd/reposcan.date=${DATE}'" -o reposcan .
+
+      - name: Verify Version
+        run: ./reposcan version
 
       - name: Trigger pkg.go.dev indexing
         run: |

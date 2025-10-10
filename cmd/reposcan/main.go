@@ -38,4 +38,6 @@ func init() {
 	RootCmd.PersistentFlags().IntP("max-workers", "w", configs.MaxWorkers, "Number of concurrent git checks")
 	RootCmd.PersistentFlags().BoolP("debug", "", configs.Debug, "Enable/Disable debug mode")
 	// RootCmd.PersistentFlags().StringP("colorscheme", "", configs.Output.ColorSchemeName, "Used only if 'output' is 'interactive'")
+
+	RootCmd.AddCommand(versionCmd)
 }
