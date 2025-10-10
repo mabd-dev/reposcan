@@ -90,3 +90,7 @@ func BoolAttr(key string, v bool) slog.Attr {
 func StringAttr(key string, v string) slog.Attr {
 	return slog.String(key, v)
 }
+
+func IntAttr(key string, v int) slog.Attr {
+	return slog.Int(key, v)
+}

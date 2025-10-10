@@ -148,21 +148,23 @@ func (m Model) View() string {
 		body = lipgloss.JoinVertical(lipgloss.Left, body, m.detailsView())
 	}
 
+	header := m.rtHeader.View()
 	footer := m.generateFooter()
 
-	// var messages strings.Builder
-	// for _, msg := range m.warnings {
-	// 	messages.WriteString(msg)
-	// 	messages.WriteString("\n")
-	// }
-	// stdMessages := m.theme.Styles.Muted.Render(messages.String())
+	// Calculate heights
+	headerHeight := lipgloss.Height(header)
+	footerHeight := lipgloss.Height(footer)
+	availableHeight := m.height - headerHeight - footerHeight
 
-	header := m.rtHeader.View()
+	body = lipgloss.NewStyle().
+		Height(availableHeight).
+		MaxHeight(availableHeight).
+		Render(body)
+
 	view := lipgloss.JoinVertical(lipgloss.Left,
 		header,
 		body,
 		footer,
-		// stdMessages,
 	)
 
 	view = lipgloss.NewStyle().
