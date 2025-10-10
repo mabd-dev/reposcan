@@ -136,6 +136,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m Model) View() string {
 	body := m.reposTable.View()
 
+	repoIndicator := strconv.Itoa(m.reposTable.Cursor()+1) + "/" + strconv.Itoa(m.reposTable.ReposCount())
+	body = PlaceOverlayWithPosition(
+		OverlayPositionBottomRight,
+		lipgloss.Width(body), lipgloss.Height(body),
+		repoIndicator, body,
+		false,
+		WithWhitespaceChars(" "),
+	)
+
 	if m.reposFilter.show {
 		focused := m.reposFilter.textInput.Focused()
 		textfieldStr := m.theme.Styles.BoxFor(focused).
@@ -156,15 +165,6 @@ func (m Model) View() string {
 	headerHeight := lipgloss.Height(header)
 	footerHeight := lipgloss.Height(footer)
 	availableHeight := m.height - headerHeight - footerHeight
-
-	repoIndicator := strconv.Itoa(m.reposTable.Cursor()+1) + "/" + strconv.Itoa(m.reposTable.ReposCount())
-	body = PlaceOverlayWithPosition(
-		OverlayPositionBottomRight,
-		lipgloss.Width(body), lipgloss.Height(body),
-		repoIndicator, body,
-		false,
-		WithWhitespaceChars(" "),
-	)
 
 	body = lipgloss.NewStyle().
 		Height(availableHeight).
