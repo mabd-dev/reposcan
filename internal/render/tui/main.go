@@ -54,6 +54,18 @@ func (m *Model) addWarning(msg string) {
 	m.warnings = append(m.warnings, msg)
 }
 
+func (m *Model) getFocusedModel() focusedModel {
+	var focusedModel focusedModel
+	if m.showHelp {
+		focusedModel = popupFM{}
+	} else if m.reposFilter.IsVisible() {
+		focusedModel = reposFilterTextFieldFM{}
+	} else {
+		focusedModel = reposTableFM{}
+	}
+	return focusedModel
+}
+
 // ShowReportTUI runs a Bubble Tea UI that renders the ScanReport in a table.
 func ShowReportTUI(r report.ScanReport, colorSchemeName string) error {
 	colors, err := theme.CreateColors(colorSchemeName)
@@ -117,15 +129,7 @@ func createRrepoFilter() reposFilter {
 func (m Model) Init() tea.Cmd { return nil }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	var focusedModel focusedModel
-	if m.showHelp {
-		focusedModel = popupFM{}
-	} else if m.reposFilter.IsVisible() {
-		focusedModel = reposFilterTextFieldFM{}
-	} else {
-		focusedModel = reposTableFM{}
-	}
-	return focusedModel.update(m, msg)
+	return m.getFocusedModel().update(m, msg)
 }
 
 func (m Model) View() string {
@@ -144,7 +148,7 @@ func (m Model) View() string {
 		body = lipgloss.JoinVertical(lipgloss.Left, body, m.detailsView())
 	}
 
-	footer := m.theme.Styles.Muted.Render("Move: ↑/↓  • keybindings: ?")
+	footer := m.generateFooter()
 
 	// var messages strings.Builder
 	// for _, msg := range m.warnings {
@@ -219,6 +223,41 @@ func (m Model) detailsView() string {
 		}
 	}
 	return strings.Join(lines, "\n")
+}
+
+func (m *Model) generateFooter() string {
+	focusedModel := m.getFocusedModel()
+	keybindings := focusedModel.keybindings()
+
+	addKeybinding := false
+	switch focusedModel.(type) {
+	case reposTableFM:
+		addKeybinding = true
+	}
+
+	if addKeybinding {
+		keybindings = append(keybindings, Keybinding{
+			Key:         "?",
+			Description: "More Keybindings",
+			ShortDesc:   "Keybindings",
+		})
+	}
+
+	kbStyle := m.theme.Styles.Base.Foreground(m.theme.Colors.Foreground)
+	mutedStyle := m.theme.Styles.Muted
+
+	var sb strings.Builder
+	for i, kb := range keybindings {
+		sb.WriteString(mutedStyle.Render(kb.ShortDesc))
+		sb.WriteString(mutedStyle.Render(": "))
+		sb.WriteString(kbStyle.Render(kb.Key))
+
+		if i < len(keybindings)-1 {
+			sb.WriteString(mutedStyle.Render(" | "))
+		}
+	}
+
+	return m.theme.Styles.Muted.Render(sb.String())
 }
 
 func min(a, b int) int {
