@@ -130,6 +130,10 @@ func (rt *Table) Cursor() int {
 	return rt.tbl.Cursor()
 }
 
+func (rt *Table) ReposCount() int {
+	return len(rt.report.RepoStates)
+}
+
 func (rt *Table) GetCurrentRepoState() *report.RepoState {
 	return rt.GetRepoStateAt(rt.Cursor())
 }

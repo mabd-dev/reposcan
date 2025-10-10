@@ -4,6 +4,7 @@ package tui
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/charmbracelet/bubbles/textinput"
@@ -155,6 +156,15 @@ func (m Model) View() string {
 	headerHeight := lipgloss.Height(header)
 	footerHeight := lipgloss.Height(footer)
 	availableHeight := m.height - headerHeight - footerHeight
+
+	repoIndicator := strconv.Itoa(m.reposTable.Cursor()+1) + "/" + strconv.Itoa(m.reposTable.ReposCount())
+	body = PlaceOverlayWithPosition(
+		OverlayPositionBottomRight,
+		lipgloss.Width(body), lipgloss.Height(body),
+		repoIndicator, body,
+		false,
+		WithWhitespaceChars(" "),
+	)
 
 	body = lipgloss.NewStyle().
 		Height(availableHeight).

@@ -34,6 +34,12 @@ func PlaceOverlayWithPosition(
 	case OverlayPositionTopRight:
 		x = fullWidth - fgWidth
 		y = 0
+	case OverlayPositionTopLeft:
+		x = 0
+		y = 0
+	case OverlayPositionBottomRight:
+		x = fullWidth - fgWidth
+		y = (fullHeight)
 	default:
 		panic("Unknown overlay position")
 	}
@@ -229,6 +235,8 @@ func WithWhitespaceChars(s string) WhitespaceOption {
 type OverlayPosition string
 
 const (
-	OverlayPositionCenter   OverlayPosition = "center"
-	OverlayPositionTopRight OverlayPosition = "topRight"
+	OverlayPositionCenter      OverlayPosition = "center"
+	OverlayPositionTopRight    OverlayPosition = "topRight"
+	OverlayPositionTopLeft     OverlayPosition = "topLeft"
+	OverlayPositionBottomRight OverlayPosition = "bottomright"
 )
