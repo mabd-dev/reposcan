@@ -9,6 +9,7 @@ import (
 // focusModel defined how each group of ui-elements handles tui.Update function
 type focusedModel interface {
 	update(m Model, msg tea.Msg) (tea.Model, tea.Cmd)
+	keybindings() []Keybinding
 }
 
 type popupFM struct{}
@@ -18,6 +19,7 @@ func (r popupFM) update(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "q", "esc":
+			m.reposTable.Focus()
 			m.showHelp = false
 			return m, nil
 		}
@@ -30,6 +32,10 @@ func (r popupFM) update(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 		return nm, cmd
 	}
 	return m, nil
+}
+
+func (r popupFM) keybindings() []Keybinding {
+	return helpPopupKeybindings
 }
 
 type reposTableFM struct{}
@@ -65,6 +71,7 @@ func (r reposTableFM) update(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		case "?":
 			m.showHelp = true
+			m.reposTable.Blur()
 			return m, nil
 		}
 	}
@@ -78,6 +85,10 @@ func (r reposTableFM) update(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	m.reposTable, cmd = m.reposTable.Update(msg)
 	return m, cmd
+}
+
+func (r reposTableFM) keybindings() []Keybinding {
+	return reposTableKeybindings
 }
 
 type reposFilterTextFieldFM struct{}
@@ -114,4 +125,8 @@ func (r reposFilterTextFieldFM) update(m Model, msg tea.Msg) (tea.Model, tea.Cmd
 	m.reposTable.Filter(m.reposFilter.textInput.Value())
 
 	return m, cmd
+}
+
+func (r reposFilterTextFieldFM) keybindings() []Keybinding {
+	return reposTableFilterKeybindings
 }

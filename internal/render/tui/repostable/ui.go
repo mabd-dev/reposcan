@@ -3,9 +3,7 @@ package repostable
 import (
 	"fmt"
 	"github.com/charmbracelet/bubbles/table"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/mabd-dev/reposcan/pkg/report"
-	"strconv"
 	"strings"
 )
 
@@ -14,10 +12,6 @@ const (
 	BranchW      = 40
 	RemoteStateW = 20 //(uncommited files count + aheadW + behindW + 4 space)
 )
-
-var ReposTableStyle = lipgloss.NewStyle().
-	Border(lipgloss.RoundedBorder()).
-	BorderForeground(lipgloss.Color("63"))
 
 func createColumns(maxWidth int) []table.Column {
 	repoW := maxWidth * RepoW / 100
@@ -33,13 +27,11 @@ func createColumns(maxWidth int) []table.Column {
 
 func createRows(repoStates []report.RepoState) []table.Row {
 	rows := make([]table.Row, 0, len(repoStates))
-	for index, rs := range repoStates {
+	for _, rs := range repoStates {
 		state := getStateColumnStr(rs)
 
-		repoNameCol := strconv.Itoa(index+1) + ") " + rs.Repo
-
 		rows = append(rows, table.Row{
-			repoNameCol,
+			rs.Repo,
 			rs.Branch,
 			state,
 		})

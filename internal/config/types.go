@@ -12,6 +12,9 @@ type Config struct {
 	// Max git checker workers
 	MaxWorkers int `toml:"maxWorkers"`
 
+	// Debug if true, enable logging to a file in [DefaultLogFileDir]
+	Debug bool `toml:"debug"`
+
 	Version int `toml:"version"`
 }
 
@@ -91,6 +94,7 @@ func Defaults() Config {
 		Only:       OnlyDirty,
 		Output:     newOutput,
 		MaxWorkers: 8,
+		Debug:      false,
 		Version:    1,
 	}
 }

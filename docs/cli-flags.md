@@ -39,7 +39,7 @@ This document explains each CLI flag, its equivalent `config.toml` field, what i
     - `reposcan --filter unpulled`
 
 - `-o, --output TYPE`
-  - Config: `Output = "table" | "json" | "none"`
+  - Config: `output.type = "table" | "json" | "interactive" | "none"`
   - Description: Select how results are printed to stdout.
     - `table`: human-friendly table + details.
     - `interactive`: human-friendly table + details with keymaps actions
@@ -48,7 +48,7 @@ This document explains each CLI flag, its equivalent `config.toml` field, what i
   - Example: `reposcan -o json`
 
 - `--json-output-path DIR`
-  - Config: `JsonOutputPath = "/path/to/reports"`
+  - Config: `output.jsonPath = "/path/to/reports"`
   - Description: Write a timestamped JSON report file to the directory. Folders are created if missing.
   - Example: `reposcan --json-output-path ./output-samples`
 
@@ -57,3 +57,7 @@ This document explains each CLI flag, its equivalent `config.toml` field, what i
   - Description: Concurrency for git state checks when scanning many repos.
   - Example: `reposcan -w 16`
 
+- `--debug true/false`
+  - Config: `debug = true/false`
+  - Description: Enable/disable logging mode. Log file will be in `~/.config/reposcan/logs/`
+  - Example: `--debug=false` or `--debug` same as `--debug=true`

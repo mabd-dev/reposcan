@@ -6,8 +6,9 @@ import (
 )
 
 type Output struct {
-	Type     OutputFormat `toml:"type"`
-	JSONPath string       `toml:"jsonPath"`
+	Type            OutputFormat `toml:"type"`
+	JSONPath        string       `toml:"jsonPath"`
+	ColorSchemeName string       `toml:"colorscheme"`
 }
 
 // OutputFormat controls how scan results are rendered.

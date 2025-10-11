@@ -2,41 +2,39 @@ package tui
 
 import (
 	"github.com/charmbracelet/lipgloss"
+	"github.com/mabd-dev/reposcan/internal/theme"
 )
 
-func generateHelpPopup(width int, height int) string {
+func generateHelpPopup(theme theme.Theme) string {
+
+	keybindingStyle := theme.Styles.Base.
+		Bold(true).
+		Foreground(theme.Colors.Accent)
+
+	keybindings := reposTableKeybindings
+
+	keys := []string{}
+	descs := []string{}
+	for _, kb := range keybindings {
+		keys = append(keys, keybindingStyle.Render(kb.Key+" -"))
+		descs = append(descs, theme.Styles.PopupText.Render(" "+kb.Description))
+	}
+
 	lines := lipgloss.JoinVertical(
 		lipgloss.Center,
-		PopupTitleStyle.Render("Keybindings"),
+		theme.Styles.PopupHeader.Render("Keybindings"),
 		lipgloss.JoinHorizontal(
 			lipgloss.Left,
 			lipgloss.JoinVertical(
 				lipgloss.Right,
-				HeaderStyle.Render("↑/↓ -"),
-				HeaderStyle.Render("<enter> -"),
-				// HeaderStyle.Render("p -"),
-				// HeaderStyle.Render("P -"),
-				// HeaderStyle.Render("f -"),
-				HeaderStyle.Render("c -"),
-				HeaderStyle.Render("/ -"),
-				HeaderStyle.Render("q -"),
+				keys...,
 			),
 			lipgloss.JoinVertical(
 				lipgloss.Left,
-				RepoStyle.Render(" Navigate up and down (or j/k)"),
-				RepoStyle.Render(" Open git repository report details"),
-				// RepoStyle.Render(" Pull changes"),
-				// RepoStyle.Render(" Push changes"),
-				// RepoStyle.Render(" Fetch changes"),
-				RepoStyle.Render(" Copy repo path to clipboard"),
-				RepoStyle.Render(" Filter by repo/branch name"),
-				RepoStyle.Render(" Quit"),
+				descs...,
 			),
 		),
 	)
 
-	helpBox := PopupStyle.Render(lines)
-
-	popup := lipgloss.Place(width, height, lipgloss.Center, lipgloss.Center, helpBox)
-	return popup
+	return theme.Styles.Popup.Render(lines)
 }
