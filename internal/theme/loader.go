@@ -1,24 +1,29 @@
 package theme
 
 import (
+	"embed"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/mabd-dev/reposcan/internal/logger"
 	"gopkg.in/yaml.v3"
-	"os"
 	"strings"
 )
 
 var (
-	schemesDir        string = "internal/theme/schemes/base24/"
+	schemesDir        string = "schemes/base24/"
 	defaultSchemeName string = "catppuccin-mocha"
 )
+
+// This line tells Go to embed everything in the schemes directory into the binary
+//
+//go:embed schemes/base24/*.yaml
+var schemesFS embed.FS
 
 func LoadBase24(path string) (ColorScheme, error) {
 	if !strings.HasSuffix(path, ".yaml") {
 		path += ".yaml"
 	}
 
-	data, err := os.ReadFile(path)
+	data, err := schemesFS.ReadFile(path)
 	if err != nil {
 		return ColorScheme{}, err
 	}
