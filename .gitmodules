@@ -1,3 +1,0 @@
-[submodule "internal/theme/schemes"]
-	path = internal/theme/schemes
-	url = https://github.com/tinted-theming/schemes.git

@@ -8,8 +8,8 @@ import (
 )
 
 func main() {
-	dir := "internal/theme/schemes/base24/" // adjust to your folder
-	outFile := "internal/theme/base24_schemes.go"
+	dir := "internal/theme/base24-schemas/" // adjust to your folder
+	outFile := "internal/theme/base24_schemas.go"
 	packageName := "theme"
 
 	var names []string

@@ -15,8 +15,6 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
-        with:
-          submodules: 'recursive'
 
       - name: Install Linux dependencies
         run: |
@@ -33,12 +31,8 @@ jobs:
 
       - name: Build Binary
         run: |
-          VERSION="${{ github.ref_name }}"
-          DATE=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-          
-          
           echo "Building reposcan ${VERSION} ..."
-          go build -ldflags "-X 'github.com/mabd-dev/reposcan/cmd/reposcan.version=${VERSION}'  -X 'github.com/mabd-dev/reposcan/cmd/reposcan.date=${DATE}'" -o reposcan .
+          go build -o reposcan .
 
       - name: Verify Version
         run: ./reposcan version
