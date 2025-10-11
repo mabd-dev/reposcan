@@ -136,7 +136,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m Model) View() string {
 	body := m.reposTable.View()
 
-	repoIndicator := strconv.Itoa(m.reposTable.Cursor()+1) + "/" + strconv.Itoa(m.reposTable.ReposCount())
+	var repoIndicator string
+	if m.reposTable.ReposCount() == 0 {
+		repoIndicator = "0/0"
+	} else {
+		repoIndicator = strconv.Itoa(m.reposTable.Cursor()+1) + "/" + strconv.Itoa(m.reposTable.ReposCount())
+	}
+
 	body = PlaceOverlayWithPosition(
 		OverlayPositionBottomRight,
 		lipgloss.Width(body), lipgloss.Height(body),

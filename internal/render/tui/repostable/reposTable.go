@@ -131,7 +131,7 @@ func (rt *Table) Cursor() int {
 }
 
 func (rt *Table) ReposCount() int {
-	return len(rt.report.RepoStates)
+	return len(rt.filteredRepos)
 }
 
 func (rt *Table) GetCurrentRepoState() *report.RepoState {
