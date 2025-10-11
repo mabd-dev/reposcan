@@ -10,7 +10,7 @@ import (
 
 var (
 	schemesDir        string = "internal/theme/schemes/base24/"
-	defaultSchemeName string = "catppuccin-mocha.yaml"
+	defaultSchemeName string = "catppuccin-mocha"
 )
 
 func LoadBase24(path string) (ColorScheme, error) {
