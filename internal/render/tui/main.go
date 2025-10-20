@@ -10,6 +10,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
+	"github.com/mabd-dev/reposcan/internal/render/tui/alerts"
 	"github.com/mabd-dev/reposcan/internal/render/tui/repostable"
 	rth "github.com/mabd-dev/reposcan/internal/render/tui/repostableheader"
 	"github.com/mabd-dev/reposcan/internal/theme"
@@ -40,6 +41,7 @@ func (rf reposFilter) IsVisible() bool {
 type Model struct {
 	reposTable        repostable.Table
 	rtHeader          rth.Header
+	alerts            alerts.AlertModel
 	showDetails       bool
 	isPushing         bool
 	width             int
@@ -97,6 +99,7 @@ func ShowReportTUI(r report.ScanReport, colorSchemeName string) error {
 	m := Model{
 		reposTable:  reposTable,
 		rtHeader:    reposTableHeader,
+		alerts:      alerts.New(theme),
 		showDetails: false,
 		width:       totalWidth,
 		height:      totalHeight,
@@ -189,6 +192,8 @@ func (m Model) View() string {
 		// Background(m.theme.Colors.Background).
 		Render(view)
 
+	view = m.renderAlerts(view, m.alerts.AlertStates(m.width, m.height))
+
 	if m.showHelp {
 		helpView := generateHelpPopup(m.theme)
 
@@ -276,6 +281,30 @@ func (m *Model) generateFooter() string {
 	}
 
 	return m.theme.Styles.Muted.Render(sb.String())
+}
+
+// renderAlerts take list of alerts, calculate each alert y position and render it (it it's visible). Overlay each alert on top of main [view] (bg view)
+func (m *Model) renderAlerts(
+	view string,
+	alertStates []alerts.AlertState,
+) string {
+	if len(alertStates) == 0 {
+		return view
+	}
+
+	for _, alert := range alertStates {
+		if alert.IsVisible {
+			view = PlaceOverlay(
+				alert.X,
+				alert.Y,
+				alert.AlertView,
+				view,
+				false,
+				WithWhitespaceChars(" "),
+			)
+		}
+	}
+	return view
 }
 
 func min(a, b int) int {

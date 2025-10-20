@@ -1,9 +1,11 @@
 package tui
 
 import (
-	tea "github.com/charmbracelet/bubbletea"
-	"golang.design/x/clipboard"
 	"strings"
+
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/mabd-dev/reposcan/internal/render/tui/alerts"
+	"golang.design/x/clipboard"
 )
 
 // focusModel defined how each group of ui-elements handles tui.Update function
@@ -63,7 +65,16 @@ func (r reposTableFM) update(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 
 			path := shellEscapePath(rs.Path)
 			clipboard.Write(clipboard.FmtText, []byte(path))
-			return m, nil
+
+			return m, func() tea.Msg {
+				return alerts.AddAlertMsg{
+					Msg: alerts.Alert{
+						Type:    alerts.AlertTypeInfo,
+						Title:   "",
+						Message: "Path copied to clipboard",
+					},
+				}
+			}
 		case "/":
 			m.reposFilter.show = true
 			m.reposFilter.textInput.Focus()

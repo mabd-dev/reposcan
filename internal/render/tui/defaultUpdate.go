@@ -2,6 +2,7 @@ package tui
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/mabd-dev/reposcan/internal/render/tui/alerts"
 )
 
 func defaultUpdate(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -57,6 +58,11 @@ func defaultUpdate(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.reposTable.UpdateRepoState(msg.index, msg.newRepoState)
 
 		return m, nil
+
+	case alerts.AddAlertMsg, alerts.TickMsg:
+		var cmd tea.Cmd
+		m.alerts, cmd = m.alerts.Update(msg)
+		return m, cmd
 	}
 
 	return nil, nil
