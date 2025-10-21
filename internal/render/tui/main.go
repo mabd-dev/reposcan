@@ -11,6 +11,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/mabd-dev/reposcan/internal/render/tui/alerts"
+	"github.com/mabd-dev/reposcan/internal/render/tui/overlay"
 	"github.com/mabd-dev/reposcan/internal/render/tui/repostable"
 	rth "github.com/mabd-dev/reposcan/internal/render/tui/repostableheader"
 	"github.com/mabd-dev/reposcan/internal/theme"
@@ -146,12 +147,12 @@ func (m Model) View() string {
 		repoIndicator = strconv.Itoa(m.reposTable.Cursor()+1) + "/" + strconv.Itoa(m.reposTable.ReposCount())
 	}
 
-	body = PlaceOverlayWithPosition(
-		OverlayPositionBottomRight,
+	body = overlay.PlaceOverlayWithPosition(
+		overlay.OverlayPositionBottomRight,
 		lipgloss.Width(body), lipgloss.Height(body),
 		repoIndicator, body,
 		false,
-		WithWhitespaceChars(" "),
+		overlay.WithWhitespaceChars(" "),
 	)
 
 	if m.reposFilter.show {
@@ -197,12 +198,12 @@ func (m Model) View() string {
 	if m.showHelp {
 		helpView := generateHelpPopup(m.theme)
 
-		view = PlaceOverlayWithPosition(
-			OverlayPositionCenter,
+		view = overlay.PlaceOverlayWithPosition(
+			overlay.OverlayPositionCenter,
 			m.width, m.height,
 			helpView, view,
 			true,
-			WithWhitespaceChars(" "), // fill empty space
+			overlay.WithWhitespaceChars(" "), // fill empty space
 		)
 	}
 
@@ -294,13 +295,13 @@ func (m *Model) renderAlerts(
 
 	for _, alert := range alertStates {
 		if alert.IsVisible {
-			view = PlaceOverlay(
+			view = overlay.PlaceOverlay(
 				alert.X,
 				alert.Y,
 				alert.AlertView,
 				view,
 				false,
-				WithWhitespaceChars(" "),
+				overlay.WithWhitespaceChars(" "),
 			)
 		}
 	}

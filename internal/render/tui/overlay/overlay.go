@@ -1,4 +1,4 @@
-package tui
+package overlay
 
 import (
 	"bytes"
@@ -221,22 +221,3 @@ func (w whitespace) render(width int) string {
 
 	return w.style.Styled(b.String())
 }
-
-// WhitespaceOption sets a styling rule for rendering whitespace.
-type WhitespaceOption func(*whitespace)
-
-// WithWhitespaceChars sets the characters to be rendered in the whitespace.
-func WithWhitespaceChars(s string) WhitespaceOption {
-	return func(w *whitespace) {
-		w.chars = s
-	}
-}
-
-type OverlayPosition string
-
-const (
-	OverlayPositionCenter      OverlayPosition = "center"
-	OverlayPositionTopRight    OverlayPosition = "topRight"
-	OverlayPositionTopLeft     OverlayPosition = "topLeft"
-	OverlayPositionBottomRight OverlayPosition = "bottomright"
-)
