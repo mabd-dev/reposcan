@@ -13,6 +13,7 @@ import (
 	"github.com/mabd-dev/reposcan/internal/render/tui/alerts"
 	"github.com/mabd-dev/reposcan/internal/render/tui/common"
 	"github.com/mabd-dev/reposcan/internal/render/tui/overlay"
+	"github.com/mabd-dev/reposcan/internal/render/tui/repodetails"
 	"github.com/mabd-dev/reposcan/internal/render/tui/repostable"
 	rth "github.com/mabd-dev/reposcan/internal/render/tui/repostableheader"
 	"github.com/mabd-dev/reposcan/internal/theme"
@@ -42,9 +43,9 @@ func (rf reposFilter) IsVisible() bool {
 
 type Model struct {
 	reposTable        repostable.Table
+	repoDetails       repodetails.Model
 	rtHeader          rth.Header
 	alerts            alerts.AlertModel
-	showDetails       bool
 	isPushing         bool
 	width             int
 	height            int
@@ -98,11 +99,18 @@ func ShowReportTUI(r report.ScanReport, colorSchemeName string) error {
 	}
 	reposTableHeader.SetReport(r)
 
+	var repoDetails repodetails.Model
+	if len(r.RepoStates) == 0 {
+		repoDetails = repodetails.New(nil, theme)
+	} else {
+		repoDetails = repodetails.New(&r.RepoStates[0], theme)
+	}
+
 	m := Model{
 		reposTable:  reposTable,
+		repoDetails: repoDetails,
 		rtHeader:    reposTableHeader,
 		alerts:      alerts.New(theme),
-		showDetails: false,
 		width:       totalWidth,
 		height:      totalHeight,
 		warnings:    []string{},
@@ -165,9 +173,7 @@ func (m Model) View() string {
 		body = lipgloss.JoinVertical(lipgloss.Top, body, textfieldStr)
 	}
 
-	if m.showDetails {
-		body = lipgloss.JoinVertical(lipgloss.Left, body, m.detailsView())
-	}
+	body = lipgloss.JoinVertical(lipgloss.Left, body, m.repoDetails.View())
 
 	header := m.rtHeader.View()
 	footer := m.generateFooter()

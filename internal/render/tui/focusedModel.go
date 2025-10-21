@@ -49,9 +49,6 @@ func (r reposTableFM) update(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "q", "esc", "ctrl+c":
 			return m, tea.Quit
-		case "enter":
-			m.showDetails = !m.showDetails
-			return m, nil
 		// case "p":
 		// 	return m, gitPull(m)
 		// case "P":
@@ -96,6 +93,17 @@ func (r reposTableFM) update(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	m.reposTable, cmd = m.reposTable.Update(msg)
+
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "j", "down":
+			m.repoDetails.UpdateData(m.reposTable.GetCurrentRepoState())
+
+		case "k", "up":
+			m.repoDetails.UpdateData(m.reposTable.GetCurrentRepoState())
+		}
+	}
 	return m, cmd
 }
 
@@ -116,6 +124,7 @@ func (r reposFilterTextFieldFM) update(m Model, msg tea.Msg) (tea.Model, tea.Cmd
 
 			m.reposTable.Filter("")
 			m.reposTable.Focus()
+			m.repoDetails.UpdateData(m.reposTable.GetCurrentRepoState())
 
 			return m, nil
 		case "enter":
@@ -125,6 +134,7 @@ func (r reposFilterTextFieldFM) update(m Model, msg tea.Msg) (tea.Model, tea.Cmd
 
 			m.reposFilter.textInput.Blur()
 			m.reposTable.Focus()
+			m.repoDetails.UpdateData(m.reposTable.GetCurrentRepoState())
 
 			return m, nil
 		}
@@ -135,6 +145,7 @@ func (r reposFilterTextFieldFM) update(m Model, msg tea.Msg) (tea.Model, tea.Cmd
 	m.reposFilter.textInput, cmd = m.reposFilter.textInput.Update(msg)
 
 	m.reposTable.Filter(m.reposFilter.textInput.Value())
+	m.repoDetails.UpdateData(m.reposTable.GetCurrentRepoState())
 
 	return m, cmd
 }
