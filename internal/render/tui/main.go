@@ -11,6 +11,7 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 	"github.com/mabd-dev/reposcan/internal/render/tui/alerts"
+	"github.com/mabd-dev/reposcan/internal/render/tui/common"
 	"github.com/mabd-dev/reposcan/internal/render/tui/overlay"
 	"github.com/mabd-dev/reposcan/internal/render/tui/repostable"
 	rth "github.com/mabd-dev/reposcan/internal/render/tui/repostableheader"
@@ -196,7 +197,7 @@ func (m Model) View() string {
 	view = m.renderAlerts(view, m.alerts.AlertStates(m.width, m.height))
 
 	if m.showHelp {
-		helpView := generateHelpPopup(m.theme)
+		helpView := generateHelpPopup(m.theme, reposTableKeybindings)
 
 		view = overlay.PlaceOverlayWithPosition(
 			overlay.OverlayPositionCenter,
@@ -260,7 +261,7 @@ func (m *Model) generateFooter() string {
 	}
 
 	if addKeybinding {
-		keybindings = append(keybindings, Keybinding{
+		keybindings = append(keybindings, common.Keybinding{
 			Key:         "?",
 			Description: "More Keybindings",
 			ShortDesc:   "Keybindings",

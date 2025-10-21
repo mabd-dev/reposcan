@@ -2,16 +2,15 @@ package tui
 
 import (
 	"github.com/charmbracelet/lipgloss"
+	"github.com/mabd-dev/reposcan/internal/render/tui/common"
 	"github.com/mabd-dev/reposcan/internal/theme"
 )
 
-func generateHelpPopup(theme theme.Theme) string {
+func generateHelpPopup(theme theme.Theme, keybindings []common.Keybinding) string {
 
 	keybindingStyle := theme.Styles.Base.
 		Bold(true).
 		Foreground(theme.Colors.Accent)
-
-	keybindings := reposTableKeybindings
 
 	keys := []string{}
 	descs := []string{}

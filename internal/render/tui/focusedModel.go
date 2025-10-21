@@ -5,13 +5,14 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/mabd-dev/reposcan/internal/render/tui/alerts"
+	"github.com/mabd-dev/reposcan/internal/render/tui/common"
 	"golang.design/x/clipboard"
 )
 
 // focusModel defined how each group of ui-elements handles tui.Update function
 type focusedModel interface {
 	update(m Model, msg tea.Msg) (tea.Model, tea.Cmd)
-	keybindings() []Keybinding
+	keybindings() []common.Keybinding
 }
 
 type popupFM struct{}
@@ -36,7 +37,7 @@ func (r popupFM) update(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (r popupFM) keybindings() []Keybinding {
+func (r popupFM) keybindings() []common.Keybinding {
 	return helpPopupKeybindings
 }
 
@@ -98,7 +99,7 @@ func (r reposTableFM) update(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (r reposTableFM) keybindings() []Keybinding {
+func (r reposTableFM) keybindings() []common.Keybinding {
 	return reposTableKeybindings
 }
 
@@ -138,6 +139,6 @@ func (r reposFilterTextFieldFM) update(m Model, msg tea.Msg) (tea.Model, tea.Cmd
 	return m, cmd
 }
 
-func (r reposFilterTextFieldFM) keybindings() []Keybinding {
+func (r reposFilterTextFieldFM) keybindings() []common.Keybinding {
 	return reposTableFilterKeybindings
 }
