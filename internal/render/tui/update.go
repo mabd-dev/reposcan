@@ -2,6 +2,7 @@ package tui
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/mabd-dev/reposcan/internal/logger"
 	"github.com/mabd-dev/reposcan/internal/render/tui/alerts"
 )
 
@@ -25,7 +26,7 @@ func defaultUpdate(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case gitPullResultMsg:
 		if len(msg.Err) != 0 {
-			m.addWarning(msg.Err)
+			logger.Warn(msg.Err)
 			return m, nil
 		}
 
@@ -42,7 +43,7 @@ func defaultUpdate(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	case gitFetchResultMsg:
 		if len(msg.Err) != 0 {
-			m.addWarning(msg.Err)
+			logger.Warn(msg.Err)
 			return m, nil
 		}
 

@@ -23,20 +23,23 @@ func (rf reposFilter) IsVisible() bool {
 }
 
 type Model struct {
-	loading           bool
+	// Loading stuff
+	loading bool
+	width   int
+	height  int
+	theme   theme.Theme
+
+	// configs
 	configs           config.Config
-	reposTable        repostable.Model
-	repoDetails       repodetails.Model
-	rtHeader          rth.Header
-	alerts            alerts.AlertModel
-	isPushing         bool
-	width             int
-	height            int
-	reposBeingUpdated []string
-	warnings          []string
 	showHelp          bool
-	reposFilter       reposFilter
-	theme             theme.Theme
+	reposBeingUpdated []string
+
+	// Models
+	reposTable  repostable.Model
+	repoDetails repodetails.Model
+	rtHeader    rth.Header
+	alerts      alerts.AlertModel
+	reposFilter reposFilter
 }
 
 type generateReport struct {

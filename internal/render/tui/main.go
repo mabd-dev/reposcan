@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/mabd-dev/reposcan/internal/config"
+	"github.com/mabd-dev/reposcan/internal/logger"
 	"github.com/mabd-dev/reposcan/internal/render/tui/alerts"
 	"github.com/mabd-dev/reposcan/internal/render/tui/repodetails"
 	"github.com/mabd-dev/reposcan/internal/render/tui/repostable"
@@ -72,14 +73,13 @@ func Render(
 		alerts:      alerts.New(theme),
 		width:       totalWidth,
 		height:      totalHeight,
-		warnings:    []string{},
 		reposFilter: createRrepoFilter(),
 		theme:       theme,
 	}
 
 	err = clipboard.Init()
 	if err != nil {
-		m.warnings = append(m.warnings, err.Error())
+		logger.Warn(err.Error())
 	}
 
 	p := tea.NewProgram(m, tea.WithOutput(os.Stdout), tea.WithAltScreen())
@@ -109,8 +109,4 @@ func (m *Model) getFocusedModel() focusedModel {
 		focusedModel = reposTableFM{}
 	}
 	return focusedModel
-}
-
-func (m *Model) addWarning(msg string) {
-	m.warnings = append(m.warnings, msg)
 }
