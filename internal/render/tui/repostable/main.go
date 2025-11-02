@@ -56,15 +56,8 @@ func New(
 func (rt Model) Init() tea.Cmd { return nil }
 
 func (m *Model) SetReport(report report.ScanReport) {
-	cursorPosition := m.tbl.Cursor()
-
 	m.report = report
 	m.Filter(m.filterQuery)
-
-	if cursorPosition < len(m.filteredRepos)-1 {
-		m.tbl.SetCursor(cursorPosition)
-	}
-
 }
 
 func (m *Model) UpdateWindowSize(width int, height int) {
@@ -89,10 +82,14 @@ func (m *Model) Filter(query string) {
 		}
 	}
 
+	cursorPosition := m.tbl.Cursor()
+
 	rows := createRows(m.filteredRepos)
 	m.tbl.SetRows(rows)
 
-	if len(rows) > 0 {
+	if cursorPosition < len(m.filteredRepos) {
+		m.tbl.SetCursor(cursorPosition)
+	} else {
 		m.tbl.SetCursor(0)
 	}
 
