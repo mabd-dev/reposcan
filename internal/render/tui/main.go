@@ -164,19 +164,20 @@ func (m Model) View() string {
 		overlay.WithWhitespaceChars(" "),
 	)
 
-	if m.reposFilter.show {
-		focused := m.reposFilter.textInput.Focused()
-		textfieldStr := m.theme.Styles.BoxFor(focused).
-			Foreground(m.theme.Colors.Foreground).
-			Render(m.reposFilter.textInput.View())
-
-		body = lipgloss.JoinVertical(lipgloss.Top, body, textfieldStr)
-	}
-
 	body = lipgloss.JoinVertical(lipgloss.Left, body, m.repoDetails.View())
 
 	header := m.rtHeader.View()
-	footer := m.generateFooter()
+
+	var footer string
+	if m.reposFilter.show {
+		textfieldStr := m.theme.Styles.Base.
+			Foreground(m.theme.Colors.Foreground).
+			Render(m.reposFilter.textInput.View())
+
+		footer = textfieldStr
+	} else {
+		footer = m.generateFooter()
+	}
 
 	// Calculate heights
 	headerHeight := lipgloss.Height(header)

@@ -32,6 +32,7 @@ var reposTableKeybindings = []common.Keybinding{
 	},
 }
 
+// Not needed anymore. Repos table filter textfield is placed on top of footer
 var reposTableFilterKeybindings = []common.Keybinding{
 	{
 		Key:         "<enter>",
