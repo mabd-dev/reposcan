@@ -2,9 +2,11 @@ package repostable
 
 import (
 	"fmt"
-	"github.com/charmbracelet/bubbles/table"
-	"github.com/mabd-dev/reposcan/pkg/report"
 	"strings"
+
+	"github.com/charmbracelet/bubbles/table"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/mabd-dev/reposcan/pkg/report"
 )
 
 const (
@@ -66,4 +68,22 @@ func getStateColumnStr(rs report.RepoState) string {
 	}
 
 	return stateStr.String()
+}
+
+func setKeymaps(km table.KeyMap) {
+	km.LineUp.SetKeys("up", "k")
+	km.LineDown.SetKeys("down", "j")
+	km.PageUp.SetKeys("pgup", tea.KeyCtrlU.String())
+	km.PageDown.SetKeys("pgdn", tea.KeyCtrlD.String())
+	km.GotoTop.SetKeys("home", "g")
+	km.GotoBottom.SetKeys("end", "G")
+}
+
+func getRepoIndex(repos []report.RepoState, id string) int {
+	for i, s := range repos {
+		if s.ID == id {
+			return i
+		}
+	}
+	return -1
 }

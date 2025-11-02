@@ -5,6 +5,10 @@ import (
 	"github.com/mabd-dev/reposcan/internal/render/tui/alerts"
 )
 
+func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	return m.getFocusedModel().update(m, msg)
+}
+
 func defaultUpdate(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:

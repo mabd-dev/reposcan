@@ -2,26 +2,28 @@
 package repostable
 
 import (
+	"strings"
+
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/mabd-dev/reposcan/internal/theme"
 	"github.com/mabd-dev/reposcan/pkg/report"
-	"strings"
 )
 
-type Table struct {
-	tbl           table.Model
-	report        report.ScanReport
-	filteredRepos []report.RepoState
-	Theme         theme.Theme
-}
-
-func (rt *Table) InitUI(
+func New(
+	theme theme.Theme,
+	report report.ScanReport,
 	width int,
 	height int,
-) {
+) Model {
+	model := Model{
+		theme:         theme,
+		report:        report,
+		filteredRepos: report.RepoStates,
+	}
+
 	cols := createColumns(width)
-	rows := createRows(rt.report.RepoStates)
+	rows := createRows(model.report.RepoStates)
 
 	t := table.New(
 		table.WithColumns(cols),
@@ -39,111 +41,88 @@ func (rt *Table) InitUI(
 	}
 
 	t.SetStyles(table.Styles{
-		Header:   rt.Theme.Styles.TableHeader,
-		Selected: rt.Theme.Styles.TableSelectedRow,
-		Cell:     rt.Theme.Styles.TableRow,
+		Header:   model.theme.Styles.TableHeader,
+		Selected: model.theme.Styles.TableSelectedRow,
+		Cell:     model.theme.Styles.TableRow,
 	})
-	rt.tbl = t
+	model.tbl = t
+
+	return model
 }
 
-func setKeymaps(km table.KeyMap) {
-	km.LineUp.SetKeys("up", "k")
-	km.LineDown.SetKeys("down", "j")
-	km.PageUp.SetKeys("pgup", tea.KeyCtrlU.String())
-	km.PageDown.SetKeys("pgdn", tea.KeyCtrlD.String())
-	km.GotoTop.SetKeys("home", "g")
-	km.GotoBottom.SetKeys("end", "G")
-}
+func (rt Model) Init() tea.Cmd { return nil }
 
-func (rt Table) Init() tea.Cmd { return nil }
-
-func (rt Table) Update(msg tea.Msg) (Table, tea.Cmd) {
-	var cmd tea.Cmd
-	rt.tbl, cmd = rt.tbl.Update(msg)
-
-	return rt, cmd
-}
-
-func (rt Table) View() string {
-	return rt.Theme.Styles.BoxFor(rt.tbl.Focused()).Render(rt.tbl.View())
-}
-
-func (rt *Table) UpdateWindowSize(width int, height int) {
-	rt.tbl.SetHeight(height)
+func (m *Model) UpdateWindowSize(width int, height int) {
+	m.tbl.SetHeight(height)
 	cols := createColumns(width)
-	rt.tbl.SetColumns(cols)
-}
-
-func (rt *Table) SetReport(report report.ScanReport) {
-	rt.report = report
-	rt.filteredRepos = report.RepoStates
+	m.tbl.SetColumns(cols)
 }
 
 // Filter filters repo states based on repo name. Then update table based on filtered repos
-func (rt *Table) Filter(query string) {
+func (m *Model) Filter(query string) {
 	q := strings.ToLower(strings.TrimSpace(query))
 	if len(q) == 0 {
-		rt.filteredRepos = rt.report.RepoStates
+		m.filteredRepos = m.report.RepoStates
 	} else {
-		rt.filteredRepos = []report.RepoState{}
-		for _, rs := range rt.report.RepoStates {
+		m.filteredRepos = []report.RepoState{}
+		for _, rs := range m.report.RepoStates {
 			if strings.Contains(strings.ToLower(rs.Repo), q) ||
 				strings.Contains(strings.ToLower(rs.Branch), q) {
-				rt.filteredRepos = append(rt.filteredRepos, rs)
+				m.filteredRepos = append(m.filteredRepos, rs)
 			}
 		}
 	}
 
-	rows := createRows(rt.filteredRepos)
-	rt.tbl.SetRows(rows)
+	rows := createRows(m.filteredRepos)
+	m.tbl.SetRows(rows)
 
 	if len(rows) > 0 {
-		rt.tbl.SetCursor(0)
+		m.tbl.SetCursor(0)
 	}
 
 }
 
-func (rt *Table) UpdateRepoState(index int, newState report.RepoState) {
-	rt.filteredRepos[index] = newState
+func (m *Model) UpdateRepoState(index int, newState report.RepoState) {
+	m.filteredRepos[index] = newState
 
-	originalIndex := getRepoIndex(rt.report.RepoStates, newState.ID)
+	originalIndex := getRepoIndex(m.report.RepoStates, newState.ID)
 	if originalIndex != -1 {
-		rt.report.RepoStates[originalIndex] = newState
+		m.report.RepoStates[originalIndex] = newState
 	}
 
-	rows := createRows(rt.filteredRepos)
-	rt.tbl.SetRows(rows)
+	rows := createRows(m.filteredRepos)
+	m.tbl.SetRows(rows)
 }
 
 // Blur removes focus from table
-func (rt *Table) Blur() {
-	rt.tbl.Blur()
+func (m *Model) Blur() {
+	m.tbl.Blur()
 }
 
 // Focus bring focus to table
-func (rt *Table) Focus() {
-	rt.tbl.Focus()
+func (m *Model) Focus() {
+	m.tbl.Focus()
 }
 
 // Cursor returns the index of the selected row.
-func (rt *Table) Cursor() int {
-	return rt.tbl.Cursor()
+func (m *Model) Cursor() int {
+	return m.tbl.Cursor()
 }
 
-func (rt *Table) ReposCount() int {
+func (rt *Model) ReposCount() int {
 	return len(rt.filteredRepos)
 }
 
-func (rt *Table) GetCurrentRepoState() *report.RepoState {
-	return rt.GetRepoStateAt(rt.Cursor())
+func (m *Model) GetCurrentRepoState() *report.RepoState {
+	return m.GetRepoStateAt(m.Cursor())
 }
 
-func (rt *Table) GetRepoStateAt(index int) *report.RepoState {
+func (m *Model) GetRepoStateAt(index int) *report.RepoState {
 	if index < 0 {
 		return nil
 	}
-	if index >= len(rt.filteredRepos) {
+	if index >= len(m.filteredRepos) {
 		return nil
 	}
-	return &rt.filteredRepos[index]
+	return &m.filteredRepos[index]
 }
