@@ -15,10 +15,22 @@ import (
 // https://github.com/charmbracelet/lipgloss/pull/102
 // as well as the lipgloss library, with some modification for what I needed.
 
-// PlaceOverlayWithPosition places fg on top of bg with overlay position
 func PlaceOverlayWithPosition(
 	position OverlayPosition,
 	fullWidth, fullHeight int,
+	fg, bg string,
+	shadow bool, opts ...WhitespaceOption,
+) string {
+	return PlaceOverlayWithPositionAndPadding(
+		position, fullWidth, fullHeight, 0, 0, fg, bg, shadow, opts...,
+	)
+}
+
+// PlaceOverlayWithPosition places fg on top of bg with overlay position
+func PlaceOverlayWithPositionAndPadding(
+	position OverlayPosition,
+	fullWidth, fullHeight int,
+	horizontalPadding, verticalPadding int,
 	fg, bg string,
 	shadow bool, opts ...WhitespaceOption,
 ) string {
@@ -32,13 +44,13 @@ func PlaceOverlayWithPosition(
 		x = (fullWidth - fgWidth) / 2
 		y = (fullHeight - fgHeight) / 2
 	case OverlayPositionTopRight:
-		x = fullWidth - fgWidth
+		x = fullWidth - fgWidth - horizontalPadding
 		y = 0
 	case OverlayPositionTopLeft:
-		x = 0
+		x = horizontalPadding
 		y = 0
 	case OverlayPositionBottomRight:
-		x = fullWidth - fgWidth
+		x = fullWidth - fgWidth - horizontalPadding
 		y = (fullHeight)
 	default:
 		panic("Unknown overlay position")

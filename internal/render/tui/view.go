@@ -24,17 +24,16 @@ func (m Model) View() string {
 		repoIndicator = strconv.Itoa(m.reposTable.Cursor()+1) + "/" + strconv.Itoa(m.reposTable.ReposCount())
 	}
 
-	body = overlay.PlaceOverlayWithPosition(
+	body = overlay.PlaceOverlayWithPositionAndPadding(
 		overlay.OverlayPositionBottomRight,
 		lipgloss.Width(body), lipgloss.Height(body),
+		2, 0,
 		repoIndicator, body,
 		false,
 		overlay.WithWhitespaceChars(" "),
 	)
 
 	body = lipgloss.JoinVertical(lipgloss.Left, body, m.repoDetails.View())
-
-	header := m.rtHeader.View()
 
 	var footer string
 	if m.reposFilter.show {
@@ -48,9 +47,8 @@ func (m Model) View() string {
 	}
 
 	// Calculate heights
-	headerHeight := lipgloss.Height(header)
 	footerHeight := lipgloss.Height(footer)
-	availableHeight := m.height - headerHeight - footerHeight
+	availableHeight := m.height - footerHeight
 
 	body = lipgloss.NewStyle().
 		Height(availableHeight).
@@ -58,7 +56,7 @@ func (m Model) View() string {
 		Render(body)
 
 	view := lipgloss.JoinVertical(lipgloss.Left,
-		header,
+		//header,
 		body,
 		footer,
 	)
