@@ -6,6 +6,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/mabd-dev/reposcan/internal/config"
 	"github.com/mabd-dev/reposcan/internal/render/tui/alerts"
 	"github.com/mabd-dev/reposcan/internal/render/tui/repodetails"
 	"github.com/mabd-dev/reposcan/internal/render/tui/repostable"
@@ -29,7 +30,11 @@ var (
 func (m Model) Init() tea.Cmd { return nil }
 
 // Render runs a Bubble Tea UI that renders the ScanReport in a table.
-func Render(r report.ScanReport, colorSchemeName string) error {
+func Render(
+	r report.ScanReport,
+	configs config.Config,
+) error {
+	colorSchemeName := configs.Output.ColorSchemeName
 	colors, err := theme.CreateColors(colorSchemeName)
 	if err != nil {
 		return err
@@ -60,6 +65,7 @@ func Render(r report.ScanReport, colorSchemeName string) error {
 	}
 
 	m := Model{
+		configs:     configs,
 		reposTable:  reposTable,
 		repoDetails: repoDetails,
 		rtHeader:    reposTableHeader,

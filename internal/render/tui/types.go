@@ -2,11 +2,15 @@ package tui
 
 import (
 	"github.com/charmbracelet/bubbles/textinput"
+	tea "github.com/charmbracelet/bubbletea"
+	"github.com/mabd-dev/reposcan/internal"
+	"github.com/mabd-dev/reposcan/internal/config"
 	"github.com/mabd-dev/reposcan/internal/render/tui/alerts"
 	"github.com/mabd-dev/reposcan/internal/render/tui/repodetails"
 	"github.com/mabd-dev/reposcan/internal/render/tui/repostable"
 	rth "github.com/mabd-dev/reposcan/internal/render/tui/repostableheader"
 	"github.com/mabd-dev/reposcan/internal/theme"
+	"github.com/mabd-dev/reposcan/pkg/report"
 )
 
 type reposFilter struct {
@@ -19,6 +23,8 @@ func (rf reposFilter) IsVisible() bool {
 }
 
 type Model struct {
+	loading           bool
+	configs           config.Config
 	reposTable        repostable.Model
 	repoDetails       repodetails.Model
 	rtHeader          rth.Header
@@ -31,4 +37,19 @@ type Model struct {
 	showHelp          bool
 	reposFilter       reposFilter
 	theme             theme.Theme
+}
+
+type generateReport struct {
+	configs config.Config
+}
+
+func (g *generateReport) Cmd() tea.Cmd {
+	return func() tea.Msg {
+		report := internal.GenerateScanReport(g.configs)
+		return generateReportResponse{report: report}
+	}
+}
+
+type generateReportResponse struct {
+	report report.ScanReport
 }

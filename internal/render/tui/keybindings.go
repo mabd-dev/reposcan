@@ -11,14 +11,14 @@ var reposTableKeybindings = []common.Keybinding{
 		ShortDesc:   "Navigate",
 	},
 	{
-		Key:         "<enter>",
-		Description: "Open git repository report details",
-		ShortDesc:   "Details",
-	},
-	{
 		Key:         "c",
 		Description: "Copy repo path to clipboard",
 		ShortDesc:   "Copy Path",
+	},
+	{
+		Key:         "r",
+		Description: "Refresh list",
+		ShortDesc:   "Refresh list",
 	},
 	{
 		Key:         "/",

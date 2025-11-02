@@ -17,9 +17,12 @@ func New(
 	height int,
 ) Model {
 	model := Model{
+		width:         width,
+		height:        height,
 		theme:         theme,
 		report:        report,
 		filteredRepos: report.RepoStates,
+		filterQuery:   "",
 	}
 
 	cols := createColumns(width)
@@ -52,6 +55,18 @@ func New(
 
 func (rt Model) Init() tea.Cmd { return nil }
 
+func (m *Model) SetReport(report report.ScanReport) {
+	cursorPosition := m.tbl.Cursor()
+
+	m.report = report
+	m.Filter(m.filterQuery)
+
+	if cursorPosition < len(m.filteredRepos)-1 {
+		m.tbl.SetCursor(cursorPosition)
+	}
+
+}
+
 func (m *Model) UpdateWindowSize(width int, height int) {
 	m.tbl.SetHeight(height)
 	cols := createColumns(width)
@@ -60,6 +75,7 @@ func (m *Model) UpdateWindowSize(width int, height int) {
 
 // Filter filters repo states based on repo name. Then update table based on filtered repos
 func (m *Model) Filter(query string) {
+	m.filterQuery = query
 	q := strings.ToLower(strings.TrimSpace(query))
 	if len(q) == 0 {
 		m.filteredRepos = m.report.RepoStates

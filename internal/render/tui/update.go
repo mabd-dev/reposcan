@@ -62,6 +62,10 @@ func defaultUpdate(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.reposTable.UpdateRepoState(msg.index, msg.newRepoState)
 
 		return m, nil
+	case generateReportResponse:
+		m.loading = false
+		m.reposTable.SetReport(msg.report)
+		return m, nil
 
 	case alerts.AddAlertMsg, alerts.TickMsg:
 		var cmd tea.Cmd

@@ -73,6 +73,10 @@ func (r reposTableFM) update(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 					},
 				}
 			}
+		case "r":
+			m.loading = true
+			request := generateReport{configs: m.configs}
+			return m, request.Cmd()
 		case "/":
 			m.reposFilter.show = true
 			m.reposFilter.textInput.Focus()

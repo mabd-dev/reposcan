@@ -11,6 +11,10 @@ import (
 )
 
 func (m Model) View() string {
+	if m.loading {
+		return "Loading..."
+	}
+
 	body := m.reposTable.View()
 
 	var repoIndicator string

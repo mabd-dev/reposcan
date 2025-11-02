@@ -7,8 +7,13 @@ import (
 )
 
 type Model struct {
-	tbl           table.Model
+	width  int
+	height int
+	theme  theme.Theme
+
+	tbl table.Model
+
 	report        report.ScanReport
 	filteredRepos []report.RepoState
-	theme         theme.Theme
+	filterQuery   string
 }
