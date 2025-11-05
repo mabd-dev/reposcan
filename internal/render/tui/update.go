@@ -1,13 +1,139 @@
 package tui
 
 import (
+	"strings"
+
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/mabd-dev/reposcan/internal/logger"
 	"github.com/mabd-dev/reposcan/internal/render/tui/alerts"
+	"golang.design/x/clipboard"
 )
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
-	return m.getFocusedModel().update(m, msg)
+	switch m.currentFocus() {
+	case FocusReposTable:
+		return m.updateReposTable(msg)
+	case FocusReposFilter:
+		return m.updateReposFilter(msg)
+	case FocusKeybindingPopup:
+		return m.keybindingPopup(msg)
+	}
+	return m, nil
+}
+
+func (m Model) updateReposTable(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "q", "esc", "ctrl+c":
+			return m, tea.Quit
+		// case "p":
+		// 	return m, gitPull(m)
+		// case "P":
+		// 	return m, gitPush(m)
+		// case "f":
+		// 	return m, gitFetch(m)
+		case "c":
+			rs := m.reposTable.GetCurrentRepoState()
+			if rs == nil {
+				return m, nil
+			}
+
+			path := shellEscapePath(rs.Path)
+			clipboard.Write(clipboard.FmtText, []byte(path))
+
+			return m, func() tea.Msg {
+				return alerts.AddAlertMsg{
+					Msg: alerts.Alert{
+						Type:    alerts.AlertTypeInfo,
+						Title:   "",
+						Message: "Path copied to clipboard",
+					},
+				}
+			}
+		case "r":
+			m.loading = true
+			request := generateReport{configs: m.configs}
+			return m, request.Cmd()
+		case "/":
+			m.pushFocus(FocusReposFilter)
+			return m, nil
+		case "?":
+			m.pushFocus(FocusKeybindingPopup)
+			return m, nil
+		}
+	}
+
+	var cmd tea.Cmd
+	nm, cmd := defaultUpdate(m, msg)
+
+	if nm != nil {
+		return nm, cmd
+	}
+
+	m.reposTable, cmd = m.reposTable.Update(msg)
+
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		// TODO: do this in View()
+		case "j", "down":
+			m.repoDetails.UpdateData(m.reposTable.GetCurrentRepoState())
+
+		case "k", "up":
+			m.repoDetails.UpdateData(m.reposTable.GetCurrentRepoState())
+		}
+	}
+	return m, cmd
+}
+
+func (m Model) updateReposFilter(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "esc", "ctrl+c":
+			m.popFocus(true)
+
+			m.repoDetails.UpdateData(m.reposTable.GetCurrentRepoState())
+
+			return m, nil
+		case "enter":
+			emptyQuery := len(strings.TrimSpace(m.reposFilter.Value())) == 0
+
+			m.popFocus(emptyQuery)
+			m.repoDetails.UpdateData(m.reposTable.GetCurrentRepoState())
+
+			return m, nil
+		}
+	}
+
+	// on each keystorke, update repos list
+	var cmd tea.Cmd
+	m.reposFilter, cmd = m.reposFilter.Update(msg)
+
+	m.reposTable.Filter(m.reposFilter.Value())
+	m.repoDetails.UpdateData(m.reposTable.GetCurrentRepoState())
+
+	return m, cmd
+}
+
+func (m Model) keybindingPopup(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "q", "esc":
+			m.popFocus(true)
+			return m, nil
+		}
+	}
+
+	var cmd tea.Cmd
+	nm, cmd := defaultUpdate(m, msg)
+
+	if nm != nil {
+		return nm, cmd
+	}
+	return m, nil
 }
 
 func defaultUpdate(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {

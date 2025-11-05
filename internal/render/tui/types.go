@@ -1,6 +1,8 @@
 package tui
 
 import (
+	"strings"
+
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/mabd-dev/reposcan/internal"
@@ -13,15 +15,6 @@ import (
 	"github.com/mabd-dev/reposcan/pkg/report"
 )
 
-type reposFilter struct {
-	textInput textinput.Model
-	show      bool
-}
-
-func (rf reposFilter) IsVisible() bool {
-	return rf.show && rf.textInput.Focused()
-}
-
 type Model struct {
 	// Loading stuff
 	loading bool
@@ -31,7 +24,6 @@ type Model struct {
 
 	// configs
 	configs           config.Config
-	showHelp          bool
 	reposBeingUpdated []string
 
 	// Models
@@ -39,7 +31,13 @@ type Model struct {
 	repoDetails repodetails.Model
 	rtHeader    rth.Header
 	alerts      alerts.AlertModel
-	reposFilter reposFilter
+	reposFilter textinput.Model
+
+	focusStack []FocusState
+}
+
+func (m Model) IsReposFilterVisible() bool {
+	return m.reposFilter.Focused() || len(strings.TrimSpace(m.reposFilter.Value())) != 0
 }
 
 type generateReport struct {

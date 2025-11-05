@@ -75,6 +75,7 @@ func Render(
 		height:      totalHeight,
 		reposFilter: createRrepoFilter(),
 		theme:       theme,
+		focusStack:  []FocusState{FocusReposTable},
 	}
 
 	err = clipboard.Init()
@@ -87,26 +88,11 @@ func Render(
 	return err
 }
 
-func createRrepoFilter() reposFilter {
+func createRrepoFilter() textinput.Model {
 	ti := textinput.New()
 	ti.Placeholder = "Filter by repo/branch name"
-	ti.Focus()
+	//ti.Focus()
 	ti.CharLimit = 156
 	ti.Width = 100
-	return reposFilter{
-		textInput: ti,
-		show:      false,
-	}
-}
-
-func (m *Model) getFocusedModel() focusedModel {
-	var focusedModel focusedModel
-	if m.showHelp {
-		focusedModel = popupFM{}
-	} else if m.reposFilter.IsVisible() {
-		focusedModel = reposFilterTextFieldFM{}
-	} else {
-		focusedModel = reposTableFM{}
-	}
-	return focusedModel
+	return ti
 }

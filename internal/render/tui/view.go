@@ -42,7 +42,7 @@ func (m Model) View() string {
 
 	view = m.renderAlerts(view, m.alerts.AlertStates(m.width, m.height))
 
-	if m.showHelp {
+	if m.currentFocus() == FocusKeybindingPopup {
 		helpView := generateHelpPopup(m.theme, reposTableKeybindings)
 
 		view = overlay.PlaceOverlayWithPosition(
@@ -58,22 +58,22 @@ func (m Model) View() string {
 }
 
 func (m *Model) getFooterView() string {
-	if m.reposFilter.show {
+	if m.IsReposFilterVisible() {
+		//if m.reposFilter.show {
 		return m.theme.Styles.Base.
 			Foreground(m.theme.Colors.Foreground).
-			Render(m.reposFilter.textInput.View())
+			Render(m.reposFilter.View())
 	}
 
 	return m.generateKeybindingsFooterView()
 }
 
 func (m *Model) generateKeybindingsFooterView() string {
-	focusedModel := m.getFocusedModel()
-	keybindings := focusedModel.keybindings()
+	keybindings := m.keybindings()
 
 	addKeybinding := false
-	switch focusedModel.(type) {
-	case reposTableFM:
+	switch m.currentFocus() {
+	case FocusReposTable:
 		addKeybinding = true
 	}
 
