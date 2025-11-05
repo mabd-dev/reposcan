@@ -122,7 +122,7 @@ Each step overrides the one before it
 - [x] Read user customizable `config.toml` file
 - [x] Export Report to json file
 - [x] Support dirignore
-- [ ] Worker pool for speed
+- [x] Worker pool for speed
 - [ ] Support git worktrees
 - [ ] Perform git push/pull/fetch on repos
 - [ ] Show branches with their states on each repo
