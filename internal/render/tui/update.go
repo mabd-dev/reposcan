@@ -72,18 +72,6 @@ func (m Model) updateReposTable(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	m.reposTable, cmd = m.reposTable.Update(msg)
-
-	switch msg := msg.(type) {
-	case tea.KeyMsg:
-		switch msg.String() {
-		// TODO: do this in View()
-		case "j", "down":
-			m.repoDetails.UpdateData(m.reposTable.GetCurrentRepoState())
-
-		case "k", "up":
-			m.repoDetails.UpdateData(m.reposTable.GetCurrentRepoState())
-		}
-	}
 	return m, cmd
 }
 
@@ -94,14 +82,11 @@ func (m Model) updateReposFilter(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "esc", "ctrl+c":
 			m.popFocus(true)
 
-			m.repoDetails.UpdateData(m.reposTable.GetCurrentRepoState())
-
 			return m, nil
 		case "enter":
 			emptyQuery := len(strings.TrimSpace(m.reposFilter.Value())) == 0
 
 			m.popFocus(emptyQuery)
-			m.repoDetails.UpdateData(m.reposTable.GetCurrentRepoState())
 
 			return m, nil
 		}
@@ -112,7 +97,6 @@ func (m Model) updateReposFilter(msg tea.Msg) (tea.Model, tea.Cmd) {
 	m.reposFilter, cmd = m.reposFilter.Update(msg)
 
 	m.reposTable.Filter(m.reposFilter.Value())
-	m.repoDetails.UpdateData(m.reposTable.GetCurrentRepoState())
 
 	return m, cmd
 }
@@ -140,11 +124,6 @@ func defaultUpdate(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
 		m.width, m.height = msg.Width, msg.Height
-
-		m.reposTable.UpdateWindowSize(
-			m.width*sizeReposTableWidthPercent/100,
-			m.height*sizeReposTableHeightPercent/100,
-		)
 		return m, nil
 
 	case gitPushResultMsg:

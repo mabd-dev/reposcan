@@ -25,6 +25,8 @@ func (m Model) View() string {
 		m.height*sizeReposTableHeightPercent/100,
 	)
 	reposTable := m.reposTable.View()
+
+	m.repoDetails.UpdateData(m.reposTable.GetCurrentRepoState())
 	reposDetails := m.repoDetails.View()
 
 	body := lipgloss.JoinVertical(lipgloss.Left, reposTable, reposDetails)
