@@ -43,7 +43,7 @@ func (m Model) View() string {
 
 	view = m.renderAlerts(view, m.alerts.AlertStates(m.width, m.height))
 
-	if m.currentFocus() == FocusKeybindingPopup {
+	if m.currentFocus() == FocusHelpPopup {
 		helpView := generateHelpPopup(m.theme, reposTableKeybindings)
 
 		view = overlay.PlaceOverlayWithPosition(
@@ -81,8 +81,8 @@ func (m *Model) generateKeybindingsFooterView() string {
 	if addKeybinding {
 		keybindings = append(keybindings, common.Keybinding{
 			Key:         "?",
-			Description: "More Keybindings",
-			ShortDesc:   "Keybindings",
+			Description: "Help",
+			ShortDesc:   "Help",
 		})
 	}
 

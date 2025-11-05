@@ -9,7 +9,7 @@ type FocusState int
 const (
 	FocusReposTable FocusState = iota
 	FocusReposFilter
-	FocusKeybindingPopup
+	FocusHelpPopup
 )
 
 func (m Model) currentFocus() FocusState {
@@ -49,7 +49,7 @@ func (m *Model) focusCurrentModel() {
 		m.reposTable.Focus()
 	case FocusReposFilter:
 		m.reposFilter.Focus()
-	case FocusKeybindingPopup:
+	case FocusHelpPopup:
 		break
 	}
 }
@@ -60,7 +60,7 @@ func (m *Model) blurCurrentModel() {
 		m.reposTable.Blur()
 	case FocusReposFilter:
 		m.reposFilter.Blur()
-	case FocusKeybindingPopup:
+	case FocusHelpPopup:
 		break
 	}
 }
@@ -71,7 +71,7 @@ func (m *Model) resetCurrentModel() {
 		m.reposTable.Filter("")
 	case FocusReposFilter:
 		m.reposFilter.SetValue("")
-	case FocusKeybindingPopup:
+	case FocusHelpPopup:
 		break
 	}
 }
@@ -82,7 +82,7 @@ func (m *Model) keybindings() []common.Keybinding {
 		return reposTableKeybindings
 	case FocusReposFilter:
 		return reposTableFilterKeybindings
-	case FocusKeybindingPopup:
+	case FocusHelpPopup:
 		return helpPopupKeybindings
 	}
 	return []common.Keybinding{}

@@ -15,7 +15,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.updateReposTable(msg)
 	case FocusReposFilter:
 		return m.updateReposFilter(msg)
-	case FocusKeybindingPopup:
+	case FocusHelpPopup:
 		return m.keybindingPopup(msg)
 	}
 	return m, nil
@@ -59,7 +59,7 @@ func (m Model) updateReposTable(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.pushFocus(FocusReposFilter)
 			return m, nil
 		case "?":
-			m.pushFocus(FocusKeybindingPopup)
+			m.pushFocus(FocusHelpPopup)
 			return m, nil
 		}
 	}
