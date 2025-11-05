@@ -60,10 +60,15 @@ func (m *Model) SetReport(report report.ScanReport) {
 	m.Filter(m.filterQuery)
 }
 
-func (m *Model) UpdateWindowSize(width int, height int) {
-	m.tbl.SetHeight(height)
-	cols := createColumns(width)
+func (m *Model) UpdateWindowSize(width int, height int) Model {
+	m.width = width - 2   // border corners
+	m.height = height - 2 // border corners
+
+	m.tbl.SetHeight(m.height)
+	cols := createColumns(m.width)
 	m.tbl.SetColumns(cols)
+
+	return *m
 }
 
 // Filter filters repo states based on repo name. Then update table based on filtered repos

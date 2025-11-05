@@ -17,12 +17,10 @@ func (m *Model) View() string {
 
 	lines := []string{
 		m.theme.Styles.Base.Foreground(m.theme.Colors.Muted).Italic(true).Render("\nDetails"),
-		fmt.Sprintf("%s %s", s.Render("Repo:"), m.repoState.Repo),
-		fmt.Sprintf("%s %s", s.Render("Branch:"), m.repoState.Branch),
 		fmt.Sprintf("%s %s", s.Render("Path:"), m.repoState.Path),
 	}
 	if uc > 0 {
-		lines = append(lines, s.Render("Uncommited Files:"))
+		lines = append(lines, s.Render("File Changes:"))
 
 		files := m.repoState.UncommitedFiles
 

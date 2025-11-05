@@ -1,7 +1,6 @@
 package tui
 
 import (
-	"strconv"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
@@ -15,56 +14,30 @@ func (m Model) View() string {
 		return "Loading..."
 	}
 
-	body := m.reposTable.View()
-
-	var repoIndicator string
-	if m.reposTable.ReposCount() == 0 {
-		repoIndicator = "0/0"
-	} else {
-		repoIndicator = strconv.Itoa(m.reposTable.Cursor()+1) + "/" + strconv.Itoa(m.reposTable.ReposCount())
-	}
-
-	body = overlay.PlaceOverlayWithPositionAndPadding(
-		overlay.OverlayPositionBottomRight,
-		lipgloss.Width(body), lipgloss.Height(body),
-		2, 0,
-		repoIndicator, body,
-		false,
-		overlay.WithWhitespaceChars(" "),
-	)
-
-	body = lipgloss.JoinVertical(lipgloss.Left, body, m.repoDetails.View())
-
-	var footer string
-	if m.reposFilter.show {
-		textfieldStr := m.theme.Styles.Base.
-			Foreground(m.theme.Colors.Foreground).
-			Render(m.reposFilter.textInput.View())
-
-		footer = textfieldStr
-	} else {
-		footer = m.generateFooter()
-	}
+	footer := m.getFooterView()
 
 	// Calculate heights
 	footerHeight := lipgloss.Height(footer)
-	availableHeight := m.height - footerHeight
+	bodyHeight := m.height - footerHeight
 
+	m.reposTable = m.reposTable.UpdateWindowSize(
+		m.width,
+		m.height*sizeReposTableHeightPercent/100,
+	)
+	reposTable := m.reposTable.View()
+	reposDetails := m.repoDetails.View()
+
+	body := lipgloss.JoinVertical(lipgloss.Left, reposTable, reposDetails)
 	body = lipgloss.NewStyle().
-		Height(availableHeight).
-		MaxHeight(availableHeight).
+		Height(bodyHeight).
+		MaxHeight(bodyHeight).
 		Render(body)
 
-	view := lipgloss.JoinVertical(lipgloss.Left,
-		//header,
-		body,
-		footer,
-	)
+	view := lipgloss.JoinVertical(lipgloss.Left, body, footer)
 
 	view = lipgloss.NewStyle().
 		Width(m.width).
 		Height(m.height).
-		// Background(m.theme.Colors.Background).
 		Render(view)
 
 	view = m.renderAlerts(view, m.alerts.AlertStates(m.width, m.height))
@@ -84,7 +57,17 @@ func (m Model) View() string {
 	return view
 }
 
-func (m *Model) generateFooter() string {
+func (m *Model) getFooterView() string {
+	if m.reposFilter.show {
+		return m.theme.Styles.Base.
+			Foreground(m.theme.Colors.Foreground).
+			Render(m.reposFilter.textInput.View())
+	}
+
+	return m.generateKeybindingsFooterView()
+}
+
+func (m *Model) generateKeybindingsFooterView() string {
 	focusedModel := m.getFocusedModel()
 	keybindings := focusedModel.keybindings()
 
