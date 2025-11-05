@@ -2,6 +2,7 @@ package tui
 
 import (
 	"github.com/charmbracelet/lipgloss"
+	"github.com/mabd-dev/reposcan/internal"
 	"github.com/mabd-dev/reposcan/internal/render/tui/common"
 	"github.com/mabd-dev/reposcan/internal/theme"
 )
@@ -18,7 +19,7 @@ func generateHelpPopup(theme theme.Theme, keybindings []common.Keybinding) strin
 
 	aboutSection := lipgloss.JoinVertical(
 		lipgloss.Center,
-		versionStyle.Render("RepoScan v1.3.5"),
+		versionStyle.Render("RepoScan "+internal.VERSION),
 		aboutStyle.Render("Developed by MABD"),
 		aboutStyle.Render(""),
 		aboutStyle.Foreground(theme.Colors.Accent).Render("github.com/mabd-dev/reposcan"),
