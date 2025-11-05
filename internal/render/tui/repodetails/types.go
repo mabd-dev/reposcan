@@ -6,6 +6,8 @@ import (
 )
 
 type Model struct {
+	height int
+
 	repoState *report.RepoState
 	theme     theme.Theme
 }

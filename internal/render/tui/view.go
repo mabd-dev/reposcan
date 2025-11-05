@@ -20,13 +20,12 @@ func (m Model) View() string {
 	footerHeight := lipgloss.Height(footer)
 	bodyHeight := m.height - footerHeight
 
-	m.reposTable = m.reposTable.UpdateWindowSize(
-		m.width,
-		m.height*sizeReposTableHeightPercent/100,
-	)
+	reposTableHeight := bodyHeight * sizeReposTableHeightPercent / 100
+	m.reposTable = m.reposTable.UpdateWindowSize(m.width, reposTableHeight)
 	reposTable := m.reposTable.View()
 
 	m.repoDetails.UpdateData(m.reposTable.GetCurrentRepoState())
+	m.repoDetails.UpdateSize(bodyHeight - reposTableHeight)
 	reposDetails := m.repoDetails.View()
 
 	body := lipgloss.JoinVertical(lipgloss.Left, reposTable, reposDetails)

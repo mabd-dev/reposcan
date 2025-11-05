@@ -2,7 +2,9 @@ package repodetails
 
 import (
 	"fmt"
-	"strings"
+	"strconv"
+
+	"github.com/charmbracelet/lipgloss"
 )
 
 func (m *Model) View() string {
@@ -11,20 +13,17 @@ func (m *Model) View() string {
 		return ""
 	}
 
-	uc := len(m.repoState.UncommitedFiles)
-
-	s := m.theme.Styles.Base.Foreground(m.theme.Colors.Info)
+	style := m.theme.Styles.Base.Foreground(m.theme.Colors.Info)
 
 	lines := []string{
-		m.theme.Styles.Base.Foreground(m.theme.Colors.Muted).Italic(true).Render("\nDetails"),
-		fmt.Sprintf("%s %s", s.Render("Path:"), m.repoState.Path),
+		//m.theme.Styles.Base.Foreground(m.theme.Colors.Muted).Italic(true).Render("Details"),
+		fmt.Sprintf("%s %s", style.Render("Path:"), m.repoState.Path),
+		style.Render("File Changes:"),
 	}
-	if uc > 0 {
-		lines = append(lines, s.Render("File Changes:"))
-
+	if len(m.repoState.UncommitedFiles) > 0 {
 		files := m.repoState.UncommitedFiles
 
-		maxUncommitedFilesToShow := 3
+		maxUncommitedFilesToShow := m.height - len(lines) - 1
 		trimUncommitedFiles := len(files) > maxUncommitedFilesToShow
 
 		if trimUncommitedFiles {
@@ -36,8 +35,12 @@ func (m *Model) View() string {
 		}
 
 		if trimUncommitedFiles {
-			lines = append(lines, m.theme.Styles.Muted.Render("  ..."))
+			more := len(m.repoState.UncommitedFiles) - maxUncommitedFilesToShow
+			lines = append(lines, m.theme.Styles.Muted.Render("  ... (+"+strconv.Itoa(more)+" more)"))
 		}
+	} else {
+		lines = append(lines, m.theme.Styles.Muted.Render("    no changes"))
 	}
-	return strings.Join(lines, "\n")
+
+	return lipgloss.JoinVertical(lipgloss.Left, lines...)
 }

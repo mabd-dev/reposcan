@@ -16,6 +16,10 @@ func New(
 	}
 }
 
+func (m *Model) UpdateSize(height int) {
+	m.height = height
+}
+
 func (m *Model) UpdateData(repoState *report.RepoState) {
 	m.repoState = repoState
 }
