@@ -2,10 +2,11 @@ package theme
 
 import (
 	"embed"
+	"strings"
+
 	"github.com/charmbracelet/lipgloss"
 	"github.com/mabd-dev/reposcan/internal/logger"
 	"gopkg.in/yaml.v3"
-	"strings"
 )
 
 var (

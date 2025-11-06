@@ -12,7 +12,11 @@ It outputs results in both **human-friendly tables** and **machine-friendly JSON
 
 🖼 Demo
 
-https://github.com/user-attachments/assets/ba7fbb95-6566-41eb-bc1c-d67fb5adab5e
+
+
+https://github.com/user-attachments/assets/1c8370c6-3b94-4490-bc96-fc179ef14f1d
+
+
 
 
 ---
@@ -122,7 +126,7 @@ Each step overrides the one before it
 - [x] Read user customizable `config.toml` file
 - [x] Export Report to json file
 - [x] Support dirignore
-- [ ] Worker pool for speed
+- [x] Worker pool for speed
 - [ ] Support git worktrees
 - [ ] Perform git push/pull/fetch on repos
 - [ ] Show branches with their states on each repo

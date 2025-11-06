@@ -1,4 +1,4 @@
-package tui
+package overlay
 
 import (
 	"bytes"
@@ -15,10 +15,22 @@ import (
 // https://github.com/charmbracelet/lipgloss/pull/102
 // as well as the lipgloss library, with some modification for what I needed.
 
-// PlaceOverlayWithPosition places fg on top of bg with overlay position
 func PlaceOverlayWithPosition(
 	position OverlayPosition,
 	fullWidth, fullHeight int,
+	fg, bg string,
+	shadow bool, opts ...WhitespaceOption,
+) string {
+	return PlaceOverlayWithPositionAndPadding(
+		position, fullWidth, fullHeight, 0, 0, fg, bg, shadow, opts...,
+	)
+}
+
+// PlaceOverlayWithPosition places fg on top of bg with overlay position
+func PlaceOverlayWithPositionAndPadding(
+	position OverlayPosition,
+	fullWidth, fullHeight int,
+	horizontalPadding, verticalPadding int,
 	fg, bg string,
 	shadow bool, opts ...WhitespaceOption,
 ) string {
@@ -32,13 +44,13 @@ func PlaceOverlayWithPosition(
 		x = (fullWidth - fgWidth) / 2
 		y = (fullHeight - fgHeight) / 2
 	case OverlayPositionTopRight:
-		x = fullWidth - fgWidth
+		x = fullWidth - fgWidth - horizontalPadding
 		y = 0
 	case OverlayPositionTopLeft:
-		x = 0
+		x = horizontalPadding
 		y = 0
 	case OverlayPositionBottomRight:
-		x = fullWidth - fgWidth
+		x = fullWidth - fgWidth - horizontalPadding
 		y = (fullHeight)
 	default:
 		panic("Unknown overlay position")
@@ -221,22 +233,3 @@ func (w whitespace) render(width int) string {
 
 	return w.style.Styled(b.String())
 }
-
-// WhitespaceOption sets a styling rule for rendering whitespace.
-type WhitespaceOption func(*whitespace)
-
-// WithWhitespaceChars sets the characters to be rendered in the whitespace.
-func WithWhitespaceChars(s string) WhitespaceOption {
-	return func(w *whitespace) {
-		w.chars = s
-	}
-}
-
-type OverlayPosition string
-
-const (
-	OverlayPositionCenter      OverlayPosition = "center"
-	OverlayPositionTopRight    OverlayPosition = "topRight"
-	OverlayPositionTopLeft     OverlayPosition = "topLeft"
-	OverlayPositionBottomRight OverlayPosition = "bottomright"
-)

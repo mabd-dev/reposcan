@@ -1,26 +1,24 @@
 package tui
 
-type Keybinding struct {
-	Key         string
-	Description string
-	ShortDesc   string
-}
+import (
+	"github.com/mabd-dev/reposcan/internal/render/tui/common"
+)
 
-var reposTableKeybindings = []Keybinding{
+var reposTableKeybindings = []common.Keybinding{
 	{
 		Key:         "↑/↓",
 		Description: "Navigate up and down (or j/k)",
 		ShortDesc:   "Navigate",
 	},
 	{
-		Key:         "<enter>",
-		Description: "Open git repository report details",
-		ShortDesc:   "Details",
-	},
-	{
 		Key:         "c",
 		Description: "Copy repo path to clipboard",
 		ShortDesc:   "Copy Path",
+	},
+	{
+		Key:         "r",
+		Description: "Refresh list",
+		ShortDesc:   "Refresh list",
 	},
 	{
 		Key:         "/",
@@ -34,7 +32,8 @@ var reposTableKeybindings = []Keybinding{
 	},
 }
 
-var reposTableFilterKeybindings = []Keybinding{
+// Not needed anymore. Repos table filter textfield is placed on top of footer
+var reposTableFilterKeybindings = []common.Keybinding{
 	{
 		Key:         "<enter>",
 		Description: "Apply and move cursor to repos table",
@@ -47,7 +46,7 @@ var reposTableFilterKeybindings = []Keybinding{
 	},
 }
 
-var helpPopupKeybindings = []Keybinding{
+var helpPopupKeybindings = []common.Keybinding{
 	{
 		Key:         "q/<esc>",
 		Description: "Close Popup",

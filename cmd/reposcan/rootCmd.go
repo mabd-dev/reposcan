@@ -5,16 +5,13 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"time"
 
+	"github.com/mabd-dev/reposcan/internal"
 	"github.com/mabd-dev/reposcan/internal/config"
-	"github.com/mabd-dev/reposcan/internal/gitx"
 	"github.com/mabd-dev/reposcan/internal/logger"
 	"github.com/mabd-dev/reposcan/internal/render/file"
 	"github.com/mabd-dev/reposcan/internal/render/stdout"
 	"github.com/mabd-dev/reposcan/internal/render/tui"
-	"github.com/mabd-dev/reposcan/internal/scan"
-	"github.com/mabd-dev/reposcan/pkg/report"
 	"github.com/spf13/cobra"
 )
 
@@ -145,31 +142,7 @@ func readFlags(cmd *cobra.Command, configs *config.Config) error {
 }
 
 func run(configs config.Config) error {
-	reportWarnings := []string{}
-
-	// Find git repos at defined configs.Roots
-	gitReposPaths, warnings := scan.FindGitRepos(configs.Roots, configs.DirIgnore)
-
-	reportWarnings = append(reportWarnings, warnings...)
-
-	repoStates := make([]report.RepoState, 0, len(gitReposPaths))
-
-	allRepoStates, warnings := gitx.GetGitRepoStatesConcurrent(gitReposPaths, configs.MaxWorkers)
-	reportWarnings = append(reportWarnings, warnings...)
-
-	// filter repo states based on config OnlyFilter
-	for _, repoState := range allRepoStates {
-		if filter(configs.Only, repoState) {
-			repoStates = append(repoStates, repoState)
-		}
-	}
-
-	report := report.ScanReport{
-		Version:     configs.Version,
-		GeneratedAt: time.Now(),
-		RepoStates:  repoStates,
-		Warnings:    reportWarnings,
-	}
+	report := internal.GenerateScanReport(configs)
 
 	switch configs.Output.Type {
 	case config.OutputJson:
@@ -180,7 +153,7 @@ func run(configs config.Config) error {
 	case config.OutputTable:
 		stdout.RenderScanReportAsTable(report)
 	case config.OutputInteractive:
-		if err := tui.ShowReportTUI(report, configs.Output.ColorSchemeName); err != nil {
+		if err := tui.Render(report, configs); err != nil {
 			fmt.Fprintf(os.Stderr, "tui error: %v\n", err)
 			os.Exit(1)
 		}
@@ -203,31 +176,4 @@ func run(configs config.Config) error {
 	}
 
 	return nil
-}
-
-// Filter repoState based on config only filter
-// Returns true if repoState should be in output, false otherwise
-func filter(f config.OnlyFilter, repoState report.RepoState) bool {
-	switch f {
-	case config.OnlyAll:
-		return true
-	case config.OnlyDirty:
-		if repoState.IsDirty() {
-			return true
-		}
-	case config.OnlyUncommitted:
-		if len(repoState.UncommitedFiles) > 0 {
-			return true
-		}
-	case config.OnlyUnpushed:
-		if repoState.Ahead > 0 {
-			return true
-		}
-	case config.OnlyUnpulled:
-		if repoState.Behind > 0 {
-			return true
-		}
-	}
-
-	return false
 }
