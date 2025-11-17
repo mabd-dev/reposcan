@@ -4,6 +4,7 @@ dist/
 *.out
 *.test
 .gocache/
+reposcan
 # Editors
 .idea/
 .vscode/
