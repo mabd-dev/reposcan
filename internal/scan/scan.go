@@ -61,14 +61,70 @@ func isGitRepo(path string) bool {
 			return true
 		} else {
 			// git worktrees has gitdir: folder
-			b, err := os.ReadFile(path)
+			b, err := os.ReadFile(gitPath)
 			if err != nil {
 				return false
 			}
 			return strings.Contains(string(b), "gitdir:")
 		}
 	}
-	return false
+
+	// Check if this is a bare repository
+	// Bare repos don't have .git folder, but have HEAD, refs/, and objects/ directly
+	return isBareRepo(path)
+}
+
+// isBareRepo checks if a directory is a bare git repository
+// A bare repo has the git contents directly in the directory (no .git folder)
+// Key indicators: HEAD file, refs/ directory, objects/ directory
+func isBareRepo(path string) bool {
+	// Check for required bare repo markers
+	headPath := filepath.Join(path, "HEAD")
+	refsPath := filepath.Join(path, "refs")
+	objectsPath := filepath.Join(path, "objects")
+
+	// All three must exist
+	if !fileExists(headPath) {
+		return false
+	}
+	if !dirExists(refsPath) {
+		return false
+	}
+	if !dirExists(objectsPath) {
+		return false
+	}
+
+	// Additional validation: check if config file has bare = true (optional but recommended)
+	configPath := filepath.Join(path, "config")
+	if fileExists(configPath) {
+		if b, err := os.ReadFile(configPath); err == nil {
+			content := string(b)
+			// Look for bare = true in the config
+			if strings.Contains(content, "bare = true") || strings.Contains(content, "bare=true") {
+				return true
+			}
+		}
+	}
+
+	// If we have HEAD, refs, and objects, it's likely a bare repo even without config check
+	// This handles edge cases where config might not explicitly say bare = true
+	return true
+}
+
+func fileExists(path string) bool {
+	info, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return !info.IsDir()
+}
+
+func dirExists(path string) bool {
+	info, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
+	return info.IsDir()
 }
 
 func removeDuplicates(strs []string) []string {
