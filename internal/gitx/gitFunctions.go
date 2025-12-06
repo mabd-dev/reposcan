@@ -36,6 +36,16 @@ func GitFetch(path string) (string, error) {
 	return str, nil
 }
 
+func GetGitRemotes(path string) (remotes []string, err error) {
+	str, err := RunGitCommand(path, "remote")
+	if err != nil {
+		return []string{}, err
+	}
+
+	remotes = strings.Split(strings.TrimRight(str, "\n"), "\n")
+	return remotes, nil
+}
+
 // GetRepoBranch returns the current branch name for the Git repository at path.
 func GetRepoBranch(path string) (branchName string, err error) {
 	str, err := RunGitCommand(path, "branch", "--show-current")

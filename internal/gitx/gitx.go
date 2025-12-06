@@ -1,14 +1,22 @@
 package gitx
 
 import (
+	"strings"
+
 	"github.com/mabd-dev/reposcan/internal/utils"
 	"github.com/mabd-dev/reposcan/pkg/report"
-	"strings"
 )
 
 // CheckRepoState inspects the Git repository at path and returns its RepoState
 // along with any non-fatal warnings encountered while collecting information.
 func CheckRepoState(path string) (repoState report.RepoState, warnings []string) {
+
+	_, err := GetGitRemotes(path)
+	if err != nil {
+		msg := "Failed to get git remotes, path=" + path
+		warnings = append(warnings, msg)
+	}
+
 	repoName, err := GetRepoName(path)
 	if err != nil {
 		msg := "Failed to get repo name, path=" + path
