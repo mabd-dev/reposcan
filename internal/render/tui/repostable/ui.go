@@ -6,16 +6,15 @@ import (
 
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 	"github.com/mabd-dev/reposcan/internal/logger"
 	"github.com/mabd-dev/reposcan/internal/theme"
 	"github.com/mabd-dev/reposcan/pkg/report"
 )
 
 const (
-	RepoW        = 40
-	BranchW      = 40
-	RemoteStateW = 20 //(uncommited files count + aheadW + behindW + 4 space)
+	RepoW        = 30
+	BranchW      = 30
+	RemoteStateW = 40
 )
 
 func createColumns(maxWidth int) []table.Column {
@@ -45,46 +44,38 @@ func createRows(repoStates []report.RepoState, theme theme.Theme) []table.Row {
 }
 
 func getStateColumnStr(rs report.RepoState, theme theme.Theme) string {
-	lines := []string{}
-	var stateStr strings.Builder
+	parts := []string{}
 
-	for i, remoteStatus := range rs.RemoteStatus {
-		stateStr.Reset()
+	uc := len(rs.UncommitedFiles)
+	ucStr := fmt.Sprintf("⏳%-d", uc)
 
-		uc := len(rs.UncommitedFiles)
-		if uc > 0 {
-			stateStr.WriteString(fmt.Sprintf("⏳%-d", uc))
-		} else if uc == 0 {
-			stateStr.WriteString(fmt.Sprintf("⏳%-d", uc))
-		}
+	for _, remoteStatus := range rs.RemoteStatus {
+		var statusParts []string
 
 		if remoteStatus.Ahead > 0 {
-			stateStr.WriteString(fmt.Sprintf(" ↑%-d", remoteStatus.Ahead))
+			statusParts = append(statusParts, fmt.Sprintf("↑%-d", remoteStatus.Ahead))
 		} else if remoteStatus.Ahead < 0 {
-			stateStr.WriteString(fmt.Sprintf(" %-s ", "x"))
+			statusParts = append(statusParts, "x")
 		} else {
-			stateStr.WriteString(fmt.Sprintf(" ↑%-d", 0))
+			statusParts = append(statusParts, fmt.Sprintf("↑%-d", 0))
 		}
 
 		if remoteStatus.Behind > 0 {
-			stateStr.WriteString(fmt.Sprintf(" ↓%-d", remoteStatus.Behind))
+			statusParts = append(statusParts, fmt.Sprintf("↓%-d", remoteStatus.Behind))
 		} else if remoteStatus.Behind < 0 {
-			stateStr.WriteString(fmt.Sprintf(" %-s", "x"))
+			statusParts = append(statusParts, "x")
 		} else {
-			stateStr.WriteString(fmt.Sprintf(" ↓%-d", 0))
+			statusParts = append(statusParts, fmt.Sprintf("↓%-d", 0))
 		}
 
-		remoteName := theme.Styles.Muted.Render(fmt.Sprintf(" (%s)", remoteStatus.Remote))
-		stateStr.WriteString(remoteName)
+		remoteName := theme.Styles.Muted.Render(fmt.Sprintf("(%s)", remoteStatus.Remote))
+		statusParts = append(statusParts, remoteName)
 
-		if i < len(rs.RemoteStatus)-1 { // not the last element
-			stateStr.WriteString("\n")
-		}
-
-		lines = append(lines, stateStr.String())
+		parts = append(parts, strings.Join(statusParts, " "))
 	}
 
-	s := lipgloss.JoinVertical(lipgloss.Center, lines...)
+	// Combine uncommitted count with all remote statuses, separated by " | "
+	s := ucStr + theme.Styles.Muted.Render(" | ") + strings.Join(parts, " | ")
 
 	logger.Debug("staus output=", logger.StringAttr("s=", s))
 
