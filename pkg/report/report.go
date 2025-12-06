@@ -7,15 +7,22 @@ import (
 	"time"
 )
 
+type RemoteStatus struct {
+	Remote string `json:"remote"`
+	Ahead  int    `json:"ahead"`
+	Behind int    `json:"behin"`
+}
+
 // RepoState describes the state of a single Git repository discovered during a scan.
 type RepoState struct {
-	ID              string   `json:"id"`
-	Path            string   `json:"path"`
-	Repo            string   `json:"repo"`
-	Branch          string   `json:"branch"`
-	UncommitedFiles []string `json:"uncommitedFiles"`
-	Ahead           int      `json:"ahead"`
-	Behind          int      `json:"behind"`
+	ID              string         `json:"id"`
+	Path            string         `json:"path"`
+	Repo            string         `json:"repo"`
+	Branch          string         `json:"branch"`
+	UncommitedFiles []string       `json:"uncommitedFiles"`
+	Ahead           int            `json:"ahead"`
+	Behind          int            `json:"behind"`
+	RemoteStatus    []RemoteStatus `json:"remoteStatus"`
 }
 
 // ScanReport aggregates the results of scanning one or more directories for

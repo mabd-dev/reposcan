@@ -11,6 +11,12 @@ import (
 	"strings"
 )
 
+// RemoteStatus holds the ahead/behind status for a specific remote branch
+type remoteStatus struct {
+	Ahead  int
+	Behind int
+}
+
 // GitPush pushed git repo at given path using `git push` command and returns stdout of the command + error if any
 func GitPush(path string) (string, error) {
 	str, err := RunGitCommand(path, "push", "--porcelain")
@@ -83,6 +89,43 @@ func GetUpstreamStatus(path string) (ahead int, behind int, err error) {
 	}
 
 	return ahead, behind, nil
+}
+
+// GetUpstreamStatusForAllRemotes returns the ahead/behind counts for the current branch
+// against the same branch on each remote. Returns a slice of RemoteStatus.
+func GetUpstreamStatusForAllRemotes(
+	path string,
+	remote string,
+	currentBranch string,
+) (remoteStatus, error) {
+
+	// Construct remote branch ref: remote/branch
+	remoteBranchRef := remote + "/" + currentBranch
+
+	// Check if remote branch exists
+	_, err := RunGitCommand(path, "rev-parse", "--verify", remoteBranchRef)
+	if err != nil {
+		// Remote branch doesn't exist, skip this remote
+		return remoteStatus{}, err
+	}
+
+	// Get ahead/behind count for this remote branch
+	lrc, err := RunGitCommand(path, "rev-list", "--left-right", "--count", remoteBranchRef+"...HEAD")
+	if err != nil {
+		return remoteStatus{}, err
+	}
+
+	parts := strings.Fields(strings.TrimSpace(lrc))
+	var ahead, behind int
+	if len(parts) == 2 {
+		behind = atoiSafe(parts[0])
+		ahead = atoiSafe(parts[1])
+	}
+
+	return remoteStatus{
+		Ahead:  ahead,
+		Behind: behind,
+	}, nil
 }
 
 // GetRepoName tries to extract the repository name from its remote URL,

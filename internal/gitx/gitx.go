@@ -1,6 +1,7 @@
 package gitx
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/mabd-dev/reposcan/internal/utils"
@@ -11,10 +12,39 @@ import (
 // along with any non-fatal warnings encountered while collecting information.
 func CheckRepoState(path string) (repoState report.RepoState, warnings []string) {
 
-	_, err := GetGitRemotes(path)
+	branch, err := GetRepoBranch(path)
+	if err != nil {
+		msg := "Failed to get branch name, path=" + path
+		warnings = append(warnings, msg)
+	}
+
+	remotes, err := GetGitRemotes(path)
 	if err != nil {
 		msg := "Failed to get git remotes, path=" + path
 		warnings = append(warnings, msg)
+	}
+
+	remoteStatuses := []report.RemoteStatus{}
+
+	for _, remote := range remotes {
+		remoteStatus, err := GetUpstreamStatusForAllRemotes(path, remote, branch)
+		if err != nil {
+			msg := fmt.Sprintf("Failed to get upstream status for remote=%s, path=%s", remote, path)
+			warnings = append(warnings, msg)
+		} else {
+			remoteStatuses = append(remoteStatuses, report.RemoteStatus{
+				Remote: remote,
+				Ahead:  remoteStatus.Ahead,
+				Behind: remoteStatus.Behind,
+			})
+			// logger.Info("Remote status",
+			// 	logger.StringAttr("path", path),
+			// 	logger.StringAttr("\tremote", remote),
+			// 	logger.StringAttr("branch", branch),
+			// 	logger.IntAttr("ahead", remoteStatus.Ahead),
+			// 	logger.IntAttr("behind", remoteStatus.Behind),
+			// )
+		}
 	}
 
 	repoName, err := GetRepoName(path)
@@ -26,12 +56,6 @@ func CheckRepoState(path string) (repoState report.RepoState, warnings []string)
 	uncommitedFiles, err := GetUncommitedFiles(path)
 	if err != nil {
 		msg := "Failed to get uncommited files, path=" + path
-		warnings = append(warnings, msg)
-	}
-
-	branch, err := GetRepoBranch(path)
-	if err != nil {
-		msg := "Failed to get branch name, path=" + path
 		warnings = append(warnings, msg)
 	}
 
@@ -49,6 +73,7 @@ func CheckRepoState(path string) (repoState report.RepoState, warnings []string)
 		UncommitedFiles: uncommitedFiles,
 		Ahead:           ahead,
 		Behind:          behind,
+		RemoteStatus:    remoteStatuses,
 	}, warnings
 }
 
