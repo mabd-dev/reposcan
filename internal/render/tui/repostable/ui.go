@@ -6,6 +6,9 @@ import (
 
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
+	"github.com/mabd-dev/reposcan/internal/logger"
+	"github.com/mabd-dev/reposcan/internal/theme"
 	"github.com/mabd-dev/reposcan/pkg/report"
 )
 
@@ -27,10 +30,10 @@ func createColumns(maxWidth int) []table.Column {
 	}
 }
 
-func createRows(repoStates []report.RepoState) []table.Row {
+func createRows(repoStates []report.RepoState, theme theme.Theme) []table.Row {
 	rows := make([]table.Row, 0, len(repoStates))
 	for _, rs := range repoStates {
-		state := getStateColumnStr(rs)
+		state := getStateColumnStr(rs, theme)
 
 		rows = append(rows, table.Row{
 			rs.Repo,
@@ -41,33 +44,51 @@ func createRows(repoStates []report.RepoState) []table.Row {
 	return rows
 }
 
-func getStateColumnStr(rs report.RepoState) string {
+func getStateColumnStr(rs report.RepoState, theme theme.Theme) string {
+	lines := []string{}
 	var stateStr strings.Builder
 
-	uc := len(rs.UncommitedFiles)
-	if uc > 0 {
-		stateStr.WriteString(fmt.Sprintf("⏳%-d", uc))
-	} else if uc == 0 {
-		stateStr.WriteString(fmt.Sprintf("⏳%-d", uc))
+	for i, remoteStatus := range rs.RemoteStatus {
+		stateStr.Reset()
+
+		uc := len(rs.UncommitedFiles)
+		if uc > 0 {
+			stateStr.WriteString(fmt.Sprintf("⏳%-d", uc))
+		} else if uc == 0 {
+			stateStr.WriteString(fmt.Sprintf("⏳%-d", uc))
+		}
+
+		if remoteStatus.Ahead > 0 {
+			stateStr.WriteString(fmt.Sprintf(" ↑%-d", remoteStatus.Ahead))
+		} else if remoteStatus.Ahead < 0 {
+			stateStr.WriteString(fmt.Sprintf(" %-s ", "x"))
+		} else {
+			stateStr.WriteString(fmt.Sprintf(" ↑%-d", 0))
+		}
+
+		if remoteStatus.Behind > 0 {
+			stateStr.WriteString(fmt.Sprintf(" ↓%-d", remoteStatus.Behind))
+		} else if remoteStatus.Behind < 0 {
+			stateStr.WriteString(fmt.Sprintf(" %-s", "x"))
+		} else {
+			stateStr.WriteString(fmt.Sprintf(" ↓%-d", 0))
+		}
+
+		remoteName := theme.Styles.Muted.Render(fmt.Sprintf(" (%s)", remoteStatus.Remote))
+		stateStr.WriteString(remoteName)
+
+		if i < len(rs.RemoteStatus)-1 { // not the last element
+			stateStr.WriteString("\n")
+		}
+
+		lines = append(lines, stateStr.String())
 	}
 
-	if rs.Ahead > 0 {
-		stateStr.WriteString(fmt.Sprintf(" ↑%-d", rs.Ahead))
-	} else if rs.Ahead < 0 {
-		stateStr.WriteString(fmt.Sprintf(" %-s ", "x"))
-	} else {
-		stateStr.WriteString(fmt.Sprintf(" ↑%-d", 0))
-	}
+	s := lipgloss.JoinVertical(lipgloss.Center, lines...)
 
-	if rs.Behind > 0 {
-		stateStr.WriteString(fmt.Sprintf(" ↓%-d", rs.Behind))
-	} else if rs.Behind < 0 {
-		stateStr.WriteString(fmt.Sprintf(" %-s", "x"))
-	} else {
-		stateStr.WriteString(fmt.Sprintf(" ↓%-d", 0))
-	}
+	logger.Debug("staus output=", logger.StringAttr("s=", s))
 
-	return stateStr.String()
+	return s
 }
 
 func setKeymaps(km table.KeyMap) {

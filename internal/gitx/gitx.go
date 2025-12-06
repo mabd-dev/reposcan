@@ -57,20 +57,12 @@ func CheckRepoState(path string) (repoState report.RepoState, warnings []string)
 		warnings = append(warnings, msg)
 	}
 
-	ahead, behind, err := GetUpstreamStatus(path)
-	if err != nil {
-		msg := "Failed to get upstream status, path=" + path
-		warnings = append(warnings, msg)
-	}
-
 	return report.RepoState{
 		ID:              utils.Hash(path),
 		Path:            path,
 		Repo:            repoName,
 		Branch:          branch,
 		UncommitedFiles: uncommitedFiles,
-		Ahead:           ahead,
-		Behind:          behind,
 		RemoteStatus:    remoteStatuses,
 	}, warnings
 }

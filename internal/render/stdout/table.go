@@ -2,8 +2,9 @@ package stdout
 
 import (
 	"fmt"
-	"github.com/mabd-dev/reposcan/pkg/report"
 	"strings"
+
+	"github.com/mabd-dev/reposcan/pkg/report"
 )
 
 // RenderReposTable renders the per-repository rows for a ScanReport as a table.
@@ -44,21 +45,21 @@ func getStateColumnStr(rs report.RepoState) string {
 		stateStr.WriteString(GrayS("⏳%-*d", UncommW, uc))
 	}
 
-	if rs.Ahead > 0 {
-		stateStr.WriteString(GreenS("↑%-*d", AheadW, rs.Ahead))
-	} else if rs.Ahead < 0 {
-		stateStr.WriteString(RedS("%-*s ", AheadW, "x"))
-	} else {
-		stateStr.WriteString(GrayS("↑%-*d", AheadW, 0))
-	}
-
-	if rs.Behind > 0 {
-		stateStr.WriteString(GreenS("↓%-*d", BehindW, rs.Behind))
-	} else if rs.Behind < 0 {
-		stateStr.WriteString(RedS("%-*s ", BehindW, "x"))
-	} else {
-		stateStr.WriteString(GrayS("↓%-*d", BehindW, 0))
-	}
+	// if rs.Ahead > 0 {
+	// 	stateStr.WriteString(GreenS("↑%-*d", AheadW, rs.Ahead))
+	// } else if rs.Ahead < 0 {
+	// 	stateStr.WriteString(RedS("%-*s ", AheadW, "x"))
+	// } else {
+	// 	stateStr.WriteString(GrayS("↑%-*d", AheadW, 0))
+	// }
+	//
+	// if rs.Behind > 0 {
+	// 	stateStr.WriteString(GreenS("↓%-*d", BehindW, rs.Behind))
+	// } else if rs.Behind < 0 {
+	// 	stateStr.WriteString(RedS("%-*s ", BehindW, "x"))
+	// } else {
+	// 	stateStr.WriteString(GrayS("↓%-*d", BehindW, 0))
+	// }
 
 	return stateStr.String()
 }
