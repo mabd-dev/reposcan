@@ -31,19 +31,17 @@ func CheckRepoState(path string) (repoState report.RepoState, warnings []string)
 		if err != nil {
 			msg := fmt.Sprintf("Failed to get upstream status for remote=%s, path=%s", remote, path)
 			warnings = append(warnings, msg)
+			remoteStatuses = append(remoteStatuses, report.RemoteStatus{
+				Remote: remote,
+				Ahead:  -1,
+				Behind: -1,
+			})
 		} else {
 			remoteStatuses = append(remoteStatuses, report.RemoteStatus{
 				Remote: remote,
 				Ahead:  remoteStatus.Ahead,
 				Behind: remoteStatus.Behind,
 			})
-			// logger.Info("Remote status",
-			// 	logger.StringAttr("path", path),
-			// 	logger.StringAttr("\tremote", remote),
-			// 	logger.StringAttr("branch", branch),
-			// 	logger.IntAttr("ahead", remoteStatus.Ahead),
-			// 	logger.IntAttr("behind", remoteStatus.Behind),
-			// )
 		}
 	}
 
