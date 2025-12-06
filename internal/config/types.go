@@ -84,7 +84,7 @@ func Defaults() Config {
 	}
 
 	newOutput := Output{
-		Type:     OutputTable,
+		Type:     OutputInteractive,
 		JSONPath: "",
 	}
 

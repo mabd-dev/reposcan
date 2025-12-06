@@ -39,9 +39,8 @@ This document explains each CLI flag, its equivalent `config.toml` field, what i
     - `reposcan --filter unpulled`
 
 - `-o, --output TYPE`
-  - Config: `output.type = "table" | "json" | "interactive" | "none"`
+  - Config: `output.type = "json" | "interactive" | "none"`
   - Description: Select how results are printed to stdout.
-    - `table`: human-friendly table + details.
     - `interactive`: human-friendly table + details with keymaps actions
     - `json`: machine-readable JSON object.
     - `none`: print nothing to stdout.

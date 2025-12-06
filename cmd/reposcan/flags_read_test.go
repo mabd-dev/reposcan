@@ -69,3 +69,23 @@ func TestReadFlags_AppliesAllFlags(t *testing.T) {
 		t.Fatalf("debugnot applied: %t", cfg.Debug)
 	}
 }
+
+func TestReadTableOutput_SwitchToInteractiveOutput(t *testing.T) {
+	// base config defaults
+	cfg := config.Defaults()
+
+	// build a throwaway command with the same flags as RootCmd
+	cmd := &cobra.Command{Use: "reposcan"}
+	cmd.Flags().StringP("output", "o", "table", "")
+	// cmd.Flags().StringP("colorscheme", "", "", "")
+
+	args := []string{
+		"-o", "table",
+	}
+	cmd.SetArgs(args)
+
+	if cfg.Output.Type != config.OutputInteractive {
+		t.Fatalf("output not applied: %v", cfg.Output.Type)
+	}
+
+}

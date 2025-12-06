@@ -4,9 +4,6 @@ import "testing"
 
 func TestDefaults_SensibleValues(t *testing.T) {
 	cfg := Defaults()
-	if cfg.Output.Type != OutputTable {
-		t.Fatalf("expected default output=table, got %v", cfg.Output.Type)
-	}
 	if cfg.Only != OnlyDirty {
 		t.Fatalf("expected default only=dirty, got %v", cfg.Only)
 	}
