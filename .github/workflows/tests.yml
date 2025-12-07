@@ -36,14 +36,14 @@ jobs:
     - name: Run Tests with CGO_ENABLED=1 (${{ matrix.go }})
       if: runner.os == 'Linux' || runner.os == 'macOS'
       run: |
-        CGO_ENABLED=1 go test ./... -v -covermode=atomic .
+        CGO_ENABLED=1 go test ./... -v -covermode=atomic
 
     - name: Run Tests with CGO_ENABLED=0 (${{ matrix.go }})
       if: runner.os == 'Linux' || runner.os == 'macOS'
       run: |
-        CGO_ENABLED=0 go test ./... -v -covermode=atomic .
+        CGO_ENABLED=0 go test ./... -v -covermode=atomic
 
     - name: Run Tests on Windows (${{ matrix.go }})
       if: runner.os == 'Windows'
       run: |
-        go test ./... -v -covermode=atomic .
+        go test ./... -v -covermode=atomic
