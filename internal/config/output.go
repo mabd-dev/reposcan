@@ -30,7 +30,7 @@ const (
 // IsValid reports whether o is a recognized OutputFormat value.
 func (o OutputFormat) IsValid() bool {
 	switch o {
-	case OutputJson, OutputNone, OutputInteractive:
+	case OutputJson, OutputTable, OutputNone, OutputInteractive:
 		return true
 	}
 	return false
