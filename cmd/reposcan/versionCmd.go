@@ -11,6 +11,6 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print the version number of reposcan",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("%s", "reposcan "+internal.VERSION+"\n")
+		fmt.Printf("reposcan %s\n", internal.VERSION)
 	},
 }
