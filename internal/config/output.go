@@ -1,7 +1,7 @@
 package config
 
 import (
-	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -52,5 +52,5 @@ func CreateOutputFormat(s string) (OutputFormat, error) {
 		return OutputInteractive, nil
 	}
 
-	return OutputInteractive, errors.New(s + " is not valid output format")
+	return OutputInteractive, fmt.Errorf("'%s' is not valid output format", s)
 }
