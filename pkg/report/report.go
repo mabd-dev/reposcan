@@ -10,7 +10,7 @@ import (
 type RemoteStatus struct {
 	Remote string `json:"remote"`
 	Ahead  int    `json:"ahead"`
-	Behind int    `json:"behin"`
+	Behind int    `json:"behind"`
 }
 
 // RepoState describes the state of a single Git repository discovered during a scan.
