@@ -1,9 +1,10 @@
 package gitx
 
 import (
-	"github.com/mabd-dev/reposcan/pkg/report"
 	"sort"
 	"sync"
+
+	"github.com/mabd-dev/reposcan/pkg/report"
 )
 
 type gitRepoResult struct {
