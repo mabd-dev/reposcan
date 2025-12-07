@@ -6,7 +6,6 @@ import (
 
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/mabd-dev/reposcan/internal/logger"
 	"github.com/mabd-dev/reposcan/internal/theme"
 	"github.com/mabd-dev/reposcan/pkg/report"
 )
@@ -47,7 +46,7 @@ func getStateColumnStr(rs report.RepoState, theme theme.Theme) string {
 	parts := []string{}
 
 	uc := len(rs.UncommitedFiles)
-	ucStr := fmt.Sprintf("⏳%-d", uc)
+	ucStr := fmt.Sprintf("⏳%-d ", uc)
 
 	for _, remoteStatus := range rs.RemoteStatus {
 		var statusParts []string
@@ -68,16 +67,14 @@ func getStateColumnStr(rs report.RepoState, theme theme.Theme) string {
 			statusParts = append(statusParts, fmt.Sprintf("↓%-d", 0))
 		}
 
-		remoteName := theme.Styles.Muted.Render(fmt.Sprintf("(%s)", remoteStatus.Remote))
+		remoteName := theme.Styles.Base.Render(fmt.Sprintf("(%s)", remoteStatus.Remote))
 		statusParts = append(statusParts, remoteName)
 
 		parts = append(parts, strings.Join(statusParts, " "))
 	}
 
 	// Combine uncommitted count with all remote statuses, separated by " | "
-	s := ucStr + theme.Styles.Muted.Render(" | ") + strings.Join(parts, " | ")
-
-	logger.Debug("staus output=", logger.StringAttr("s=", s))
+	s := ucStr + theme.Styles.Base.Render(" | ") + strings.Join(parts, " | ")
 
 	return s
 }
