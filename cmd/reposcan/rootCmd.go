@@ -66,7 +66,7 @@ var RootCmd = &cobra.Command{
 // Supported flags:
 //   - root (-r)					: repeatable directory roots to scan
 //   - dirIgnore (-d)       		: repeatable glob patterns to ignore during scan
-//   - output (-o)          		: output format: json|table|interactive|none
+//   - output (-o)          		: output format: json|interactive|none
 //   - filter (-f)          		: repository filter: all|dirty|uncommitted|unpushed|unpulled
 //   - json-output-path     		: directory to write JSON report files
 //   - max-workers (-w)     		: number of concurrent git checks
@@ -150,8 +150,6 @@ func run(configs config.Config) error {
 		if err != nil {
 			return err
 		}
-	case config.OutputTable:
-		stdout.RenderScanReportAsTable(report)
 	case config.OutputInteractive:
 		if err := tui.Render(report, configs); err != nil {
 			fmt.Fprintf(os.Stderr, "tui error: %v\n", err)

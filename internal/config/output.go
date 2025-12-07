@@ -1,7 +1,7 @@
 package config
 
 import (
-	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -45,12 +45,12 @@ func CreateOutputFormat(s string) (OutputFormat, error) {
 	case string(OutputJson):
 		return OutputJson, nil
 	case string(OutputTable):
-		return OutputTable, nil
+		return OutputInteractive, nil
 	case string(OutputNone):
 		return OutputNone, nil
 	case string(OutputInteractive):
 		return OutputInteractive, nil
 	}
 
-	return OutputTable, errors.New(s + " is not valid output format")
+	return OutputInteractive, fmt.Errorf("'%s' is not valid output format", s)
 }

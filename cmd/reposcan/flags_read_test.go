@@ -69,3 +69,54 @@ func TestReadFlags_AppliesAllFlags(t *testing.T) {
 		t.Fatalf("debugnot applied: %t", cfg.Debug)
 	}
 }
+
+func TestReadTableOutput_DefaultInteractiveOutput(t *testing.T) {
+	// base config defaults
+	cfg := config.Defaults()
+
+	if cfg.Output.Type != config.OutputInteractive {
+		t.Fatalf("output not applied: %v", cfg.Output.Type)
+	}
+
+}
+
+func TestReadTableOutput_SwitchToInteractiveOutput(t *testing.T) {
+	cfg := config.Defaults()
+
+	// build a throwaway command with the same flags as RootCmd
+	cmd := &cobra.Command{Use: "reposcan"}
+	cmd.Flags().StringArrayP("root", "r", nil, "")
+	cmd.Flags().StringArrayP("dirIgnore", "d", nil, "")
+	cmd.Flags().StringP("output", "o", "table", "")
+	cmd.Flags().StringP("filter", "f", "dirty", "")
+	cmd.Flags().String("json-output-path", "", "")
+	cmd.Flags().IntP("max-workers", "w", 8, "")
+	cmd.Flags().BoolP("debug", "", false, "")
+	// cmd.Flags().StringP("colorscheme", "", "", "")
+
+	args := []string{
+		"-r", "/tmp/root1",
+		"-r", "/tmp/root2",
+		"-d", "**/node_modules/**",
+		"-d", "**/.cache/**",
+		"-o", "table",
+		"-f", "all",
+		"--json-output-path", "/tmp/out",
+		"-w", "16",
+		"--debug", "true",
+		// "--colorscheme", "something",
+	}
+	cmd.SetArgs(args)
+
+	if err := cmd.Execute(); err != nil {
+		t.Fatalf("unexpected execute error: %v", err)
+	}
+
+	if err := readFlags(cmd, &cfg); err != nil {
+		t.Fatalf("readFlags error: %v", err)
+	}
+
+	if cfg.Output.Type != config.OutputInteractive {
+		t.Fatalf("output not applied: %v", cfg.Output.Type)
+	}
+}
