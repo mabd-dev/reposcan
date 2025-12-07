@@ -48,6 +48,11 @@ func GetGitRemotes(path string) (remotes []string, err error) {
 		return []string{}, err
 	}
 
+	str = strings.TrimSpace(str)
+	if len(str) == 0 {
+		return []string{}, nil
+	}
+
 	remotes = strings.Split(strings.TrimRight(str, "\n"), "\n")
 	return remotes, nil
 }

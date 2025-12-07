@@ -26,6 +26,14 @@ func CheckRepoState(path string) (repoState report.RepoState, warnings []string)
 
 	remoteStatuses := []report.RemoteStatus{}
 
+	if len(remotes) == 0 {
+		remoteStatuses = append(remoteStatuses, report.RemoteStatus{
+			Remote: "",
+			Ahead:  -1,
+			Behind: -1,
+		})
+	}
+
 	for _, remote := range remotes {
 		remoteStatus, err := GetUpstreamStatusForAllRemotes(path, remote, branch)
 		if err != nil {
