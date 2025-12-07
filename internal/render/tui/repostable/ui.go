@@ -74,7 +74,8 @@ func getStateColumnStr(rs report.RepoState, theme theme.Theme) string {
 	}
 
 	// Combine uncommitted count with all remote statuses, separated by " | "
-	s := ucStr + theme.Styles.Base.Render(" | ") + strings.Join(parts, " | ")
+	s := ucStr
+	s += strings.Join(parts, " | ")
 
 	return s
 }
