@@ -108,7 +108,7 @@ func gitRefreshRepo(m Model) tea.Cmd {
 	repoPath := rs.Path
 
 	return func() tea.Msg {
-		newRepoState, _ := gitx.CheckRepoState(repoPath)
+		newRepoState, _ := gitx.GetRepoState(repoPath)
 
 		return gitRefreshRepoResultMsg{
 			newRepoState: newRepoState,

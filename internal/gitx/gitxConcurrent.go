@@ -4,6 +4,7 @@ import (
 	"sort"
 	"sync"
 
+	"github.com/mabd-dev/reposcan/internal/logger"
 	"github.com/mabd-dev/reposcan/pkg/report"
 )
 
@@ -37,14 +38,22 @@ func GetGitRepoStatesConcurrent(
 			defer wg.Done()
 
 			for p := range jobs {
-				// handle warnigns
-				state, warnings := CheckRepoState(p)
-
-				result := gitRepoResult{
-					State:    state,
-					Warnings: warnings,
+				wtPaths, err := getWorktreesPaths(p)
+				if err != nil {
+					logger.Error("getWorktreesPaths() failed, ", logger.StringAttr("message", err.Error()))
+					continue
 				}
-				results <- result
+
+				for _, wtPath := range wtPaths {
+					state, warnings := GetRepoState(wtPath)
+
+					result := gitRepoResult{
+						State:    state,
+						Warnings: warnings,
+					}
+					results <- result
+
+				}
 			}
 		}()
 	}

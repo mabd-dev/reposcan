@@ -16,6 +16,9 @@ func GenerateScanReport(
 
 	// Find git repos at defined configs.Roots
 	gitReposPaths, warnings := scan.FindGitRepos(configs.Roots, configs.DirIgnore)
+	// for _, path := range gitReposPaths {
+	// 	logger.Debug("Found repo at", logger.StringAttr("path", path))
+	// }
 
 	reportWarnings = append(reportWarnings, warnings...)
 

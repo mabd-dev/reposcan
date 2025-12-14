@@ -8,9 +8,9 @@ import (
 	"github.com/mabd-dev/reposcan/pkg/report"
 )
 
-// CheckRepoState inspects the Git repository at path and returns its RepoState
+// GetRepoState inspects the Git repository at path and returns its RepoState
 // along with any non-fatal warnings encountered while collecting information.
-func CheckRepoState(path string) (repoState report.RepoState, warnings []string) {
+func GetRepoState(path string) (repoState report.RepoState, warnings []string) {
 
 	branch, err := GetRepoBranch(path)
 	if err != nil {
