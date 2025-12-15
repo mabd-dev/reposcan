@@ -6,27 +6,31 @@ import (
 
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/mabd-dev/reposcan/internal/ds/mmap"
+	"github.com/mabd-dev/reposcan/internal/ds/mslice"
+	"github.com/mabd-dev/reposcan/internal/render/tui/common"
 	"github.com/mabd-dev/reposcan/internal/theme"
 	"github.com/mabd-dev/reposcan/pkg/report"
 )
 
 func New(
 	theme theme.Theme,
-	report report.ScanReport,
+	worktreeStates []common.WorktreeState,
 	width int,
 	height int,
 ) Model {
+
 	model := Model{
-		width:         width,
-		height:        height,
-		theme:         theme,
-		report:        report,
-		filteredRepos: report.RepoStates,
-		filterQuery:   "",
+		width:                  width,
+		height:                 height,
+		theme:                  theme,
+		allWorktreeStates:      worktreeStates,
+		filteredWorktreeStates: worktreeStates,
+		filterQuery:            "",
 	}
 
 	cols := createColumns(width)
-	rows := createRows(model.report.RepoStates, theme)
+	rows := createRows(worktreeStates, theme)
 
 	t := table.New(
 		table.WithColumns(cols),
@@ -56,7 +60,7 @@ func New(
 func (rt Model) Init() tea.Cmd { return nil }
 
 func (m *Model) SetReport(report report.ScanReport) {
-	m.report = report
+	m.allWorktreeStates = mslice.Flatten(mmap.Map(report.RepoStates, common.MapToWorktreeStates))
 	m.Filter(m.filterQuery)
 }
 
@@ -76,23 +80,23 @@ func (m *Model) Filter(query string) {
 	m.filterQuery = query
 	q := strings.ToLower(strings.TrimSpace(query))
 	if len(q) == 0 {
-		m.filteredRepos = m.report.RepoStates
+		m.filteredWorktreeStates = m.allWorktreeStates
 	} else {
-		m.filteredRepos = []report.RepoState{}
-		for _, rs := range m.report.RepoStates {
-			if strings.Contains(strings.ToLower(rs.Repo), q) ||
+		m.filteredWorktreeStates = []common.WorktreeState{}
+		for _, rs := range m.allWorktreeStates {
+			if strings.Contains(strings.ToLower(rs.RepoName), q) ||
 				strings.Contains(strings.ToLower(rs.Branch), q) {
-				m.filteredRepos = append(m.filteredRepos, rs)
+				m.filteredWorktreeStates = append(m.filteredWorktreeStates, rs)
 			}
 		}
 	}
 
 	cursorPosition := m.tbl.Cursor()
 
-	rows := createRows(m.filteredRepos, m.theme)
+	rows := createRows(m.filteredWorktreeStates, m.theme)
 	m.tbl.SetRows(rows)
 
-	if cursorPosition < len(m.filteredRepos) {
+	if cursorPosition < len(m.filteredWorktreeStates) {
 		m.tbl.SetCursor(cursorPosition)
 	} else {
 		m.tbl.SetCursor(0)
@@ -100,15 +104,15 @@ func (m *Model) Filter(query string) {
 
 }
 
-func (m *Model) UpdateRepoState(index int, newState report.RepoState) {
-	m.filteredRepos[index] = newState
+func (m *Model) UpdateRepoState(index int, newState common.WorktreeState) {
+	m.filteredWorktreeStates[index] = newState
 
-	originalIndex := getRepoIndex(m.report.RepoStates, newState.ID)
+	originalIndex := getWorktreeIndex(m.allWorktreeStates, newState.RepoID)
 	if originalIndex != -1 {
-		m.report.RepoStates[originalIndex] = newState
+		m.allWorktreeStates[originalIndex] = newState
 	}
 
-	rows := createRows(m.filteredRepos, m.theme)
+	rows := createRows(m.filteredWorktreeStates, m.theme)
 	m.tbl.SetRows(rows)
 }
 
@@ -128,19 +132,19 @@ func (m *Model) Cursor() int {
 }
 
 func (rt *Model) ReposCount() int {
-	return len(rt.filteredRepos)
+	return len(rt.filteredWorktreeStates)
 }
 
-func (m *Model) GetCurrentRepoState() *report.RepoState {
-	return m.GetRepoStateAt(m.Cursor())
+func (m *Model) GetCurrentWorktreeState() *common.WorktreeState {
+	return m.GetWorktreeStateAt(m.Cursor())
 }
 
-func (m *Model) GetRepoStateAt(index int) *report.RepoState {
+func (m *Model) GetWorktreeStateAt(index int) *common.WorktreeState {
 	if index < 0 {
 		return nil
 	}
-	if index >= len(m.filteredRepos) {
+	if index >= len(m.filteredWorktreeStates) {
 		return nil
 	}
-	return &m.filteredRepos[index]
+	return &m.filteredWorktreeStates[index]
 }

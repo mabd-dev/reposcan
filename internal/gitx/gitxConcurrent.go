@@ -44,16 +44,28 @@ func GetGitRepoStatesConcurrent(
 					continue
 				}
 
+				worktrees := []report.Worktree{}
+				repoWarnings := []string{}
+
 				for _, wtPath := range wtPaths {
-					state, warnings := GetRepoState(wtPath)
+					worktree, warnings := GetWorktreeState(wtPath)
 
-					result := gitRepoResult{
-						State:    state,
-						Warnings: warnings,
+					if len(warnings) > 0 {
+						repoWarnings = append(repoWarnings, warnings...)
 					}
-					results <- result
-
+					worktrees = append(worktrees, worktree)
 				}
+
+				state, warnings := GetRepoState(p, worktrees)
+				if len(warnings) > 0 {
+					repoWarnings = append(repoWarnings, warnings...)
+				}
+
+				result := gitRepoResult{
+					State:    state,
+					Warnings: repoWarnings,
+				}
+				results <- result
 			}
 		}()
 	}
@@ -77,7 +89,7 @@ func GetGitRepoStatesConcurrent(
 		warnings = append(warnings, x.Warnings...)
 	}
 
-	sort.Slice(states, func(i, j int) bool { return states[i].Path < states[j].Path })
+	sort.Slice(states, func(i, j int) bool { return states[i].Repo < states[j].Repo })
 
 	return states, warnings
 }

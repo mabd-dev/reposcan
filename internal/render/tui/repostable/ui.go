@@ -6,8 +6,8 @@ import (
 
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/mabd-dev/reposcan/internal/render/tui/common"
 	"github.com/mabd-dev/reposcan/internal/theme"
-	"github.com/mabd-dev/reposcan/pkg/report"
 )
 
 const (
@@ -28,13 +28,13 @@ func createColumns(maxWidth int) []table.Column {
 	}
 }
 
-func createRows(repoStates []report.RepoState, theme theme.Theme) []table.Row {
+func createRows(repoStates []common.WorktreeState, theme theme.Theme) []table.Row {
 	rows := make([]table.Row, 0, len(repoStates))
 	for _, rs := range repoStates {
 		state := getStateColumnStr(rs, theme)
 
 		rows = append(rows, table.Row{
-			rs.Repo,
+			rs.RepoName,
 			rs.Branch,
 			state,
 		})
@@ -42,7 +42,7 @@ func createRows(repoStates []report.RepoState, theme theme.Theme) []table.Row {
 	return rows
 }
 
-func getStateColumnStr(rs report.RepoState, theme theme.Theme) string {
+func getStateColumnStr(rs common.WorktreeState, theme theme.Theme) string {
 	parts := []string{}
 
 	uc := len(rs.UncommitedFiles)
@@ -89,9 +89,9 @@ func setKeymaps(km table.KeyMap) {
 	km.GotoBottom.SetKeys("end", "G")
 }
 
-func getRepoIndex(repos []report.RepoState, id string) int {
-	for i, s := range repos {
-		if s.ID == id {
+func getWorktreeIndex(worktrees []common.WorktreeState, id string) int {
+	for i, s := range worktrees {
+		if s.RepoID == id {
 			return i
 		}
 	}

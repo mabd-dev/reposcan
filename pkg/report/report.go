@@ -7,20 +7,24 @@ import (
 	"time"
 )
 
+// RepoState describes the state of a single Git repository discovered during a scan.
+type RepoState struct {
+	ID        string     `json:"id"`
+	Repo      string     `json:"repo"`
+	Worktrees []Worktree `json:"worktrees"`
+}
+
+type Worktree struct {
+	Path            string         `json:"path"`
+	Branch          string         `json:"branch"`
+	UncommitedFiles []string       `json:"uncommitedFiles"`
+	RemoteStatus    []RemoteStatus `json:"remoteStatus"`
+}
+
 type RemoteStatus struct {
 	Remote string `json:"remote"`
 	Ahead  int    `json:"ahead"`
 	Behind int    `json:"behind"`
-}
-
-// RepoState describes the state of a single Git repository discovered during a scan.
-type RepoState struct {
-	ID              string         `json:"id"`
-	Path            string         `json:"path"`
-	Repo            string         `json:"repo"`
-	Branch          string         `json:"branch"`
-	UncommitedFiles []string       `json:"uncommitedFiles"`
-	RemoteStatus    []RemoteStatus `json:"remoteStatus"`
 }
 
 // ScanReport aggregates the results of scanning one or more directories for
@@ -33,7 +37,7 @@ type ScanReport struct {
 }
 
 // IsDirty reports whether the repository has uncommitted changes or is ahead/behind.
-func (r *RepoState) IsDirty() bool {
+func IsDirty(r Worktree) bool {
 	atLeastOneDirtyRemote := false
 	for _, remoteStatus := range r.RemoteStatus {
 		if remoteStatus.Ahead > 0 || remoteStatus.Behind > 0 {
@@ -43,7 +47,7 @@ func (r *RepoState) IsDirty() bool {
 	return len(r.UncommitedFiles) > 0 || atLeastOneDirtyRemote
 }
 
-func (r *RepoState) HaveUnpushedCommits() bool {
+func HaveUnpushedCommits(r Worktree) bool {
 	for _, remoteStatus := range r.RemoteStatus {
 		if remoteStatus.Ahead > 0 {
 			return true
@@ -52,7 +56,7 @@ func (r *RepoState) HaveUnpushedCommits() bool {
 	return false
 }
 
-func (r *RepoState) HaveUnpulledCommits() bool {
+func HaveUnpulledCommits(r Worktree) bool {
 	for _, remoteStatus := range r.RemoteStatus {
 		if remoteStatus.Behind > 0 {
 			return true
@@ -63,11 +67,13 @@ func (r *RepoState) HaveUnpulledCommits() bool {
 
 // DirtyReposCount count all dirty repos based on [IsDirty] function on RepoState struct
 func (sc *ScanReport) DirtyReposCount() int {
-	dirtyRepos := 0
-	for _, rs := range sc.RepoStates {
-		if rs.IsDirty() {
-			dirtyRepos++
-		}
-	}
-	return dirtyRepos
+	// TODO: implement this
+	return -1
+	// dirtyRepos := 0
+	// for _, rs := range sc.RepoStates {
+	// 	if rs.IsDirty() {
+	// 		dirtyRepos++
+	// 	}
+	// }
+	// return dirtyRepos
 }

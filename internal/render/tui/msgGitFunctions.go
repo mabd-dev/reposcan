@@ -3,6 +3,7 @@ package tui
 import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/mabd-dev/reposcan/internal/gitx"
+	"github.com/mabd-dev/reposcan/internal/render/tui/common"
 	"github.com/mabd-dev/reposcan/pkg/report"
 )
 
@@ -12,13 +13,13 @@ type gitFetchResultMsg struct {
 }
 
 func gitFetch(m Model) tea.Cmd {
-	rs := m.reposTable.GetCurrentRepoState()
+	rs := m.reposTable.GetCurrentWorktreeState()
 	if rs == nil {
 		return nil
 	}
 	repoPath := rs.Path
 
-	m.reposBeingUpdated = append(m.reposBeingUpdated, rs.ID)
+	m.reposBeingUpdated = append(m.reposBeingUpdated, rs.RepoID)
 
 	return func() tea.Msg {
 		stdout, err := gitx.GitFetch(repoPath)
@@ -41,13 +42,13 @@ type gitPullResultMsg struct {
 }
 
 func gitPull(m Model) tea.Cmd {
-	rs := m.reposTable.GetCurrentRepoState()
+	rs := m.reposTable.GetCurrentWorktreeState()
 	if rs == nil {
 		return nil
 	}
 
 	repoPath := rs.Path
-	m.reposBeingUpdated = append(m.reposBeingUpdated, rs.ID)
+	m.reposBeingUpdated = append(m.reposBeingUpdated, rs.RepoID)
 
 	return func() tea.Msg {
 		stdout, err := gitx.GitPull(repoPath)
@@ -70,7 +71,7 @@ type gitPushResultMsg struct {
 }
 
 func gitPush(m Model) tea.Cmd {
-	rs := m.reposTable.GetCurrentRepoState()
+	rs := m.reposTable.GetCurrentWorktreeState()
 	if rs == nil {
 		return nil
 	}
@@ -93,26 +94,28 @@ func gitPush(m Model) tea.Cmd {
 }
 
 type gitRefreshRepoResultMsg struct {
-	newRepoState report.RepoState
-	index        int
+	newWorktreeState common.WorktreeState
+	index            int
 }
 
 func gitRefreshRepo(m Model) tea.Cmd {
 	index := m.reposTable.Cursor()
 
-	rs := m.reposTable.GetRepoStateAt(index)
+	rs := m.reposTable.GetWorktreeStateAt(index)
 	if rs == nil {
 		return nil
 	}
 
-	repoPath := rs.Path
+	worktreePath := rs.Path
 
 	return func() tea.Msg {
-		newRepoState, _ := gitx.GetRepoState(repoPath)
+		newWorktreeState, _ := gitx.GetWorktreeState(worktreePath)
+		repoState, _ := gitx.GetRepoState(worktreePath, []report.Worktree{newWorktreeState})
+		worktreeState := common.MapToWorktreeStates(repoState)[0]
 
 		return gitRefreshRepoResultMsg{
-			newRepoState: newRepoState,
-			index:        index,
+			newWorktreeState: worktreeState,
+			index:            index,
 		}
 	}
 }

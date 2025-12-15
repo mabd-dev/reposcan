@@ -135,12 +135,12 @@ func defaultUpdate(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 
-		rs := m.reposTable.GetCurrentRepoState()
+		rs := m.reposTable.GetCurrentWorktreeState()
 		if rs == nil {
 			return m, nil
 		}
 
-		index := getRepoIndex(m.reposBeingUpdated, rs.ID)
+		index := getRepoIndex(m.reposBeingUpdated, rs.RepoID)
 		if index != -1 {
 			m.reposBeingUpdated = deleteRepo(m.reposBeingUpdated, index)
 		}
@@ -152,12 +152,12 @@ func defaultUpdate(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, nil
 		}
 
-		rs := m.reposTable.GetCurrentRepoState()
+		rs := m.reposTable.GetCurrentWorktreeState()
 		if rs == nil {
 			return m, nil
 		}
 
-		index := getRepoIndex(m.reposBeingUpdated, rs.ID)
+		index := getRepoIndex(m.reposBeingUpdated, rs.RepoID)
 		if index != -1 {
 			m.reposBeingUpdated = deleteRepo(m.reposBeingUpdated, index)
 		}
@@ -165,7 +165,7 @@ func defaultUpdate(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, gitRefreshRepo(m)
 
 	case gitRefreshRepoResultMsg:
-		m.reposTable.UpdateRepoState(msg.index, msg.newRepoState)
+		m.reposTable.UpdateRepoState(msg.index, msg.newWorktreeState)
 
 		return m, nil
 	case generateReportResponse:
