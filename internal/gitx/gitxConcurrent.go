@@ -2,6 +2,7 @@ package gitx
 
 import (
 	"sort"
+	"strings"
 	"sync"
 
 	"github.com/mabd-dev/reposcan/internal/logger"
@@ -89,7 +90,7 @@ func GetGitRepoStatesConcurrent(
 		warnings = append(warnings, x.Warnings...)
 	}
 
-	sort.Slice(states, func(i, j int) bool { return states[i].Repo < states[j].Repo })
+	sort.Slice(states, func(i, j int) bool { return strings.ToLower(states[i].Repo) < strings.ToLower(states[j].Repo) })
 
 	return states, warnings
 }
