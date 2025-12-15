@@ -1,19 +1,22 @@
 package mslice
 
 func Flatten[T any](arr [][]T) []T {
-	flatArr := []T{}
-	for _, inner := range arr {
-		flatArr = append(flatArr, inner...)
+	total := 0
+	for _, s := range arr {
+		total += len(s)
 	}
-	return flatArr
+
+	result := make([]T, 0, total)
+	for _, s := range arr {
+		result = append(result, s...)
+	}
+	return result
 }
 
-type FilterFunc[T any] func(t T) bool
-
-func Filter[T any](ts []T, filterFunc FilterFunc[T]) []T {
+func Filter[T any](ts []T, keep func(T) bool) []T {
 	filteredTS := []T{}
 	for _, t := range ts {
-		if filterFunc(t) {
+		if keep(t) {
 			filteredTS = append(filteredTS, t)
 		}
 	}
