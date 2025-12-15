@@ -141,19 +141,11 @@ func GetRepoName(repoPath string) (string, error) {
 		return "", err
 	}
 
-	validRemote := ""
-	for _, remote := range allRemotes {
-		remote, err := RunGitCommand(repoPath, "remote", "get-url", remote)
-		if err != nil {
-			continue
-		}
-		validRemote = remote
-		break
-	}
+	remote := getValidRemote(allRemotes, repoPath)
+	remote = strings.TrimSpace(remote)
 
-	validRemote = strings.TrimSpace(validRemote)
-	if validRemote != "" {
-		if name, ok := parseRepoName(validRemote); ok {
+	if remote != "" {
+		if name, ok := parseRepoName(remote); ok {
 			return name, nil
 		}
 	}
@@ -165,6 +157,17 @@ func GetRepoName(repoPath string) (string, error) {
 	}
 
 	return "", errors.New("could not determine repo name")
+}
+
+func getValidRemote(remotes []string, repoPath string) string {
+	for _, remote := range remotes {
+		remote, err := RunGitCommand(repoPath, "remote", "get-url", remote)
+		if err != nil {
+			continue
+		}
+		return remote
+	}
+	return ""
 }
 
 // parseRepoName extracts the repo name from a remote URL or path.
