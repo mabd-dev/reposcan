@@ -65,15 +65,15 @@ func HaveUnpulledCommits(r Worktree) bool {
 	return false
 }
 
-// DirtyReposCount count all dirty repos based on [IsDirty] function on RepoState struct
-func (sc *ScanReport) DirtyReposCount() int {
-	// TODO: implement this
-	return -1
-	// dirtyRepos := 0
-	// for _, rs := range sc.RepoStates {
-	// 	if rs.IsDirty() {
-	// 		dirtyRepos++
-	// 	}
-	// }
-	// return dirtyRepos
+// DirtyWorktreeCount count all dirty repos based on [IsDirty] function on RepoState struct
+func (sc *ScanReport) DirtyWorktreeCount() int {
+	count := 0
+	for _, rs := range sc.RepoStates {
+		for _, wt := range rs.Worktrees {
+			if IsDirty(wt) {
+				count++
+			}
+		}
+	}
+	return count
 }

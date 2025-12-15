@@ -4,6 +4,7 @@ package repostableheader
 
 import (
 	"fmt"
+
 	"github.com/charmbracelet/lipgloss"
 	"github.com/mabd-dev/reposcan/internal/theme"
 	"github.com/mabd-dev/reposcan/pkg/report"
@@ -17,7 +18,7 @@ type Header struct {
 
 func (h *Header) SetReport(report report.ScanReport) {
 	h.repoStatesCount = len(report.RepoStates)
-	h.dirtyRepos = report.DirtyReposCount()
+	h.dirtyRepos = report.DirtyWorktreeCount()
 
 }
 
