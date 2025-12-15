@@ -56,16 +56,16 @@ func renderReportHeader(r report.ScanReport, totalRepos int, dirtyRepos int) {
 func renderDirtyReposDetails(r report.ScanReport) {
 	fmt.Printf("\n%s\n", CyanBold("Details:"))
 	for _, rs := range r.RepoStates {
-		if len(rs.UncommitedFiles) == 0 {
-			continue
-		}
-		fmt.Printf("\n%s %s\n%s %s\n",
+		// if len(rs.UncommitedFiles) == 0 {
+		// 	continue
+		// }
+		fmt.Printf("\n%s %s\n",
 			MagBold("Repo:"), rs.Repo,
-			MagBold("Path:"), rs.Path,
+			//MagBold("Path:"), rs.Path,
 		)
-		for _, f := range rs.UncommitedFiles {
-			fmt.Printf("  %s\n", GrayS("- %s", f))
-		}
+		// for _, f := range rs.UncommitedFiles {
+		// 	fmt.Printf("  %s\n", GrayS("- %s", f))
+		// }
 	}
 }
 

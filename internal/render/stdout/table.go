@@ -24,7 +24,7 @@ func RenderReposTable(r report.ScanReport) {
 
 func renderRepoState(rs report.RepoState) {
 	repoCell := fmt.Sprintf("%-*s", RepoW, truncateRunes(rs.Repo, RepoW))
-	branchCell := BlueS("%-*s", BranchW, truncateRunes(rs.Branch, BranchW))
+	branchCell := BlueS("%-*s", BranchW, truncateRunes("laskdf", BranchW))
 
 	remoteStateStr := getStateColumnStr(rs)
 
@@ -38,7 +38,7 @@ func renderRepoState(rs report.RepoState) {
 func getStateColumnStr(rs report.RepoState) string {
 	var stateStr strings.Builder
 
-	uc := len(rs.UncommitedFiles)
+	uc := 1 //len(rs.UncommitedFiles)
 	if uc > 0 {
 		stateStr.WriteString(RedS("⏳%-*d", UncommW, uc))
 	} else if uc == 0 {
