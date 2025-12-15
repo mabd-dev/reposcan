@@ -136,25 +136,24 @@ func GetUpstreamStatusForAllRemotes(
 // GetRepoName tries to extract the repository name from its remote URL,
 // falling back to the first remote name or the local folder name if needed.
 func GetRepoName(repoPath string) (string, error) {
-	// 1. Try "origin" first
-	remote, err := RunGitCommand(repoPath, "remote", "get-url", "origin")
+	allRemotes, err := GetGitRemotes(repoPath)
 	if err != nil {
-		// 2. If "origin" not found, list remotes
-		remotes, rErr := RunGitCommand(repoPath, "remote")
-		if rErr == nil {
-			names := strings.Fields(remotes)
-			if len(names) > 0 {
-				remote, err = RunGitCommand(repoPath, "remote", "get-url", names[0])
-				if err != nil {
-					remote = ""
-				}
-			}
-		}
+		return "", err
 	}
 
-	remote = strings.TrimSpace(remote)
-	if remote != "" {
-		if name, ok := parseRepoName(remote); ok {
+	validRemote := ""
+	for _, remote := range allRemotes {
+		remote, err := RunGitCommand(repoPath, "remote", "get-url", remote)
+		if err != nil {
+			continue
+		}
+		validRemote = remote
+		break
+	}
+
+	validRemote = strings.TrimSpace(validRemote)
+	if validRemote != "" {
+		if name, ok := parseRepoName(validRemote); ok {
 			return name, nil
 		}
 	}
