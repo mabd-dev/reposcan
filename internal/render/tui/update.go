@@ -34,7 +34,7 @@ func (m Model) updateReposTable(msg tea.Msg) (tea.Model, tea.Cmd) {
 		// case "f":
 		// 	return m, gitFetch(m)
 		case "c":
-			rs := m.reposTable.GetCurrentRepoState()
+			rs := m.reposTable.GetCurrentWorktreeState()
 			if rs == nil {
 				return m, nil
 			}
