@@ -9,7 +9,7 @@ import (
 
 func (m *Model) View() string {
 
-	if m.repoState == nil {
+	if m.worktreeState == nil {
 		return ""
 	}
 
@@ -17,11 +17,11 @@ func (m *Model) View() string {
 
 	lines := []string{
 		//m.theme.Styles.Base.Foreground(m.theme.Colors.Muted).Italic(true).Render("Details"),
-		fmt.Sprintf("%s %s", style.Render("Path:"), m.repoState.Path),
+		fmt.Sprintf("%s %s", style.Render("Path:"), m.worktreeState.Path),
 		style.Render("File Changes:"),
 	}
-	if len(m.repoState.UncommitedFiles) > 0 {
-		files := m.repoState.UncommitedFiles
+	if len(m.worktreeState.UncommitedFiles) > 0 {
+		files := m.worktreeState.UncommitedFiles
 
 		maxUncommitedFilesToShow := m.height - len(lines) - 1
 		trimUncommitedFiles := len(files) > maxUncommitedFilesToShow
@@ -35,7 +35,7 @@ func (m *Model) View() string {
 		}
 
 		if trimUncommitedFiles {
-			more := len(m.repoState.UncommitedFiles) - maxUncommitedFilesToShow
+			more := len(m.worktreeState.UncommitedFiles) - maxUncommitedFilesToShow
 			lines = append(lines, m.theme.Styles.Muted.Render("  ... (+"+strconv.Itoa(more)+" more)"))
 		}
 	} else {

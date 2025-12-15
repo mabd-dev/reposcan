@@ -61,7 +61,7 @@ func Render(
 	if len(worktreeStates) == 0 {
 		repoDetails = repodetails.New(nil, theme)
 	} else {
-		repoDetails = repodetails.New(&r.RepoStates[0], theme)
+		repoDetails = repodetails.New(&worktreeStates[0], theme)
 	}
 
 	m := Model{
