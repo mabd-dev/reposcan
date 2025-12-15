@@ -5,7 +5,7 @@ import "strings"
 func getWorktreesPaths(path string) ([]string, error) {
 	str, err := RunGitCommand(path, "worktree", "list", "--porcelain")
 	if err != nil {
-		return []string{}, nil
+		return []string{}, err
 	}
 
 	paths := []string{}
