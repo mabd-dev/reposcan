@@ -12,7 +12,7 @@ func getWorktreesPaths(path string) ([]string, error) {
 	lines := strings.SplitSeq(str, "\n")
 	for line := range lines {
 		path, found := strings.CutPrefix(line, "worktree ")
-		if found {
+		if found && !strings.HasSuffix(path, ".git") {
 			paths = append(paths, path)
 		}
 	}
