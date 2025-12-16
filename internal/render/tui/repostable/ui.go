@@ -28,15 +28,13 @@ func createColumns(maxWidth int) []table.Column {
 	}
 }
 
-func createRows(repoStates []common.WorktreeState, theme theme.Theme) []table.Row {
-	rows := make([]table.Row, 0, len(repoStates))
-	for _, rs := range repoStates {
-		state := getStateColumnStr(rs, theme)
-
+func createRows(tableRows []tableRow, theme theme.Theme) []table.Row {
+	rows := make([]table.Row, 0, len(tableRows))
+	for _, r := range tableRows {
 		rows = append(rows, table.Row{
-			rs.RepoName,
-			rs.Branch,
-			state,
+			r.Repo,
+			r.Branch,
+			r.State,
 		})
 	}
 	return rows

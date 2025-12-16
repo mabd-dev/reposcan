@@ -13,7 +13,16 @@ type Model struct {
 
 	tbl table.Model
 
-	allWorktreeStates      []common.WorktreeState
-	filteredWorktreeStates []common.WorktreeState
-	filterQuery            string
+	allRows           []tableRow
+	filteredRows      []tableRow
+	allWorktreeStates []common.WorktreeState
+	filterQuery       string
+}
+
+type tableRow struct {
+	Repo     string
+	Branch   string
+	State    string
+	IsHeader bool
+	WtIndex  int
 }

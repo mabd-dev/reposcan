@@ -20,17 +20,51 @@ func New(
 	height int,
 ) Model {
 
+	allRows := []tableRow{}
+	lastIndex := len(worktreeStates) - 1
+	for i, wt := range worktreeStates {
+		previousIsSameRepo := i > 0 && worktreeStates[i-1].RepoName == wt.RepoName
+		nextIsSameRepo := i < lastIndex && worktreeStates[i+1].RepoName == wt.RepoName
+		createHeader := !previousIsSameRepo && nextIsSameRepo
+		if createHeader {
+			allRows = append(allRows, tableRow{
+				Repo:     "📦 " + wt.RepoName,
+				Branch:   "",
+				State:    "",
+				IsHeader: true,
+				WtIndex:  -1,
+			})
+		}
+
+		repoName := wt.RepoName
+		if createHeader || previousIsSameRepo {
+			repoName = "  ├ " + wt.WorktreeName
+			if !nextIsSameRepo {
+				repoName = "  ┕ " + wt.WorktreeName
+			}
+		}
+		allRows = append(allRows, tableRow{
+			Repo:     repoName,
+			Branch:   wt.Branch,
+			State:    getStateColumnStr(wt, theme),
+			IsHeader: false,
+			WtIndex:  i,
+		})
+		// if previous is not same repo name && next is same repo name -> create header
+	}
+
 	model := Model{
-		width:                  width,
-		height:                 height,
-		theme:                  theme,
-		allWorktreeStates:      worktreeStates,
-		filteredWorktreeStates: worktreeStates,
-		filterQuery:            "",
+		width:             width,
+		height:            height,
+		theme:             theme,
+		allRows:           allRows,
+		filteredRows:      allRows,
+		allWorktreeStates: worktreeStates,
+		filterQuery:       "",
 	}
 
 	cols := createColumns(width)
-	rows := createRows(worktreeStates, theme)
+	rows := createRows(allRows, theme)
 
 	t := table.New(
 		table.WithColumns(cols),
@@ -80,23 +114,30 @@ func (m *Model) Filter(query string) {
 	m.filterQuery = query
 	q := strings.ToLower(strings.TrimSpace(query))
 	if len(q) == 0 {
-		m.filteredWorktreeStates = m.allWorktreeStates
+		m.filteredRows = m.allRows
 	} else {
-		m.filteredWorktreeStates = []common.WorktreeState{}
-		for _, rs := range m.allWorktreeStates {
-			if strings.Contains(strings.ToLower(rs.RepoName), q) ||
-				strings.Contains(strings.ToLower(rs.Branch), q) {
-				m.filteredWorktreeStates = append(m.filteredWorktreeStates, rs)
+		m.filteredRows = []tableRow{}
+		for _, r := range m.allRows {
+			if r.IsHeader {
+				if strings.Contains(strings.ToLower(r.Repo), q) {
+					m.filteredRows = append(m.filteredRows, r)
+				}
+			} else {
+				if strings.Contains(strings.ToLower(r.Repo), q) ||
+					strings.Contains(strings.ToLower(r.Branch), q) {
+					m.filteredRows = append(m.filteredRows, r)
+				}
 			}
+
 		}
 	}
 
 	cursorPosition := m.tbl.Cursor()
 
-	rows := createRows(m.filteredWorktreeStates, m.theme)
+	rows := createRows(m.filteredRows, m.theme)
 	m.tbl.SetRows(rows)
 
-	if cursorPosition < len(m.filteredWorktreeStates) {
+	if cursorPosition < len(m.filteredRows) {
 		m.tbl.SetCursor(cursorPosition)
 	} else {
 		m.tbl.SetCursor(0)
@@ -105,15 +146,16 @@ func (m *Model) Filter(query string) {
 }
 
 func (m *Model) UpdateRepoState(index int, newState common.WorktreeState) {
-	m.filteredWorktreeStates[index] = newState
-
-	originalIndex := getWorktreeIndex(m.allWorktreeStates, newState.RepoID)
-	if originalIndex != -1 {
-		m.allWorktreeStates[originalIndex] = newState
-	}
-
-	rows := createRows(m.filteredWorktreeStates, m.theme)
-	m.tbl.SetRows(rows)
+	// TODO: implement later
+	// m.filteredWorktreeStates[index] = newState
+	//
+	// originalIndex := getWorktreeIndex(m.allWorktreeStates, newState.RepoID)
+	// if originalIndex != -1 {
+	// 	m.allWorktreeStates[originalIndex] = newState
+	// }
+	//
+	// rows := createRows(m.filteredRows, m.theme)
+	// m.tbl.SetRows(rows)
 }
 
 // Blur removes focus from table
@@ -132,7 +174,7 @@ func (m *Model) Cursor() int {
 }
 
 func (rt *Model) ReposCount() int {
-	return len(rt.filteredWorktreeStates)
+	return len(rt.filteredRows)
 }
 
 func (m *Model) GetCurrentWorktreeState() *common.WorktreeState {
@@ -143,8 +185,15 @@ func (m *Model) GetWorktreeStateAt(index int) *common.WorktreeState {
 	if index < 0 {
 		return nil
 	}
-	if index >= len(m.filteredWorktreeStates) {
+
+	if index >= len(m.filteredRows) {
 		return nil
 	}
-	return &m.filteredWorktreeStates[index]
+
+	if m.filteredRows[index].IsHeader {
+		return nil
+	}
+
+	worktree := m.allWorktreeStates[m.filteredRows[index].WtIndex]
+	return &worktree
 }

@@ -15,6 +15,7 @@ type RepoState struct {
 }
 
 type Worktree struct {
+	Name            string         `json:"name"`
 	Path            string         `json:"path"`
 	Branch          string         `json:"branch"`
 	UncommitedFiles []string       `json:"uncommitedFiles"`
