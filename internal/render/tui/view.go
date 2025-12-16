@@ -24,7 +24,7 @@ func (m Model) View() string {
 	m.reposTable = m.reposTable.UpdateWindowSize(m.width, reposTableHeight)
 	reposTable := m.reposTable.View()
 
-	m.repoDetails.UpdateData(m.reposTable.GetCurrentRepoState())
+	m.repoDetails.UpdateData(m.reposTable.GetCurrentWorktreeState())
 	m.repoDetails.UpdateSize(bodyHeight - reposTableHeight)
 	reposDetails := m.repoDetails.View()
 

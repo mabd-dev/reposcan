@@ -8,10 +8,7 @@ import (
 	"github.com/mabd-dev/reposcan/pkg/report"
 )
 
-// CheckRepoState inspects the Git repository at path and returns its RepoState
-// along with any non-fatal warnings encountered while collecting information.
-func CheckRepoState(path string) (repoState report.RepoState, warnings []string) {
-
+func GetWorktreeState(path string) (worktree report.Worktree, warnings []string) {
 	branch, err := GetRepoBranch(path)
 	if err != nil {
 		msg := "Failed to get branch name, path=" + path
@@ -53,25 +50,37 @@ func CheckRepoState(path string) (repoState report.RepoState, warnings []string)
 		}
 	}
 
-	repoName, err := GetRepoName(path)
-	if err != nil {
-		msg := "Failed to get repo name, path=" + path
-		warnings = append(warnings, msg)
-	}
-
 	uncommitedFiles, err := GetUncommitedFiles(path)
 	if err != nil {
 		msg := "Failed to get uncommited files, path=" + path
 		warnings = append(warnings, msg)
 	}
 
-	return report.RepoState{
-		ID:              utils.Hash(path),
+	return report.Worktree{
 		Path:            path,
-		Repo:            repoName,
 		Branch:          branch,
 		UncommitedFiles: uncommitedFiles,
 		RemoteStatus:    remoteStatuses,
+	}, nil
+}
+
+// GetRepoState inspects the Git repository at path and returns its RepoState
+// along with any non-fatal warnings encountered while collecting information.
+func GetRepoState(
+	path string,
+	worktrees []report.Worktree,
+) (repoState report.RepoState, warnings []string) {
+
+	repoName, err := GetRepoName(path)
+	if err != nil {
+		msg := "Failed to get repo name, path=" + path
+		warnings = append(warnings, msg)
+	}
+
+	return report.RepoState{
+		ID:        utils.Hash(path),
+		Repo:      repoName,
+		Worktrees: worktrees,
 	}, warnings
 }
 

@@ -93,7 +93,7 @@ func toLipglossTheme(cs ColorScheme) LipglossScheme {
 func CreateStyles(colors LipglossScheme) Styles {
 	return Styles{
 		Base:  lipgloss.NewStyle(),
-		Muted: lipgloss.NewStyle().Foreground(colors.Muted), //.Faint(true) // TODO: do i need Faint as well?
+		Muted: lipgloss.NewStyle().Foreground(colors.Muted),
 
 		Box: lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).

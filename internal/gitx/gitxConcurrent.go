@@ -2,8 +2,10 @@ package gitx
 
 import (
 	"sort"
+	"strings"
 	"sync"
 
+	"github.com/mabd-dev/reposcan/internal/logger"
 	"github.com/mabd-dev/reposcan/pkg/report"
 )
 
@@ -37,12 +39,32 @@ func GetGitRepoStatesConcurrent(
 			defer wg.Done()
 
 			for p := range jobs {
-				// handle warnigns
-				state, warnings := CheckRepoState(p)
+				wtPaths, err := getWorktreesPaths(p)
+				if err != nil {
+					logger.Error("getWorktreesPaths() failed, ", logger.StringAttr("message", err.Error()))
+					continue
+				}
+
+				worktrees := []report.Worktree{}
+				repoWarnings := []string{}
+
+				for _, wtPath := range wtPaths {
+					worktree, warnings := GetWorktreeState(wtPath)
+
+					if len(warnings) > 0 {
+						repoWarnings = append(repoWarnings, warnings...)
+					}
+					worktrees = append(worktrees, worktree)
+				}
+
+				state, warnings := GetRepoState(p, worktrees)
+				if len(warnings) > 0 {
+					repoWarnings = append(repoWarnings, warnings...)
+				}
 
 				result := gitRepoResult{
 					State:    state,
-					Warnings: warnings,
+					Warnings: repoWarnings,
 				}
 				results <- result
 			}
@@ -68,7 +90,7 @@ func GetGitRepoStatesConcurrent(
 		warnings = append(warnings, x.Warnings...)
 	}
 
-	sort.Slice(states, func(i, j int) bool { return states[i].Path < states[j].Path })
+	sort.Slice(states, func(i, j int) bool { return strings.ToLower(states[i].Repo) < strings.ToLower(states[j].Repo) })
 
 	return states, warnings
 }

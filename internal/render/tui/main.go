@@ -7,11 +7,13 @@ import (
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/mabd-dev/reposcan/internal/config"
+	"github.com/mabd-dev/reposcan/internal/ds/mmap"
+	"github.com/mabd-dev/reposcan/internal/ds/mslice"
 	"github.com/mabd-dev/reposcan/internal/logger"
 	"github.com/mabd-dev/reposcan/internal/render/tui/alerts"
+	"github.com/mabd-dev/reposcan/internal/render/tui/common"
 	"github.com/mabd-dev/reposcan/internal/render/tui/repodetails"
 	"github.com/mabd-dev/reposcan/internal/render/tui/repostable"
-	rth "github.com/mabd-dev/reposcan/internal/render/tui/repostableheader"
 	"github.com/mabd-dev/reposcan/internal/theme"
 	"github.com/mabd-dev/reposcan/pkg/report"
 	"golang.design/x/clipboard"
@@ -46,30 +48,26 @@ func Render(
 		Styles: theme.CreateStyles(colors),
 	}
 
+	worktreeStates := mslice.Flatten(mmap.Map(r.RepoStates, common.MapToWorktreeStates))
+
 	reposTable := repostable.New(
 		theme,
-		r,
+		worktreeStates,
 		totalWidth*sizeReposTableWidthPercent/100,
 		totalHeight*sizeReposTableHeightPercent/100,
 	)
 
-	reposTableHeader := rth.Header{
-		Theme: theme,
-	}
-	reposTableHeader.SetReport(r)
-
 	var repoDetails repodetails.Model
-	if len(r.RepoStates) == 0 {
+	if len(worktreeStates) == 0 {
 		repoDetails = repodetails.New(nil, theme)
 	} else {
-		repoDetails = repodetails.New(&r.RepoStates[0], theme)
+		repoDetails = repodetails.New(&worktreeStates[0], theme)
 	}
 
 	m := Model{
 		configs:     configs,
 		reposTable:  reposTable,
 		repoDetails: repoDetails,
-		rtHeader:    reposTableHeader,
 		alerts:      alerts.New(theme),
 		width:       totalWidth,
 		height:      totalHeight,
