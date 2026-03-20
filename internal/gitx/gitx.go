@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/mabd-dev/reposcan/internal/utils"
+	"github.com/mabd-dev/reposcan/internal/vcs"
 	"github.com/mabd-dev/reposcan/pkg/report"
 )
 
@@ -69,6 +70,7 @@ func CheckRepoState(path string) (repoState report.RepoState, warnings []string)
 		ID:              utils.Hash(path),
 		Path:            path,
 		Repo:            repoName,
+		VCSType:         string(vcs.TypeGit),
 		Branch:          branch,
 		UncommitedFiles: uncommitedFiles,
 		RemoteStatus:    remoteStatuses,

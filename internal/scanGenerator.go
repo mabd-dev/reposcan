@@ -4,8 +4,10 @@ import (
 	"time"
 
 	"github.com/mabd-dev/reposcan/internal/config"
-	"github.com/mabd-dev/reposcan/internal/gitx"
 	"github.com/mabd-dev/reposcan/internal/scan"
+	"github.com/mabd-dev/reposcan/internal/vcs"
+	vcsgit "github.com/mabd-dev/reposcan/internal/vcs/git"
+	vcsjj "github.com/mabd-dev/reposcan/internal/vcs/jj"
 	"github.com/mabd-dev/reposcan/pkg/report"
 )
 
@@ -14,14 +16,18 @@ func GenerateScanReport(
 ) report.ScanReport {
 	reportWarnings := []string{}
 
-	// Find git repos at defined configs.Roots
-	gitReposPaths, warnings := scan.FindGitRepos(configs.Roots, configs.DirIgnore)
+	registry := vcs.NewRegistry(
+		vcsgit.New(),
+		vcsjj.New(),
+	)
+
+	repoPaths, warnings := scan.FindRepos(configs.Roots, configs.DirIgnore)
 
 	reportWarnings = append(reportWarnings, warnings...)
 
-	repoStates := make([]report.RepoState, 0, len(gitReposPaths))
+	repoStates := make([]report.RepoState, 0, len(repoPaths))
 
-	allRepoStates, warnings := gitx.GetGitRepoStatesConcurrent(gitReposPaths, configs.MaxWorkers)
+	allRepoStates, warnings := vcs.GetRepoStatesConcurrent(repoPaths, registry, configs.MaxWorkers)
 	reportWarnings = append(reportWarnings, warnings...)
 
 	// filter repo states based on config OnlyFilter

@@ -68,3 +68,29 @@ func TestRenderScanReportAsTable_PrintsHeaderAndDetails(t *testing.T) {
 		t.Fatalf("missing warnings: %s", out)
 	}
 }
+
+func TestRenderScanReportAsTable_PrintsOutgoingCommitDetails(t *testing.T) {
+	reportWithOutgoing := report.ScanReport{
+		Version:     1,
+		GeneratedAt: time.Date(2025, 8, 31, 22, 0, 0, 0, time.UTC),
+		RepoStates: []report.RepoState{
+			{
+				Repo:            "jj-repo",
+				Branch:          "main",
+				Path:            "/tmp/jj-repo",
+				OutgoingCommits: []string{"abc123 change 1"},
+				RemoteStatus: []report.RemoteStatus{
+					{Ahead: 1},
+				},
+			},
+		},
+	}
+
+	out := captureStdout(t, func() { RenderScanReportAsTable(reportWithOutgoing) })
+	if !strings.Contains(out, "Outgoing Commits:") {
+		t.Fatalf("missing outgoing commits section: %s", out)
+	}
+	if !strings.Contains(out, "abc123 change 1") {
+		t.Fatalf("missing outgoing commit details: %s", out)
+	}
+}

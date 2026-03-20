@@ -18,29 +18,55 @@ func (m *Model) View() string {
 	lines := []string{
 		//m.theme.Styles.Base.Foreground(m.theme.Colors.Muted).Italic(true).Render("Details"),
 		fmt.Sprintf("%s %s", style.Render("Path:"), m.repoState.Path),
-		style.Render("File Changes:"),
 	}
+
 	if len(m.repoState.UncommitedFiles) > 0 {
-		files := m.repoState.UncommitedFiles
+		lines = append(lines, style.Render("File Changes:"))
+		lines = appendTrimmedList(lines, m.repoState.UncommitedFiles, m.height, func(s string) string {
+			return m.theme.Styles.Muted.Render(s)
+		})
+	}
 
-		maxUncommitedFilesToShow := m.height - len(lines) - 1
-		trimUncommitedFiles := len(files) > maxUncommitedFilesToShow
+	if len(m.repoState.OutgoingCommits) > 0 {
+		lines = append(lines, style.Render("Outgoing Commits:"))
+		lines = appendTrimmedList(lines, m.repoState.OutgoingCommits, m.height, func(s string) string {
+			return m.theme.Styles.Muted.Render(s)
+		})
+	}
 
-		if trimUncommitedFiles {
-			files = files[:maxUncommitedFilesToShow]
-		}
-
-		for _, f := range files {
-			lines = append(lines, "  "+m.theme.Styles.Muted.Render(f))
-		}
-
-		if trimUncommitedFiles {
-			more := len(m.repoState.UncommitedFiles) - maxUncommitedFilesToShow
-			lines = append(lines, m.theme.Styles.Muted.Render("  ... (+"+strconv.Itoa(more)+" more)"))
-		}
-	} else {
+	if len(m.repoState.UncommitedFiles) == 0 && len(m.repoState.OutgoingCommits) == 0 {
+		lines = append(lines, style.Render("Changes:"))
 		lines = append(lines, m.theme.Styles.Muted.Render("    no changes"))
 	}
 
 	return lipgloss.JoinVertical(lipgloss.Left, lines...)
+}
+
+func appendTrimmedList(
+	lines []string,
+	items []string,
+	height int,
+	render func(string) string,
+) []string {
+	maxItemsToShow := height - len(lines) - 1
+	if maxItemsToShow < 0 {
+		maxItemsToShow = 0
+	}
+
+	trimmedItems := items
+	trimmed := len(items) > maxItemsToShow
+	if trimmed {
+		trimmedItems = items[:maxItemsToShow]
+	}
+
+	for _, item := range trimmedItems {
+		lines = append(lines, "  "+render(item))
+	}
+
+	if trimmed {
+		more := len(items) - maxItemsToShow
+		lines = append(lines, render("  ... (+"+strconv.Itoa(more)+" more)"))
+	}
+
+	return lines
 }

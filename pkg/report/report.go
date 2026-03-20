@@ -13,18 +13,20 @@ type RemoteStatus struct {
 	Behind int    `json:"behind"`
 }
 
-// RepoState describes the state of a single Git repository discovered during a scan.
+// RepoState describes the state of a single repository discovered during a scan.
 type RepoState struct {
 	ID              string         `json:"id"`
 	Path            string         `json:"path"`
 	Repo            string         `json:"repo"`
+	VCSType         string         `json:"vcsType"`
 	Branch          string         `json:"branch"`
 	UncommitedFiles []string       `json:"uncommitedFiles"`
+	OutgoingCommits []string       `json:"outgoingCommits"`
 	RemoteStatus    []RemoteStatus `json:"remoteStatus"`
 }
 
 // ScanReport aggregates the results of scanning one or more directories for
-// Git repositories and summarizing their status.
+// repositories and summarizing their status.
 type ScanReport struct {
 	Version     int         `json:"version"`
 	RepoStates  []RepoState `json:"repoStates"`
