@@ -43,7 +43,6 @@ go run . -r ~/Code
 
 # Run with specific output format
 go run . -o interactive
-go run . -o table
 go run . -o json
 ```
 
