@@ -56,7 +56,10 @@ func GetWorktreeState(path string) (worktree report.Worktree, warnings []string)
 		warnings = append(warnings, msg)
 	}
 
+	worktreeName := getWorktreeName(path)
+
 	return report.Worktree{
+		Name:            worktreeName,
 		Path:            path,
 		Branch:          branch,
 		UncommitedFiles: uncommitedFiles,

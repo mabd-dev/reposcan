@@ -28,14 +28,34 @@ func createColumns(maxWidth int) []table.Column {
 	}
 }
 
-func createRows(tableRows []tableRow, theme theme.Theme) []table.Row {
-	rows := make([]table.Row, 0, len(tableRows))
-	for _, r := range tableRows {
-		rows = append(rows, table.Row{
-			r.Repo,
-			r.Branch,
-			r.State,
-		})
+func createRows(
+	originalGroups []worktreesGroup,
+	groups []worktreesGroup,
+	filterQuery string,
+	theme theme.Theme,
+) []table.Row {
+	rows := []table.Row{}
+	inFilterMode := len(filterQuery) > 0
+
+	for i, group := range groups {
+		hasMultipleWorktreeInOrigianList := len(originalGroups[i].worktrees) > 1
+
+		showHeader := (inFilterMode && hasMultipleWorktreeInOrigianList) || len(group.worktrees) > 1
+		if showHeader { // show header
+			rows = append(rows, table.Row{
+				"📦 " + group.repoName,
+				strings.Repeat("┅", 10),
+				strings.Repeat("┅", 10),
+			})
+		}
+
+		for _, r := range group.worktrees {
+			rows = append(rows, table.Row{
+				r.Repo,
+				r.Branch,
+				r.State,
+			})
+		}
 	}
 	return rows
 }

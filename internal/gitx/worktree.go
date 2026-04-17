@@ -18,3 +18,12 @@ func getWorktreesPaths(path string) ([]string, error) {
 	}
 	return paths, nil
 }
+
+func getWorktreeName(worktreePath string) string {
+	lastIndexOfSlash := strings.LastIndex(worktreePath, "/")
+	if lastIndexOfSlash == -1 {
+		return ""
+	}
+
+	return worktreePath[lastIndexOfSlash+1:]
+}

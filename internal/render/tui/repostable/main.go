@@ -19,18 +19,21 @@ func New(
 	width int,
 	height int,
 ) Model {
-
 	allRows := []tableRow{}
+	allGroups := convertToGroups(worktreeStates, theme)
+
 	lastIndex := len(worktreeStates) - 1
 	for i, wt := range worktreeStates {
 		previousIsSameRepo := i > 0 && worktreeStates[i-1].RepoName == wt.RepoName
 		nextIsSameRepo := i < lastIndex && worktreeStates[i+1].RepoName == wt.RepoName
 		createHeader := !previousIsSameRepo && nextIsSameRepo
+
 		if createHeader {
+			// beginning of a group
 			allRows = append(allRows, tableRow{
 				Repo:     "📦 " + wt.RepoName,
-				Branch:   "",
-				State:    "",
+				Branch:   strings.Repeat("┅", 10),
+				State:    strings.Repeat("┅", 10),
 				IsHeader: true,
 				WtIndex:  -1,
 			})
@@ -43,6 +46,7 @@ func New(
 				repoName = "  ┕ " + wt.WorktreeName
 			}
 		}
+
 		allRows = append(allRows, tableRow{
 			Repo:     repoName,
 			Branch:   wt.Branch,
@@ -50,13 +54,14 @@ func New(
 			IsHeader: false,
 			WtIndex:  i,
 		})
-		// if previous is not same repo name && next is same repo name -> create header
 	}
 
 	model := Model{
 		width:             width,
 		height:            height,
 		theme:             theme,
+		allGroups:         allGroups,
+		filteredGroups:    allGroups,
 		allRows:           allRows,
 		filteredRows:      allRows,
 		allWorktreeStates: worktreeStates,
@@ -64,7 +69,7 @@ func New(
 	}
 
 	cols := createColumns(width)
-	rows := createRows(allRows, theme)
+	rows := createRows(allGroups, allGroups, "", theme)
 
 	t := table.New(
 		table.WithColumns(cols),
@@ -116,25 +121,31 @@ func (m *Model) Filter(query string) {
 	if len(q) == 0 {
 		m.filteredRows = m.allRows
 	} else {
-		m.filteredRows = []tableRow{}
-		for _, r := range m.allRows {
-			if r.IsHeader {
-				if strings.Contains(strings.ToLower(r.Repo), q) {
-					m.filteredRows = append(m.filteredRows, r)
-				}
-			} else {
-				if strings.Contains(strings.ToLower(r.Repo), q) ||
-					strings.Contains(strings.ToLower(r.Branch), q) {
-					m.filteredRows = append(m.filteredRows, r)
+		m.filteredGroups = []worktreesGroup{}
+		for _, group := range m.allGroups {
+			filteredRows := []tableRow{}
+
+			for _, row := range group.worktrees {
+				wt := m.allWorktreeStates[row.WtIndex]
+				if strings.Contains(strings.ToLower(row.Repo), q) ||
+					strings.Contains(strings.ToLower(row.Branch), q) ||
+					strings.Contains(strings.ToLower(wt.RepoName), q) {
+					filteredRows = append(filteredRows, row)
 				}
 			}
 
+			if len(filteredRows) > 0 {
+				m.filteredGroups = append(m.filteredGroups, worktreesGroup{
+					repoName:  group.repoName,
+					worktrees: filteredRows,
+				})
+			}
 		}
 	}
 
 	cursorPosition := m.tbl.Cursor()
 
-	rows := createRows(m.filteredRows, m.theme)
+	rows := createRows(m.allGroups, m.filteredGroups, m.filterQuery, m.theme)
 	m.tbl.SetRows(rows)
 
 	if cursorPosition < len(m.filteredRows) {
