@@ -43,7 +43,7 @@ Make sure $GOPATH/bin (or $HOME/go/bin) is in your $PATH.
 ```sh
 git clone https://github.com/mabd-dev/reposcan.git
 cd reposcan
-go build -o reposcan ./cmd/reposcan
+go build -o reposcan .
 ```
 
 
