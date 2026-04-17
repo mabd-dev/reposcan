@@ -1,5 +1,7 @@
 package config
 
+import "os"
+
 // Config holds all runtime options used by reposcan.
 // Values may come from a config file and/or be overridden by CLI flags.
 type Config struct {
@@ -21,10 +23,13 @@ type Config struct {
 // Defaults returns a Config populated with sensible defaults suitable for
 // typical local development machines.
 func Defaults() Config {
-	//home, err := os.UserHomeDir()
+	home, err := os.UserHomeDir()
+	if err != nil {
+		home = ""
+	}
 
 	var roots []string = nil
-	roots = []string{"$HOME"}
+	roots = []string{home}
 
 	defaultDirIgnore := []string{
 		// --- Package managers / deps ---

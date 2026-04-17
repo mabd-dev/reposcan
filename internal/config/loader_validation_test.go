@@ -11,10 +11,26 @@ import (
 func withTempHome(t *testing.T) (restore func(), tempHome string) {
 	t.Helper()
 	dir := t.TempDir()
+
+	// On Windows, os.UserHomeDir() resolves the home directory by checking USERPROFILE first, then falling back to HOMEDRIVE+HOMEPATH. It only checks HOME as a last resort.
 	oldHome := os.Getenv("HOME")
-	// On Windows, Cobra/Go may rely on USERPROFILE, but this repo is Linux oriented.
+	oldUserProfile := os.Getenv("USERPROFILE")
+
 	os.Setenv("HOME", dir)
-	return func() { os.Setenv("HOME", oldHome) }, dir
+	os.Setenv("USERPROFILE", dir)
+
+	restoreEnv := func(key, val string) {
+		if val == "" {
+			os.Unsetenv(key)
+		} else {
+			os.Setenv(key, val)
+		}
+	}
+
+	return func() {
+		restoreEnv("HOME", oldHome)
+		restoreEnv("USERPROFILE", oldUserProfile)
+	}, dir
 }
 
 func TestCreateOrReadConfigs_CreatesWhenMissingAndWritesFile(t *testing.T) {
