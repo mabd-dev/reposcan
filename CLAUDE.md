@@ -36,15 +36,15 @@ go test -v -run TestName ./path/to/package
 ### Running
 ```bash
 # Run with default settings (scans $HOME)
-go run ./cmd/reposcan
+go run .
 
 # Run with custom root
-go run ./cmd/reposcan -r ~/Code
+go run . -r ~/Code
 
 # Run with specific output format
-go run ./cmd/reposcan -o interactive
-go run ./cmd/reposcan -o table
-go run ./cmd/reposcan -o json
+go run . -o interactive
+go run . -o table
+go run . -o json
 ```
 
 ## Architecture
