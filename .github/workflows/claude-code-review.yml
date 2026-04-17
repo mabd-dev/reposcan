@@ -9,6 +9,7 @@ on:
     #   - "src/**/*.tsx"
     #   - "src/**/*.js"
     #   - "src/**/*.jsx"
+  workflow_dispatch:
 
 jobs:
   claude-review:
