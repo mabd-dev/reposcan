@@ -26,7 +26,7 @@ func New(
 	}
 
 	cols := createColumns(width)
-	rows := createRows(model.report.RepoStates)
+	rows := createRows(model.report.RepoStates, theme)
 
 	t := table.New(
 		table.WithColumns(cols),
@@ -89,7 +89,7 @@ func (m *Model) Filter(query string) {
 
 	cursorPosition := m.tbl.Cursor()
 
-	rows := createRows(m.filteredRepos)
+	rows := createRows(m.filteredRepos, m.theme)
 	m.tbl.SetRows(rows)
 
 	if cursorPosition < len(m.filteredRepos) {
@@ -108,7 +108,7 @@ func (m *Model) UpdateRepoState(index int, newState report.RepoState) {
 		m.report.RepoStates[originalIndex] = newState
 	}
 
-	rows := createRows(m.filteredRepos)
+	rows := createRows(m.filteredRepos, m.theme)
 	m.tbl.SetRows(rows)
 }
 

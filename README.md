@@ -43,7 +43,7 @@ Make sure $GOPATH/bin (or $HOME/go/bin) is in your $PATH.
 ```sh
 git clone https://github.com/mabd-dev/reposcan.git
 cd reposcan
-go build -o reposcan ./cmd/reposcan
+go build -o reposcan .
 ```
 
 
@@ -65,7 +65,7 @@ Common flags
 -h, --help                      # help for reposcan
     --json-output-path string   # Write scan report JSON files to this directory (optional)
 -w, --max-workers int           # Number of concurrent git checks (default 8)
--o, --output string             # Output format: json|table|interactive|none (default "table")
+-o, --output string             # Output format: json|interactive|none (default "interactive")
 -r, --root stringArray          # Root directory to scan (repeatable). Defaults to $HOME if unset in config. (default [$HOME])
   , --debug                     # Enable/Disable debug mode
 ```
@@ -122,7 +122,7 @@ Each step overrides the one before it
 ## 🛣 Roadmap
 - [x] Scan filesystem for repos
 - [x] Detect uncommitted files, unpushed commits and unpulled commits
-- [x] Stdout Ouput in 3 formats: json, table, interactive, none
+- [x] Stdout Ouput in 3 formats: json, interactive, none
 - [x] Read user customizable `config.toml` file
 - [x] Export Report to json file
 - [x] Support dirignore

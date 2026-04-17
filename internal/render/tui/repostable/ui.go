@@ -6,13 +6,14 @@ import (
 
 	"github.com/charmbracelet/bubbles/table"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/mabd-dev/reposcan/internal/theme"
 	"github.com/mabd-dev/reposcan/pkg/report"
 )
 
 const (
-	RepoW        = 40
-	BranchW      = 40
-	RemoteStateW = 20 //(uncommited files count + aheadW + behindW + 4 space)
+	RepoW        = 30
+	BranchW      = 30
+	RemoteStateW = 40
 )
 
 func createColumns(maxWidth int) []table.Column {
@@ -27,10 +28,10 @@ func createColumns(maxWidth int) []table.Column {
 	}
 }
 
-func createRows(repoStates []report.RepoState) []table.Row {
+func createRows(repoStates []report.RepoState, theme theme.Theme) []table.Row {
 	rows := make([]table.Row, 0, len(repoStates))
 	for _, rs := range repoStates {
-		state := getStateColumnStr(rs)
+		state := getStateColumnStr(rs, theme)
 
 		rows = append(rows, table.Row{
 			rs.Repo,
@@ -41,33 +42,42 @@ func createRows(repoStates []report.RepoState) []table.Row {
 	return rows
 }
 
-func getStateColumnStr(rs report.RepoState) string {
-	var stateStr strings.Builder
+func getStateColumnStr(rs report.RepoState, theme theme.Theme) string {
+	parts := []string{}
 
 	uc := len(rs.UncommitedFiles)
-	if uc > 0 {
-		stateStr.WriteString(fmt.Sprintf("⏳%-d", uc))
-	} else if uc == 0 {
-		stateStr.WriteString(fmt.Sprintf("⏳%-d", uc))
+	ucStr := fmt.Sprintf("⏳%-d ", uc)
+
+	for _, remoteStatus := range rs.RemoteStatus {
+		var statusParts []string
+
+		if remoteStatus.Ahead > 0 {
+			statusParts = append(statusParts, fmt.Sprintf("↑%-d", remoteStatus.Ahead))
+		} else if remoteStatus.Ahead < 0 {
+			statusParts = append(statusParts, "x")
+		} else {
+			statusParts = append(statusParts, fmt.Sprintf("↑%-d", 0))
+		}
+
+		if remoteStatus.Behind > 0 {
+			statusParts = append(statusParts, fmt.Sprintf("↓%-d", remoteStatus.Behind))
+		} else if remoteStatus.Behind < 0 {
+			statusParts = append(statusParts, "x")
+		} else {
+			statusParts = append(statusParts, fmt.Sprintf("↓%-d", 0))
+		}
+
+		remoteName := theme.Styles.Base.Render(fmt.Sprintf("(%s)", remoteStatus.Remote))
+		statusParts = append(statusParts, remoteName)
+
+		parts = append(parts, strings.Join(statusParts, " "))
 	}
 
-	if rs.Ahead > 0 {
-		stateStr.WriteString(fmt.Sprintf(" ↑%-d", rs.Ahead))
-	} else if rs.Ahead < 0 {
-		stateStr.WriteString(fmt.Sprintf(" %-s ", "x"))
-	} else {
-		stateStr.WriteString(fmt.Sprintf(" ↑%-d", 0))
-	}
+	// Combine uncommitted count with all remote statuses, separated by " | "
+	s := ucStr
+	s += strings.Join(parts, " | ")
 
-	if rs.Behind > 0 {
-		stateStr.WriteString(fmt.Sprintf(" ↓%-d", rs.Behind))
-	} else if rs.Behind < 0 {
-		stateStr.WriteString(fmt.Sprintf(" %-s", "x"))
-	} else {
-		stateStr.WriteString(fmt.Sprintf(" ↓%-d", 0))
-	}
-
-	return stateStr.String()
+	return s
 }
 
 func setKeymaps(km table.KeyMap) {

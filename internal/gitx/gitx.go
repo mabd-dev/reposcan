@@ -1,14 +1,58 @@
 package gitx
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/mabd-dev/reposcan/internal/utils"
 	"github.com/mabd-dev/reposcan/pkg/report"
-	"strings"
 )
 
 // CheckRepoState inspects the Git repository at path and returns its RepoState
 // along with any non-fatal warnings encountered while collecting information.
 func CheckRepoState(path string) (repoState report.RepoState, warnings []string) {
+
+	branch, err := GetRepoBranch(path)
+	if err != nil {
+		msg := "Failed to get branch name, path=" + path
+		warnings = append(warnings, msg)
+	}
+
+	remotes, err := GetGitRemotes(path)
+	if err != nil {
+		msg := "Failed to get git remotes, path=" + path
+		warnings = append(warnings, msg)
+	}
+
+	remoteStatuses := []report.RemoteStatus{}
+
+	if len(remotes) == 0 {
+		remoteStatuses = append(remoteStatuses, report.RemoteStatus{
+			Remote: "",
+			Ahead:  -1,
+			Behind: -1,
+		})
+	}
+
+	for _, remote := range remotes {
+		remoteStatus, err := GetUpstreamStatusForAllRemotes(path, remote, branch)
+		if err != nil {
+			msg := fmt.Sprintf("Failed to get upstream status for remote=%s, path=%s", remote, path)
+			warnings = append(warnings, msg)
+			remoteStatuses = append(remoteStatuses, report.RemoteStatus{
+				Remote: remote,
+				Ahead:  -1,
+				Behind: -1,
+			})
+		} else {
+			remoteStatuses = append(remoteStatuses, report.RemoteStatus{
+				Remote: remote,
+				Ahead:  remoteStatus.Ahead,
+				Behind: remoteStatus.Behind,
+			})
+		}
+	}
+
 	repoName, err := GetRepoName(path)
 	if err != nil {
 		msg := "Failed to get repo name, path=" + path
@@ -21,26 +65,13 @@ func CheckRepoState(path string) (repoState report.RepoState, warnings []string)
 		warnings = append(warnings, msg)
 	}
 
-	branch, err := GetRepoBranch(path)
-	if err != nil {
-		msg := "Failed to get branch name, path=" + path
-		warnings = append(warnings, msg)
-	}
-
-	ahead, behind, err := GetUpstreamStatus(path)
-	if err != nil {
-		msg := "Failed to get upstream status, path=" + path
-		warnings = append(warnings, msg)
-	}
-
 	return report.RepoState{
 		ID:              utils.Hash(path),
 		Path:            path,
 		Repo:            repoName,
 		Branch:          branch,
 		UncommitedFiles: uncommitedFiles,
-		Ahead:           ahead,
-		Behind:          behind,
+		RemoteStatus:    remoteStatuses,
 	}, warnings
 }
 

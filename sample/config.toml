@@ -72,9 +72,8 @@ dirIgnore = [
 
 # print scan result to stdout. Options:
 #   1. `json`: json object containing scan report struct
-#   2. `table`: human readable representation of scan report
-#   3. `interactive`: human readable representation of scan report with keymaps actions
-#   4. `none`: prints nothing
+#   2. `interactive`: human readable representation of scan report with keymaps actions
+#   3. `none`: prints nothing
 type = "interactive"
 
 # output scan reports to this folder. All nested folders will be created

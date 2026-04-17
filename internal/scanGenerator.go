@@ -54,13 +54,9 @@ func filter(f config.OnlyFilter, repoState report.RepoState) bool {
 			return true
 		}
 	case config.OnlyUnpushed:
-		if repoState.Ahead > 0 {
-			return true
-		}
+		return repoState.HaveUnpushedCommits()
 	case config.OnlyUnpulled:
-		if repoState.Behind > 0 {
-			return true
-		}
+		return repoState.HaveUnpulledCommits()
 	}
 
 	return false

@@ -7,15 +7,20 @@ import (
 	"time"
 )
 
+type RemoteStatus struct {
+	Remote string `json:"remote"`
+	Ahead  int    `json:"ahead"`
+	Behind int    `json:"behind"`
+}
+
 // RepoState describes the state of a single Git repository discovered during a scan.
 type RepoState struct {
-	ID              string   `json:"id"`
-	Path            string   `json:"path"`
-	Repo            string   `json:"repo"`
-	Branch          string   `json:"branch"`
-	UncommitedFiles []string `json:"uncommitedFiles"`
-	Ahead           int      `json:"ahead"`
-	Behind          int      `json:"behind"`
+	ID              string         `json:"id"`
+	Path            string         `json:"path"`
+	Repo            string         `json:"repo"`
+	Branch          string         `json:"branch"`
+	UncommitedFiles []string       `json:"uncommitedFiles"`
+	RemoteStatus    []RemoteStatus `json:"remoteStatus"`
 }
 
 // ScanReport aggregates the results of scanning one or more directories for
@@ -29,7 +34,31 @@ type ScanReport struct {
 
 // IsDirty reports whether the repository has uncommitted changes or is ahead/behind.
 func (r *RepoState) IsDirty() bool {
-	return len(r.UncommitedFiles) > 0 || r.Ahead > 0 || r.Behind > 0
+	atLeastOneDirtyRemote := false
+	for _, remoteStatus := range r.RemoteStatus {
+		if remoteStatus.Ahead > 0 || remoteStatus.Behind > 0 {
+			atLeastOneDirtyRemote = true
+		}
+	}
+	return len(r.UncommitedFiles) > 0 || atLeastOneDirtyRemote
+}
+
+func (r *RepoState) HaveUnpushedCommits() bool {
+	for _, remoteStatus := range r.RemoteStatus {
+		if remoteStatus.Ahead > 0 {
+			return true
+		}
+	}
+	return false
+}
+
+func (r *RepoState) HaveUnpulledCommits() bool {
+	for _, remoteStatus := range r.RemoteStatus {
+		if remoteStatus.Behind > 0 {
+			return true
+		}
+	}
+	return false
 }
 
 // DirtyReposCount count all dirty repos based on [IsDirty] function on RepoState struct

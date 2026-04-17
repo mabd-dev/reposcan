@@ -3,9 +3,11 @@ package file
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
+	"path/filepath"
+
 	"github.com/mabd-dev/reposcan/internal/utils"
 	"github.com/mabd-dev/reposcan/pkg/report"
-	"strings"
 )
 
 // WriteScanReport writes the given ScanReport as a JSON file into dirPath.
@@ -21,18 +23,8 @@ func WriteScanReport(
 		return errors.New(msg)
 	}
 
-	var sBuilder strings.Builder
-	sBuilder.WriteString(dirPath)
-	if !strings.HasSuffix(dirPath, "/") {
-		sBuilder.WriteString("/")
-	}
+	reportFileName := fmt.Sprintf("ScanReport %s.json", report.GeneratedAt.Format("2006-01-02 15-04-05"))
+	fullReportPath := filepath.Join(dirPath, reportFileName)
 
-	sBuilder.WriteString("ScanReport ")
-
-	datetime := report.GeneratedAt.Format("2006-01-02 15:04:05")
-	sBuilder.WriteString(datetime)
-
-	sBuilder.WriteString(".json")
-
-	return utils.WriteToFile(jsonReport, sBuilder.String())
+	return utils.WriteToFile(jsonReport, fullReportPath)
 }

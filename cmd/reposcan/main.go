@@ -2,8 +2,9 @@ package reposcan
 
 import (
 	"fmt"
-	"github.com/mabd-dev/reposcan/internal/config"
 	"os"
+
+	"github.com/mabd-dev/reposcan/internal/config"
 )
 
 // Execute runs the root Cobra command for the reposcan CLI.
@@ -11,6 +12,7 @@ import (
 func Execute() {
 	err := RootCmd.Execute()
 	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
 		os.Exit(1)
 	}
 }
@@ -32,7 +34,7 @@ func init() {
 
 	RootCmd.PersistentFlags().StringArrayP("root", "r", configs.Roots, "Root directory to scan (repeatable). Defaults to $HOME if unset in config.")
 	RootCmd.PersistentFlags().StringArrayP("dirIgnore", "d", []string{}, "Glob patterns to ignore during scan (repeatable)")
-	RootCmd.PersistentFlags().StringP("output", "o", string(configs.Output.Type), "Output format: json|table|interactive|none")
+	RootCmd.PersistentFlags().StringP("output", "o", string(configs.Output.Type), "Output format: json|interactive|none")
 	RootCmd.PersistentFlags().StringP("filter", "f", string(configs.Only), "Repository filter: all|dirty|uncommitted|unpushed|unpulled")
 	RootCmd.PersistentFlags().String("json-output-path", configs.Output.JSONPath, "Write scan report JSON files to this directory (optional)")
 	RootCmd.PersistentFlags().IntP("max-workers", "w", configs.MaxWorkers, "Number of concurrent git checks")
