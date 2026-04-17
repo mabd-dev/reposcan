@@ -11,3 +11,7 @@ dist/
 .DS_Store
 todo.md
 output-samples/
+
+# ai stuff
+.claude.local.me
+.serena/
