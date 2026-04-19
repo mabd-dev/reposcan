@@ -43,12 +43,25 @@ jobs:
           REPO_LOWER=$(echo "$REPO" | tr '[:upper:]' '[:lower:]')
           curl -X GET "https://proxy.golang.org/github.com/$REPO_LOWER/@v/${{ github.ref_name }}.info"
 
+      - name: Extract changelog section
+        run: |
+          VERSION="${{ github.ref_name }}"
+          # Extract section for this version from CHANGELOG.md
+          VERSION="${VERSION#v}"
+          awk -v ver="$VERSION" '
+            /^## \[/ {
+              if (p) exit
+              if ($0 ~ "\\[" ver "\\]") p=1; next
+            }
+            p { print }
+          ' CHANGELOG.md > RELEASE_NOTES.md
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          body_path: docs/release-notes/${{ github.ref_name }}.md
+          body_path: RELEASE_NOTES.md
           generate_release_notes: false
 
 
