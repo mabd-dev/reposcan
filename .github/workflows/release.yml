@@ -51,7 +51,7 @@ jobs:
           awk -v ver="$VERSION" '
             /^## \[/ {
               if (p) exit
-              if ($0 ~ "\\[" ver "\\]") p=1 next
+              if ($0 ~ "\\[" ver "\\]") p=1; next
             }
             p { print }
           ' CHANGELOG.md > RELEASE_NOTES.md
