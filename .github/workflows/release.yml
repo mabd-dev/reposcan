@@ -47,10 +47,10 @@ jobs:
         run: |
           VERSION="${{ github.ref_name }}"
           # Extract section for this version from CHANGELOG.md
-          awk -v ver="$VERSION" '
+          awk -v ver="$VERSION#v" '
             /^## \[/ {
               if (p) exit
-              if ($0 ~ "\\[" ver "\\]") p=1
+              if ($0 ~ "\\[" ver "\\]") p=1 next
             }
             p { print }
           ' CHANGELOG.md > RELEASE_NOTES.md
