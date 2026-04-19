@@ -47,7 +47,8 @@ jobs:
         run: |
           VERSION="${{ github.ref_name }}"
           # Extract section for this version from CHANGELOG.md
-          awk -v ver="$VERSION#v" '
+          VERSION="${VERSION#v}"
+          awk -v ver="$VERSION" '
             /^## \[/ {
               if (p) exit
               if ($0 ~ "\\[" ver "\\]") p=1 next
