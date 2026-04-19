@@ -7,6 +7,7 @@ require (
 	github.com/charmbracelet/bubbles v0.21.0
 	github.com/charmbracelet/bubbletea v1.3.6
 	github.com/charmbracelet/lipgloss v1.1.0
+	github.com/dukex/mixpanel v1.0.1
 	github.com/fatih/color v1.18.0
 	github.com/mattn/go-runewidth v0.0.16
 	github.com/muesli/reflow v0.3.0
