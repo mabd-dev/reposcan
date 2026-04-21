@@ -3,7 +3,7 @@
 // Callers depend only on the Analytics interface, so the rest of the codebase
 // never imports a concrete SDK. Two implementations are provided:
 //
-//   - MixpanelAnalytics  sends events via the Mixpanel HTTP API.
+//   - MixpanelAnalytics  sends events via the official Mixpanel Go SDK.
 //   - StdoutAnalytics    prints events to stdout as JSON for local / CI use.
 //
 // The factory New() picks between them based on whether a build-time token is
@@ -17,7 +17,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/dukex/mixpanel"
+	mixpanel "github.com/mixpanel/mixpanel-go"
 )
 
 // Analytics is the single entry point for emitting a usage event. A nil
@@ -52,12 +52,12 @@ func (s StdoutAnalytics) Send(event string, properties map[string]any) error {
 	return nil
 }
 
-// MixpanelAnalytics sends events to the Mixpanel HTTP API via the dukex/mixpanel
-// SDK. It uses a distinctID of "anonymous" because reposcan does not have a
-// persistent user identity (that is handled in the telemetry layer built on
-// top of this).
+// MixpanelAnalytics sends events to the Mixpanel HTTP API via the official
+// mixpanel/mixpanel-go SDK. It uses a distinctID of "anonymous" because
+// reposcan does not have a persistent user identity (that is handled in the
+// telemetry layer built on top of this).
 type MixpanelAnalytics struct {
-	client     mixpanel.Mixpanel
+	client     *mixpanel.ApiClient
 	distinctID string
 }
 
@@ -65,18 +65,17 @@ type MixpanelAnalytics struct {
 // The token is required; passing an empty token is a caller bug.
 func NewMixpanelAnalytics(token string) *MixpanelAnalytics {
 	return &MixpanelAnalytics{
-		client:     mixpanel.New(token, ""),
+		client:     mixpanel.NewApiClient(token),
 		distinctID: "anonymous",
 	}
 }
 
 // Send forwards the event to Mixpanel. Failures are returned to the caller
-// verbatim — it is the caller's responsibility to decide whether telemetry
+// verbatim - it is the caller's responsibility to decide whether telemetry
 // failures should be logged or swallowed.
 func (m *MixpanelAnalytics) Send(event string, properties map[string]any) error {
-	if err := m.client.Track(m.distinctID, event, &mixpanel.Event{
-		Properties: properties,
-	}); err != nil {
+	ev := m.client.NewEvent(event, m.distinctID, properties)
+	if err := m.client.Track(context.Background(), []*mixpanel.Event{ev}); err != nil {
 		return fmt.Errorf("analytics: mixpanel track: %w", err)
 	}
 	return nil
@@ -90,7 +89,7 @@ var (
 
 // New picks the implementation based on build- and run-time inputs.
 //
-//   - If debug is true, events go to stdout — even when a real token is wired
+//   - If debug is true, events go to stdout - even when a real token is wired
 //     in. This keeps local development loops noisy and predictable and mirrors
 //     the behavior expected by CI harnesses.
 //   - If token is empty (a local dev build without the -ldflags injection),
@@ -103,8 +102,3 @@ func New(token string, debug bool) Analytics {
 	}
 	return NewMixpanelAnalytics(token)
 }
-
-// Context is accepted only to make the callsite forward-compatible with a
-// future version that supports cancellation and timeouts. The current
-// Mixpanel SDK ignores it; telemetry issue will plumb it through.
-var _ = context.Background

@@ -87,13 +87,3 @@ func TestNew_TokenAndNoDebugReturnsMixpanel(t *testing.T) {
 	}
 }
 
-func TestAnalytics_InterfaceIsSatisfied(t *testing.T) {
-	// Compile-time: confirm both implementations satisfy the interface.
-	// The var declarations at the bottom of analytics.go already assert
-	// this, so this test is a belt-and-suspenders check that the tests
-	// import the package correctly.
-	var a Analytics
-	a = StdoutAnalytics{}
-	a = NewMixpanelAnalytics("x")
-	_ = a
-}
