@@ -32,6 +32,16 @@ https://github.com/user-attachments/assets/1c8370c6-3b94-4490-bc96-fc179ef14f1d
 
 ## 📦 Installation
 
+### Install script (recommended)
+
+The easiest way to install `reposcan`. Detects your OS and architecture automatically and installs the latest release binary into a directory on your `$PATH`:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | sh
+```
+
+Supports **linux/amd64**, **darwin/amd64**, and **darwin/arm64**.
+
 ### Go install (latest)
 ```sh
 go install github.com/mabd-dev/reposcan@latest
