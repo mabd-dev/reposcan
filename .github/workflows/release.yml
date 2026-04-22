@@ -96,11 +96,12 @@ jobs:
           ASSET_NAME="reposcan-${{ github.ref_name }}-${{ matrix.os }}-${{ matrix.arch }}"
           echo "Building $ASSET_NAME ..."
           go build \
-            -ldflags "-X github.com/mabd-dev/reposcan/cmd/reposcan.mixpanelToken=${{ secrets.MIXPANEL_TOKEN }}" \
+            -ldflags "-X main.mixpanelToken=${{ secrets.MIXPANEL_TOKEN }}" \
             -o "$ASSET_NAME" \
             .
 
       - name: Verify Binary
+        if: matrix.os != 'linux' || matrix.arch != 'arm64'
         run: ./reposcan-${{ github.ref_name }}-${{ matrix.os }}-${{ matrix.arch }} version
 
       - name: Upload Binary to Release
