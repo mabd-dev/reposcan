@@ -101,7 +101,6 @@ jobs:
             .
 
       - name: Verify Binary
-        if: matrix.os != 'linux' || matrix.arch != 'arm64'
         run: ./reposcan-${{ github.ref_name }}-${{ matrix.os }}-${{ matrix.arch }} version
 
       - name: Upload Binary to Release
