@@ -11,7 +11,7 @@ case "$OS" in
   Darwin) OS="darwin" ;;
   *)
     echo "error: unsupported operating system: $OS" >&2
-    echo "       supported: linux, darwin (windows and linux/arm64 are out of scope)" >&2
+    echo "       supported: linux, darwin" >&2
     exit 1
     ;;
 esac
