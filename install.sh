@@ -77,7 +77,7 @@ find_install_dir() {
   # Prefer ~/.local/bin (no sudo needed), then /usr/local/bin
   CANDIDATES="$HOME/.local/bin /usr/local/bin /usr/bin"
   for DIR in $CANDIDATES; do
-    if echo "$PATH" | grep -q "$DIR" && [ -w "$DIR" ]; then
+    if echo ":$PATH:" | grep -q ":${DIR}:" && [ -w "$DIR" ]; then
       echo "$DIR"
       return
     fi
