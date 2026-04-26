@@ -40,12 +40,7 @@ The easiest way to install `reposcan`. Detects your OS and architecture automati
 curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | sh
 ```
 
-### Go install (latest)
-```sh
-go install github.com/mabd-dev/reposcan@latest
-```
-
-Make sure $GOPATH/bin (or $HOME/go/bin) is in your $PATH.
+Supports **linux/amd64**, **darwin/amd64**, and **darwin/arm64**.
 
 ### From source
 ```sh
