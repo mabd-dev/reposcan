@@ -11,6 +11,8 @@ All notable changes to this project will be documented in this file.
 ### Added
 
 - Feat/release workflow and install.sh by @AnthonyGeorgeAZ in [#30](https://github.com/mabd-dev/reposcan/pull/30)
+- CHANGELOG.md added by @vgauraha62 in [#26](https://github.com/mabd-dev/reposcan/pull/26)
+- feat(analytics): add Analytics interface with Mixpanel and stdout backends by @mvanhorn in [#27](https://github.com/mabd-dev/reposcan/pull/27)
 
 ### 🐛 Bug Fixes
 
