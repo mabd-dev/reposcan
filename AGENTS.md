@@ -13,8 +13,8 @@ RepoScan is a Go CLI tool that scans filesystems for Git repositories and report
 # Build the main binary
 go build -o reposcan .
 
-# Install to $GOPATH/bin
-go install github.com/mabd-dev/reposcan@latest
+# Install
+curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | sh
 ```
 
 ### Testing
