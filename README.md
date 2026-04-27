@@ -32,12 +32,15 @@ https://github.com/user-attachments/assets/1c8370c6-3b94-4490-bc96-fc179ef14f1d
 
 ## 📦 Installation
 
-### Go install (latest)
+### Install script (recommended)
+
+The easiest way to install `reposcan`. Detects your OS and architecture automatically and installs the latest release binary into a directory on your `$PATH`:
+
 ```sh
-go install github.com/mabd-dev/reposcan@latest
+curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | sh
 ```
 
-Make sure $GOPATH/bin (or $HOME/go/bin) is in your $PATH.
+Supports **linux/amd64**, **darwin/amd64**, and **darwin/arm64**.
 
 ### From source
 ```sh

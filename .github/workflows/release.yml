@@ -6,20 +6,78 @@ on:
       - 'v*'  # triggers on version tags like v0.1.0, v1.2.3
 
 permissions:
-    contents: write
+  contents: write
 
 jobs:
+  # ── 1. Create the GitHub release object first ─────────────────────────────
   release:
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.24.x'
+
+      - name: Download Dependencies
+        run: go mod tidy
+
+      - name: Trigger pkg.go.dev indexing
+        run: |
+          REPO="${{ github.repository }}"
+          REPO_LOWER=$(echo "$REPO" | tr '[:upper:]' '[:lower:]')
+          curl -X GET "https://proxy.golang.org/github.com/$REPO_LOWER/@v/${{ github.ref_name }}.info"
+
+      - name: Extract changelog section
+        run: |
+          VERSION="${{ github.ref_name }}"
+          # Extract section for this version from CHANGELOG.md
+          VERSION="${VERSION#v}"
+          awk -v ver="$VERSION" '
+            /^## \[/ {
+              if (p) exit
+              if ($0 ~ "\\[" ver "\\]") p=1; next
+            }
+            p { print }
+          ' CHANGELOG.md > RELEASE_NOTES.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          body_path: RELEASE_NOTES.md
+          generate_release_notes: false
+
+  # ── 2. Build binaries for each platform and attach to the release ─────────
+  build:
+    needs: release
+    strategy:
+      matrix:
+        include:
+          - os: linux
+            arch: amd64
+            runner: ubuntu-latest
+          - os: darwin
+            arch: amd64
+            runner: macos-latest
+          - os: darwin
+            arch: arm64
+            runner: macos-latest
+
+    runs-on: ${{ matrix.runner }}
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
       - name: Install Linux dependencies
+        if: matrix.os == 'linux'
         run: |
           sudo apt update
-          sudo apt install -y libx11-dev
+          sudo apt install -y xvfb libx11-dev x11-utils
 
       - name: Set up Go
         uses: actions/setup-go@v4
@@ -30,25 +88,24 @@ jobs:
         run: go mod tidy
 
       - name: Build Binary
+        env:
+          GOOS: ${{ matrix.os }}
+          GOARCH: ${{ matrix.arch }}
+          CGO_ENABLED: 1
         run: |
-          echo "Building reposcan ${VERSION} ..."
-          go build -o reposcan .
+          ASSET_NAME="reposcan-${{ github.ref_name }}-${{ matrix.os }}-${{ matrix.arch }}"
+          echo "Building $ASSET_NAME ..."
+          go build \
+            -ldflags "-X github.com/mabd-dev/reposcan/cmd/reposcan.mixpanelToken=${{ secrets.MIXPANEL_TOKEN }}" \
+            -o "$ASSET_NAME" \
+            .
 
-      - name: Verify Version
-        run: ./reposcan version
+      - name: Verify Binary
+        run: ./reposcan-${{ github.ref_name }}-${{ matrix.os }}-${{ matrix.arch }} version
 
-      - name: Trigger pkg.go.dev indexing
-        run: |
-          REPO="${{ github.repository }}"
-          REPO_LOWER=$(echo "$REPO" | tr '[:upper:]' '[:lower:]')
-          curl -X GET "https://proxy.golang.org/github.com/$REPO_LOWER/@v/${{ github.ref_name }}.info"
-
-      - name: Create GitHub Release
+      - name: Upload Binary to Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          body_path: docs/release-notes/${{ github.ref_name }}.md
-          generate_release_notes: false
-
-
+          files: reposcan-${{ github.ref_name }}-${{ matrix.os }}-${{ matrix.arch }}

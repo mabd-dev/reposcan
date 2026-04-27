@@ -67,8 +67,10 @@ func getStateColumnStr(rs report.RepoState, theme theme.Theme) string {
 			statusParts = append(statusParts, fmt.Sprintf("↓%-d", 0))
 		}
 
-		remoteName := theme.Styles.Base.Render(fmt.Sprintf("(%s)", remoteStatus.Remote))
-		statusParts = append(statusParts, remoteName)
+		if remoteStatus.Remote != "" && !(len(rs.RemoteStatus) == 1 && remoteStatus.Remote == "origin") {
+			remoteName := theme.Styles.Base.Render(fmt.Sprintf("(%s)", remoteStatus.Remote))
+			statusParts = append(statusParts, remoteName)
+		}
 
 		parts = append(parts, strings.Join(statusParts, " "))
 	}
