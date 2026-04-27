@@ -42,6 +42,27 @@ curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh |
 
 Supports **linux/amd64**, **darwin/amd64**, and **darwin/arm64**.
 
+#### Optional environment variables
+
+Both variables are optional. Defaults match the standard install above.
+
+Pin a specific release tag (skips the latest-version lookup):
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | VERSION=v1.2.0 sh
+```
+
+Install under a different binary name (useful for running a stable and a dev build side by side):
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | ALIAS=reposcan-dev sh
+```
+
+Combine both:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | VERSION=v1.2.0 ALIAS=reposcan-dev sh
+```
 
 #### Migrating from `go install`
 

@@ -3,6 +3,8 @@ set -e
 
 REPO="mabd-dev/reposcan"
 BINARY_NAME="reposcan"
+# Allow overriding the installed binary name via $ALIAS (default: reposcan)
+ALIAS="${ALIAS:-${BINARY_NAME}}"
 
 # ── 1. Detect OS ────────────────────────────────────────────────────────────
 OS="$(uname -s)"
@@ -35,24 +37,28 @@ if [ "$OS" = "linux" ] && [ "$ARCH" = "arm64" ]; then
 fi
 
 # ── 4. Fetch latest release version from GitHub API ─────────────────────────
-echo "Fetching latest release..."
-LATEST_URL="https://api.github.com/repos/${REPO}/releases/latest"
-
-if command -v curl >/dev/null 2>&1; then
-  VERSION="$(curl -fsSL "$LATEST_URL" | grep '"tag_name"' | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')"
-elif command -v wget >/dev/null 2>&1; then
-  VERSION="$(wget -qO- "$LATEST_URL" | grep '"tag_name"' | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')"
+if [ -n "${VERSION:-}" ]; then
+  echo "Using pinned version: $VERSION"
 else
-  echo "error: curl or wget is required to install reposcan." >&2
-  exit 1
-fi
+  echo "Fetching latest release..."
+  LATEST_URL="https://api.github.com/repos/${REPO}/releases/latest"
 
-if [ -z "$VERSION" ]; then
-  echo "error: could not determine the latest release version." >&2
-  exit 1
-fi
+  if command -v curl >/dev/null 2>&1; then
+    VERSION="$(curl -fsSL "$LATEST_URL" | grep '"tag_name"' | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')"
+  elif command -v wget >/dev/null 2>&1; then
+    VERSION="$(wget -qO- "$LATEST_URL" | grep '"tag_name"' | sed 's/.*"tag_name": *"\([^"]*\)".*/\1/')"
+  else
+    echo "error: curl or wget is required to install reposcan." >&2
+    exit 1
+  fi
 
-echo "Latest version: $VERSION"
+  if [ -z "$VERSION" ]; then
+    echo "error: could not determine the latest release version." >&2
+    exit 1
+  fi
+
+  echo "Latest version: $VERSION"
+fi
 
 # ── 5. Build download URL ────────────────────────────────────────────────────
 ASSET="${BINARY_NAME}-${VERSION}-${OS}-${ARCH}"
@@ -99,12 +105,12 @@ INSTALL_DIR="$(find_install_dir)"
 if [ -z "$INSTALL_DIR" ]; then
   echo "error: could not find a writable directory on your \$PATH." >&2
   echo "       Add ~/.local/bin to your PATH and re-run, or install manually:" >&2
-  echo "       sudo mv $TMP_BIN /usr/local/bin/${BINARY_NAME}" >&2
+  echo "       sudo mv $TMP_BIN /usr/local/bin/${ALIAS}" >&2
   exit 1
 fi
 
-mv "$TMP_BIN" "${INSTALL_DIR}/${BINARY_NAME}"
+mv "$TMP_BIN" "${INSTALL_DIR}/${ALIAS}"
 
 echo ""
-echo "reposcan $VERSION installed to ${INSTALL_DIR}/${BINARY_NAME}"
+echo "reposcan $VERSION installed to ${INSTALL_DIR}/${ALIAS}"
 echo "Run 'reposcan --help' to get started."
