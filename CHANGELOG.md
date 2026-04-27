@@ -6,6 +6,8 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 
+## [1.3.8] - 2026-04-27
+
 ### Added
 
 - Feat/release workflow and install.sh by @AnthonyGeorgeAZ in [#30](https://github.com/mabd-dev/reposcan/pull/30)
