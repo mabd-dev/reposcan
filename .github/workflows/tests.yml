@@ -5,9 +5,9 @@ name: Go-Tests
 
 on:
   push:
-    branches: [ "main", "dev" ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ "main", "dev", "feat/jjSupport" ]
+    branches: [ "main", "feat/jjSupport" ]
   workflow_dispatch:
 
 jobs:
