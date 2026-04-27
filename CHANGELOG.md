@@ -6,6 +6,10 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 
+### Added
+
+- Feat/release workflow and install.sh by @AnthonyGeorgeAZ in [#30](https://github.com/mabd-dev/reposcan/pull/30)
+
 ### 🐛 Bug Fixes
 
 - fix: hide redundant remote name in state column by @mvanhorn in [#23](https://github.com/mabd-dev/reposcan/pull/23)
