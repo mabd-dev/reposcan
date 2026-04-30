@@ -18,7 +18,7 @@ import (
 func FindRepos(
 	roots []string,
 	dirignore []string,
-) (repoPaths []vcs.RepoPath, warnings []string) {
+) (repos []vcs.RepoInfo, warnings []string) {
 	matcher := NewIgnoreMatcher(roots, dirignore)
 
 	visitedDir := map[string]struct{}{}
@@ -47,7 +47,7 @@ func FindRepos(
 			visitedDir[path] = struct{}{}
 
 			if repoType, ok := detectRepoType(path); ok {
-				repoPaths = append(repoPaths, vcs.RepoPath{
+				repos = append(repos, vcs.RepoInfo{
 					Path: path,
 					Type: repoType,
 				})
@@ -57,7 +57,7 @@ func FindRepos(
 		})
 	}
 
-	return removeDuplicateRepoPaths(repoPaths), warnings
+	return removeDuplicateRepoInfo(repos), warnings
 }
 
 func detectRepoType(path string) (vcs.Type, bool) {
@@ -100,14 +100,14 @@ func isJJRepo(path string) bool {
 	return info.IsDir()
 }
 
-func removeDuplicateRepoPaths(repoPaths []vcs.RepoPath) []vcs.RepoPath {
-	seen := make(map[string]struct{}, len(repoPaths))
-	distinct := make([]vcs.RepoPath, 0, len(repoPaths))
+func removeDuplicateRepoInfo(repos []vcs.RepoInfo) []vcs.RepoInfo {
+	seen := make(map[string]struct{}, len(repos))
+	distinct := make([]vcs.RepoInfo, 0, len(repos))
 
-	for _, repoPath := range repoPaths {
-		if _, ok := seen[repoPath.Path]; !ok {
-			seen[repoPath.Path] = struct{}{}
-			distinct = append(distinct, repoPath)
+	for _, repo := range repos {
+		if _, ok := seen[repo.Path]; !ok {
+			seen[repo.Path] = struct{}{}
+			distinct = append(distinct, repo)
 		}
 	}
 

@@ -23,7 +23,7 @@ func writeFile(t *testing.T, path string, contents string) {
 	}
 }
 
-func repoTypeByPath(repos []vcs.RepoPath) map[string]vcs.Type {
+func repoTypeByPath(repos []vcs.RepoInfo) map[string]vcs.Type {
 	result := map[string]vcs.Type{}
 	for _, repo := range repos {
 		result[repo.Path] = repo.Type

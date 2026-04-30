@@ -7,7 +7,7 @@ const (
 	TypeJJ  Type = "jj"
 )
 
-type RepoPath struct {
+type RepoInfo struct {
 	Path string
 	Type Type
 }

@@ -15,7 +15,7 @@ type repoResult struct {
 }
 
 func GetRepoStatesConcurrent(
-	repos []RepoPath,
+	repos []RepoInfo,
 	registry *Registry,
 	maxWorkers int,
 ) ([]report.RepoState, []string) {
@@ -26,7 +26,7 @@ func GetRepoStatesConcurrent(
 	states := []report.RepoState{}
 	warnings := []string{}
 
-	jobs := make(chan RepoPath, maxWorkers*2)
+	jobs := make(chan RepoInfo, maxWorkers*2)
 	results := make(chan repoResult, maxWorkers*2)
 
 	var wg sync.WaitGroup

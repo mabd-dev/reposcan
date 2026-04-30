@@ -28,7 +28,7 @@ func (p stubProvider) CheckRepoState(path string) (report.RepoState, []string) {
 }
 
 func TestGetRepoStatesConcurrent_SortsResultsAndPreservesWarnings(t *testing.T) {
-	repos := []RepoPath{
+	repos := []RepoInfo{
 		{Path: "/tmp/z-jj", Type: TypeJJ},
 		{Path: "/tmp/a-git", Type: TypeGit},
 		{Path: "/tmp/m-jj", Type: TypeJJ},
@@ -78,7 +78,7 @@ func TestGetRepoStatesConcurrent_SortsResultsAndPreservesWarnings(t *testing.T) 
 }
 
 func TestGetRepoStatesConcurrent_WarnsWhenProviderIsMissing(t *testing.T) {
-	repos := []RepoPath{{Path: "/tmp/repo", Type: TypeJJ}}
+	repos := []RepoInfo{{Path: "/tmp/repo", Type: TypeJJ}}
 
 	states, warnings := GetRepoStatesConcurrent(repos, NewRegistry(), 1)
 
