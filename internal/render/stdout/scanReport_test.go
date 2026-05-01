@@ -75,12 +75,11 @@ func TestRenderScanReportAsTable_PrintsOutgoingCommitDetails(t *testing.T) {
 		GeneratedAt: time.Date(2025, 8, 31, 22, 0, 0, 0, time.UTC),
 		RepoStates: []report.RepoState{
 			{
-				Repo:            "jj-repo",
-				Branch:          "main",
-				Path:            "/tmp/jj-repo",
-				OutgoingCommits: []string{"abc123 change 1"},
+				Repo:   "jj-repo",
+				Branch: "main",
+				Path:   "/tmp/jj-repo",
 				RemoteStatus: []report.RemoteStatus{
-					{Ahead: 1},
+					{Ahead: 1, OutgoingCommits: []string{"abc123 change 1"}},
 				},
 			},
 		},

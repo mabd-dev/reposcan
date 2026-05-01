@@ -8,9 +8,10 @@ import (
 )
 
 type RemoteStatus struct {
-	Remote string `json:"remote"`
-	Ahead  int    `json:"ahead"`
-	Behind int    `json:"behind"`
+	Remote          string   `json:"remote"`
+	Ahead           int      `json:"ahead"`
+	Behind          int      `json:"behind"`
+	OutgoingCommits []string `json:"outgoingCommits,omitempty"`
 }
 
 // RepoState describes the state of a single repository discovered during a scan.
@@ -21,7 +22,6 @@ type RepoState struct {
 	VCSType         string         `json:"vcsType"`
 	Branch          string         `json:"branch"`
 	UncommitedFiles []string       `json:"uncommitedFiles"`
-	OutgoingCommits []string       `json:"outgoingCommits"`
 	RemoteStatus    []RemoteStatus `json:"remoteStatus"`
 }
 
@@ -61,6 +61,23 @@ func (r *RepoState) HaveUnpulledCommits() bool {
 		}
 	}
 	return false
+}
+
+func (r *RepoState) OutgoingCommits() []string {
+	commits := []string{}
+	includeRemoteName := len(r.RemoteStatus) > 1
+
+	for _, remoteStatus := range r.RemoteStatus {
+		for _, commit := range remoteStatus.OutgoingCommits {
+			if includeRemoteName && remoteStatus.Remote != "" {
+				commits = append(commits, remoteStatus.Remote+": "+commit)
+			} else {
+				commits = append(commits, commit)
+			}
+		}
+	}
+
+	return commits
 }
 
 // DirtyReposCount count all dirty repos based on [IsDirty] function on RepoState struct

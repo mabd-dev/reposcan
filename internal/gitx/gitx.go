@@ -46,10 +46,17 @@ func CheckRepoState(path string) (repoState report.RepoState, warnings []string)
 				Behind: -1,
 			})
 		} else {
+			outgoingCommits, err := GetOutgoingCommitsForRemote(path, remote, branch)
+			if err != nil {
+				msg := fmt.Sprintf("Failed to get outgoing commits for remote=%s, path=%s", remote, path)
+				warnings = append(warnings, msg)
+			}
+
 			remoteStatuses = append(remoteStatuses, report.RemoteStatus{
-				Remote: remote,
-				Ahead:  remoteStatus.Ahead,
-				Behind: remoteStatus.Behind,
+				Remote:          remote,
+				Ahead:           remoteStatus.Ahead,
+				Behind:          remoteStatus.Behind,
+				OutgoingCommits: outgoingCommits,
 			})
 		}
 	}

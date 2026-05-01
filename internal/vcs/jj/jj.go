@@ -79,8 +79,8 @@ func (p *Provider) CheckRepoState(path string) (report.RepoState, []string) {
 	if err != nil {
 		warnings = append(warnings, "Failed to get jj outgoing commits, path="+path)
 	} else {
-		state.OutgoingCommits = outgoingCommits
 		state.RemoteStatus[0].Ahead = len(outgoingCommits)
+		state.RemoteStatus[0].OutgoingCommits = outgoingCommits
 	}
 
 	return state, warnings

@@ -27,14 +27,15 @@ func (m *Model) View() string {
 		})
 	}
 
-	if len(m.repoState.OutgoingCommits) > 0 {
+	outgoingCommits := m.repoState.OutgoingCommits()
+	if len(outgoingCommits) > 0 {
 		lines = append(lines, style.Render("Outgoing Commits:"))
-		lines = appendTrimmedList(lines, m.repoState.OutgoingCommits, m.height, func(s string) string {
+		lines = appendTrimmedList(lines, outgoingCommits, m.height, func(s string) string {
 			return m.theme.Styles.Muted.Render(s)
 		})
 	}
 
-	if len(m.repoState.UncommitedFiles) == 0 && len(m.repoState.OutgoingCommits) == 0 {
+	if len(m.repoState.UncommitedFiles) == 0 && len(outgoingCommits) == 0 {
 		lines = append(lines, style.Render("Changes:"))
 		lines = append(lines, m.theme.Styles.Muted.Render("    no changes"))
 	}

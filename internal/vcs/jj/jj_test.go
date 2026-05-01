@@ -109,8 +109,8 @@ func TestProviderCheckRepoStateHandlesMissingRemotesAndBookmarks(t *testing.T) {
 		)
 	}
 
-	if len(state.OutgoingCommits) != 0 {
-		t.Fatalf("expected no outgoing commits, got %v", state.OutgoingCommits)
+	if len(state.RemoteStatus[0].OutgoingCommits) != 0 {
+		t.Fatalf("expected no outgoing commits, got %v", state.RemoteStatus[0].OutgoingCommits)
 	}
 }
 
@@ -197,16 +197,16 @@ func TestProviderCheckRepoStateCollectsTrackedBookmarkOutgoingCommits(t *testing
 		t.Fatalf("expected ahead count 1 from tracked bookmark commits, got %d", state.RemoteStatus[0].Ahead)
 	}
 
-	if len(state.OutgoingCommits) != 1 {
-		t.Fatalf("expected exactly 1 outgoing commit, got %d: %v", len(state.OutgoingCommits), state.OutgoingCommits)
+	if len(state.RemoteStatus[0].OutgoingCommits) != 1 {
+		t.Fatalf("expected exactly 1 outgoing commit, got %d: %v", len(state.RemoteStatus[0].OutgoingCommits), state.RemoteStatus[0].OutgoingCommits)
 	}
 
-	if !strings.Contains(state.OutgoingCommits[0], "change 1") {
-		t.Fatalf("expected outgoing commit list to mention tracked bookmark commit, got %v", state.OutgoingCommits)
+	if !strings.Contains(state.RemoteStatus[0].OutgoingCommits[0], "change 1") {
+		t.Fatalf("expected outgoing commit list to mention tracked bookmark commit, got %v", state.RemoteStatus[0].OutgoingCommits)
 	}
 
-	if strings.Contains(state.OutgoingCommits[0], "change 2") {
-		t.Fatalf("did not expect working-copy descendant to be treated as tracked-bookmark outgoing commit, got %v", state.OutgoingCommits)
+	if strings.Contains(state.RemoteStatus[0].OutgoingCommits[0], "change 2") {
+		t.Fatalf("did not expect working-copy descendant to be treated as tracked-bookmark outgoing commit, got %v", state.RemoteStatus[0].OutgoingCommits)
 	}
 }
 
