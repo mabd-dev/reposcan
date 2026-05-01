@@ -61,9 +61,8 @@ go run . -o json
 - **`internal/config`**: Configuration types, validation, defaults, TOML loading. The `Config` struct in `types.go` is the central configuration object
 - **`internal/scan`**: Filesystem walking with `filepath.WalkDir`, directory ignore matching using `doublestar` globs, git repo detection
 - **`internal/vcs`**: VCS provider registry, repository metadata, and worker pool for parallel repo state checking across supported VCS types
-- **`internal/vcs/git`**: Git provider implementation that adapts `internal/gitx` state checks to the VCS provider interface
+- **`internal/vcs/git`**: Git provider implementation and Git command wrappers for state checks, push, pull, and fetch operations
 - **`internal/vcs/jj`**: Jujutsu provider implementation for detecting and checking jj repositories
-- **`internal/gitx`**: Git operations via `exec.Command`. `gitFunctions.go` wraps individual git commands (status, branch, rev-list)
 - **`internal/render`**: Three render paths:
   - `stdout`: Plain table (using `charmbracelet/lipgloss`) or JSON output
   - `file`: Writes JSON reports to disk
@@ -109,7 +108,7 @@ The `filter` function in `rootCmd.go` applies `OnlyFilter` after all repos are d
 `scan.FindGitRepos` collects warnings (e.g., permission denied) but continues walking. Warnings are included in `ScanReport.Warnings`.
 
 ### Git Command Wrapper
-`gitx.RunGitCommand` uses `git -C <dir>` to run commands in a specific directory without changing the process's working directory. Stderr is captured but only used for error detection—stdout is returned.
+`git.RunGitCommand` uses `git -C <dir>` to run commands in a specific directory without changing the process's working directory. Stderr is captured but only used for error detection—stdout is returned.
 
 ## Testing Patterns
 
