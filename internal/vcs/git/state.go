@@ -1,10 +1,11 @@
-package gitx
+package git
 
 import (
 	"fmt"
 	"strings"
 
 	"github.com/mabd-dev/reposcan/internal/utils"
+	"github.com/mabd-dev/reposcan/internal/vcs"
 	"github.com/mabd-dev/reposcan/pkg/report"
 )
 
@@ -45,10 +46,17 @@ func CheckRepoState(path string) (repoState report.RepoState, warnings []string)
 				Behind: -1,
 			})
 		} else {
+			outgoingCommits, err := GetOutgoingCommitsForRemote(path, remote, branch)
+			if err != nil {
+				msg := fmt.Sprintf("Failed to get outgoing commits for remote=%s, path=%s", remote, path)
+				warnings = append(warnings, msg)
+			}
+
 			remoteStatuses = append(remoteStatuses, report.RemoteStatus{
-				Remote: remote,
-				Ahead:  remoteStatus.Ahead,
-				Behind: remoteStatus.Behind,
+				Remote:          remote,
+				Ahead:           remoteStatus.Ahead,
+				Behind:          remoteStatus.Behind,
+				OutgoingCommits: outgoingCommits,
 			})
 		}
 	}
@@ -69,6 +77,7 @@ func CheckRepoState(path string) (repoState report.RepoState, warnings []string)
 		ID:              utils.Hash(path),
 		Path:            path,
 		Repo:            repoName,
+		VCSType:         string(vcs.TypeGit),
 		Branch:          branch,
 		UncommitedFiles: uncommitedFiles,
 		RemoteStatus:    remoteStatuses,

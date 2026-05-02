@@ -1,4 +1,4 @@
-package gitx
+package git
 
 import (
 	"bytes"
@@ -131,6 +131,20 @@ func GetUpstreamStatusForAllRemotes(
 		Ahead:  ahead,
 		Behind: behind,
 	}, nil
+}
+
+func GetOutgoingCommitsForRemote(path string, remote string, currentBranch string) ([]string, error) {
+	remoteBranchRef := remote + "/" + currentBranch
+
+	str, err := RunGitCommand(path, "log", "--format=%h %s", remoteBranchRef+"..HEAD")
+	if err != nil {
+		return []string{}, err
+	}
+
+	commits := strings.Split(strings.TrimRight(str, "\n"), "\n")
+	commits = removeEmptyStrings(commits)
+
+	return commits, nil
 }
 
 // GetRepoName tries to extract the repository name from its remote URL,

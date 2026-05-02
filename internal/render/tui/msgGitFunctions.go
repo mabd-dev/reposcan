@@ -2,7 +2,7 @@ package tui
 
 import (
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/mabd-dev/reposcan/internal/gitx"
+	"github.com/mabd-dev/reposcan/internal/vcs/git"
 	"github.com/mabd-dev/reposcan/pkg/report"
 )
 
@@ -21,7 +21,7 @@ func gitFetch(m Model) tea.Cmd {
 	m.reposBeingUpdated = append(m.reposBeingUpdated, rs.ID)
 
 	return func() tea.Msg {
-		stdout, err := gitx.GitFetch(repoPath)
+		stdout, err := git.GitFetch(repoPath)
 
 		errMessage := ""
 		if err != nil {
@@ -50,7 +50,7 @@ func gitPull(m Model) tea.Cmd {
 	m.reposBeingUpdated = append(m.reposBeingUpdated, rs.ID)
 
 	return func() tea.Msg {
-		stdout, err := gitx.GitPull(repoPath)
+		stdout, err := git.GitPull(repoPath)
 
 		errMessage := ""
 		if err != nil {
@@ -78,7 +78,7 @@ func gitPush(m Model) tea.Cmd {
 	repoPath := rs.Path
 
 	return func() tea.Msg {
-		stdout, err := gitx.GitPush(repoPath)
+		stdout, err := git.GitPush(repoPath)
 
 		errMessage := ""
 		if err != nil {
@@ -108,7 +108,7 @@ func gitRefreshRepo(m Model) tea.Cmd {
 	repoPath := rs.Path
 
 	return func() tea.Msg {
-		newRepoState, _ := gitx.CheckRepoState(repoPath)
+		newRepoState, _ := git.CheckRepoState(repoPath)
 
 		return gitRefreshRepoResultMsg{
 			newRepoState: newRepoState,

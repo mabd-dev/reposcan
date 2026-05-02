@@ -56,15 +56,27 @@ func renderReportHeader(r report.ScanReport, totalRepos int, dirtyRepos int) {
 func renderDirtyReposDetails(r report.ScanReport) {
 	fmt.Printf("\n%s\n", CyanBold("Details:"))
 	for _, rs := range r.RepoStates {
-		if len(rs.UncommitedFiles) == 0 {
+		outgoingCommits := rs.OutgoingCommits()
+		if len(rs.UncommitedFiles) == 0 && len(outgoingCommits) == 0 {
 			continue
 		}
 		fmt.Printf("\n%s %s\n%s %s\n",
 			MagBold("Repo:"), rs.Repo,
 			MagBold("Path:"), rs.Path,
 		)
-		for _, f := range rs.UncommitedFiles {
-			fmt.Printf("  %s\n", GrayS("- %s", f))
+
+		if len(rs.UncommitedFiles) > 0 {
+			fmt.Printf("%s\n", MagBold("File Changes:"))
+			for _, f := range rs.UncommitedFiles {
+				fmt.Printf("  %s\n", GrayS("- %s", f))
+			}
+		}
+
+		if len(outgoingCommits) > 0 {
+			fmt.Printf("%s\n", MagBold("Outgoing Commits:"))
+			for _, commit := range outgoingCommits {
+				fmt.Printf("  %s\n", GrayS("- %s", commit))
+			}
 		}
 	}
 }

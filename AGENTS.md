@@ -51,7 +51,7 @@ go run . -o json
 ### Core Flow
 1. **Configuration Loading** (`internal/config`): Loads defaults → reads `~/.config/reposcan/config.toml` → applies CLI flags (in that order of precedence)
 2. **Repository Discovery** (`internal/scan`): Walks filesystem from root directories, applying `dirIgnore` glob patterns, identifying `.git` directories
-3. **Git State Checking** (`internal/gitx`): Concurrently checks each repo using a worker pool (`gitxConcurrent.go`) to gather branch, uncommitted files, ahead/behind counts
+3. **VCS State Checking** (`internal/vcs`): Concurrently checks each repo using registered VCS providers to gather branch, uncommitted files, ahead/behind counts, and VCS-specific metadata
 4. **Filtering** (`cmd/reposcan/rootCmd.go`): Applies `OnlyFilter` (all/dirty/uncommitted/unpushed/unpulled) to determine which repos to include in output
 5. **Rendering** (`internal/render`): Outputs results in chosen format (stdout table/json, interactive TUI, or file output)
 
@@ -60,7 +60,9 @@ go run . -o json
 - **`cmd/reposcan`**: CLI entry point, Cobra command setup, flag parsing, orchestration of the scan→filter→render pipeline
 - **`internal/config`**: Configuration types, validation, defaults, TOML loading. The `Config` struct in `types.go` is the central configuration object
 - **`internal/scan`**: Filesystem walking with `filepath.WalkDir`, directory ignore matching using `doublestar` globs, git repo detection
-- **`internal/gitx`**: Git operations via `exec.Command`. `gitFunctions.go` wraps individual git commands (status, branch, rev-list). `gitxConcurrent.go` implements worker pool pattern for parallel repo checking
+- **`internal/vcs`**: VCS provider registry, repository metadata, and worker pool for parallel repo state checking across supported VCS types
+- **`internal/vcs/git`**: Git provider implementation and Git command wrappers for state checks, push, pull, and fetch operations
+- **`internal/vcs/jj`**: Jujutsu provider implementation for detecting and checking jj repositories
 - **`internal/render`**: Three render paths:
   - `stdout`: Plain table (using `charmbracelet/lipgloss`) or JSON output
   - `file`: Writes JSON reports to disk
@@ -75,10 +77,10 @@ Values are merged in this order (later overrides earlier):
 3. CLI flags
 
 ### Concurrency Model
-The `gitx.GetGitRepoStatesConcurrent` function uses a worker pool pattern:
+The `vcs.GetRepoStatesConcurrent` function uses a worker pool pattern:
 - Creates buffered channels for jobs and results
 - Spawns `maxWorkers` goroutines (default: 8)
-- Each worker pulls repo paths from the jobs channel and checks git state
+- Each worker pulls discovered repositories from the jobs channel, resolves the matching VCS provider, and checks repo state
 - Results are collected, sorted by path, and returned
 
 ### TUI Architecture (`internal/render/tui`)
@@ -106,7 +108,7 @@ The `filter` function in `rootCmd.go` applies `OnlyFilter` after all repos are d
 `scan.FindGitRepos` collects warnings (e.g., permission denied) but continues walking. Warnings are included in `ScanReport.Warnings`.
 
 ### Git Command Wrapper
-`gitx.RunGitCommand` uses `git -C <dir>` to run commands in a specific directory without changing the process's working directory. Stderr is captured but only used for error detection—stdout is returned.
+`git.RunGitCommand` uses `git -C <dir>` to run commands in a specific directory without changing the process's working directory. Stderr is captured but only used for error detection—stdout is returned.
 
 ## Testing Patterns
 
