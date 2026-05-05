@@ -21,7 +21,12 @@ func initJJRepo(t *testing.T, root string, name string) string {
 	return repoPath
 }
 
-func initTrackedJJRepo(t *testing.T) string {
+type trackedJJRepo struct {
+	SeedPath string
+	WorkPath string
+}
+
+func initTrackedJJRepo(t *testing.T) trackedJJRepo {
 	t.Helper()
 
 	root := t.TempDir()
@@ -60,7 +65,10 @@ func initTrackedJJRepo(t *testing.T) string {
 		t.Fatalf("jj git clone: %v", err)
 	}
 
-	return workPath
+	return trackedJJRepo{
+		SeedPath: seedPath,
+		WorkPath: workPath,
+	}
 }
 
 func TestProviderCheckRepoStateHandlesMissingRemotesAndBookmarks(t *testing.T) {
@@ -149,7 +157,7 @@ func TestProviderCheckRepoStateCollectsTrackedBookmarkOutgoingCommits(t *testing
 		t.Skip("git binary not available")
 	}
 
-	repoPath := initTrackedJJRepo(t)
+	repoPath := initTrackedJJRepo(t).WorkPath
 
 	filePath := filepath.Join(repoPath, "README.md")
 	f, err := os.OpenFile(filePath, os.O_APPEND|os.O_WRONLY, 0o644)
@@ -207,6 +215,79 @@ func TestProviderCheckRepoStateCollectsTrackedBookmarkOutgoingCommits(t *testing
 
 	if strings.Contains(state.RemoteStatus[0].OutgoingCommits[0], "change 2") {
 		t.Fatalf("did not expect working-copy descendant to be treated as tracked-bookmark outgoing commit, got %v", state.RemoteStatus[0].OutgoingCommits)
+	}
+}
+
+func TestProviderCheckRepoStateCollectsTrackedBookmarkIncomingCommits(t *testing.T) {
+	if _, err := exec.LookPath("jj"); err != nil {
+		t.Skip("jj binary not available")
+	}
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git binary not available")
+	}
+
+	repo := initTrackedJJRepo(t)
+	seedPath := repo.SeedPath
+	workPath := repo.WorkPath
+
+	workFile := filepath.Join(workPath, "README.md")
+	f, err := os.OpenFile(workFile, os.O_APPEND|os.O_WRONLY, 0o644)
+	if err != nil {
+		t.Fatalf("open work file: %v", err)
+	}
+	if _, err := f.WriteString("local\n"); err != nil {
+		t.Fatalf("append local change: %v", err)
+	}
+	_ = f.Close()
+
+	if err := exec.Command("jj", "-R", workPath, "describe", "-m", "local change").Run(); err != nil {
+		t.Fatalf("jj describe local change: %v", err)
+	}
+	if err := exec.Command("jj", "-R", workPath, "bookmark", "move", "main", "-t", "@").Run(); err != nil {
+		t.Fatalf("jj bookmark move main: %v", err)
+	}
+	if err := exec.Command("jj", "-R", workPath, "new").Run(); err != nil {
+		t.Fatalf("jj new: %v", err)
+	}
+
+	seedFile := filepath.Join(seedPath, "README.md")
+	f, err = os.OpenFile(seedFile, os.O_APPEND|os.O_WRONLY, 0o644)
+	if err != nil {
+		t.Fatalf("open seed file: %v", err)
+	}
+	if _, err := f.WriteString("remote\n"); err != nil {
+		t.Fatalf("append remote change: %v", err)
+	}
+	_ = f.Close()
+
+	if err := exec.Command("git", "-C", seedPath, "add", "README.md").Run(); err != nil {
+		t.Fatalf("git add remote: %v", err)
+	}
+	if err := exec.Command("git", "-C", seedPath, "commit", "-m", "remote change").Run(); err != nil {
+		t.Fatalf("git commit remote: %v", err)
+	}
+	if err := exec.Command("git", "-C", seedPath, "push", "origin", "main").Run(); err != nil {
+		t.Fatalf("git push remote: %v", err)
+	}
+	if err := exec.Command("jj", "-R", workPath, "git", "fetch").Run(); err != nil {
+		t.Fatalf("jj git fetch: %v", err)
+	}
+
+	state, warnings := New().CheckRepoState(workPath)
+	if len(warnings) != 0 {
+		t.Fatalf("unexpected warnings: %v", warnings)
+	}
+
+	if len(state.RemoteStatus) != 1 {
+		t.Fatalf("expected one jj remote status entry, got %d: %v", len(state.RemoteStatus), state.RemoteStatus)
+	}
+
+	if state.RemoteStatus[0].Behind != 1 {
+		t.Fatalf("expected behind count 1 from tracked bookmark incoming commits, got %d", state.RemoteStatus[0].Behind)
+	}
+
+	if state.RemoteStatus[0].Ahead != 1 {
+		t.Fatalf("expected ahead count 1 from local tracked bookmark commit, got %d", state.RemoteStatus[0].Ahead)
 	}
 }
 

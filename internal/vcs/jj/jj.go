@@ -83,6 +83,13 @@ func (p *Provider) CheckRepoState(path string) (report.RepoState, []string) {
 		state.RemoteStatus[0].OutgoingCommits = outgoingCommits
 	}
 
+	incomingCommits, err := p.getIncomingCommits(path)
+	if err != nil {
+		warnings = append(warnings, "Failed to get jj incoming commits, path="+path)
+	} else {
+		state.RemoteStatus[0].Behind = len(incomingCommits)
+	}
+
 	return state, warnings
 }
 
@@ -200,6 +207,37 @@ func (p *Provider) getOutgoingCommits(repoPath string) ([]string, error) {
 		return nil, err
 	}
 
+	return parseCommitSummaries(output), nil
+}
+
+func (p *Provider) getIncomingCommits(repoPath string) ([]string, error) {
+	trackedBookmarks, err := p.getTrackedBookmarks(repoPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(trackedBookmarks) == 0 {
+		return []string{}, nil
+	}
+
+	revset := buildTrackedIncomingRevset(trackedBookmarks)
+	output, err := p.run(
+		repoPath,
+		"log",
+		"-r",
+		revset,
+		"--no-graph",
+		"-T",
+		`commit_id.short() ++ "|" ++ description.first_line() ++ "\n"`,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return parseCommitSummaries(output), nil
+}
+
+func parseCommitSummaries(output string) []string {
 	commits := []string{}
 	seen := map[string]struct{}{}
 
@@ -230,7 +268,7 @@ func (p *Provider) getOutgoingCommits(repoPath string) ([]string, error) {
 		commits = append(commits, commitID+" "+description)
 	}
 
-	return commits, nil
+	return commits
 }
 
 func (p *Provider) getTrackedBookmarks(repoPath string) ([]trackedBookmark, error) {
@@ -307,6 +345,21 @@ func buildTrackedOutgoingRevset(bookmarks []trackedBookmark) string {
 			escapeRevsetString(bookmark.Name),
 			escapeRevsetString(bookmark.Remote),
 			escapeRevsetString(bookmark.Name),
+		))
+	}
+
+	return strings.Join(parts, " | ")
+}
+
+func buildTrackedIncomingRevset(bookmarks []trackedBookmark) string {
+	parts := make([]string, 0, len(bookmarks))
+
+	for _, bookmark := range bookmarks {
+		parts = append(parts, fmt.Sprintf(
+			`(remote_bookmarks("%s", remote="git")..remote_bookmarks("%s", remote="%s"))`,
+			escapeRevsetString(bookmark.Name),
+			escapeRevsetString(bookmark.Name),
+			escapeRevsetString(bookmark.Remote),
 		))
 	}
 
