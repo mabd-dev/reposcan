@@ -6,11 +6,12 @@ import (
 
 const (
 	RepoW        = 24
+	VCSW         = 5
 	BranchW      = 30
 	UncommW      = 3
 	AheadW       = 3
 	BehindW      = 3
-	RemoteStateW = 3 + 3 + 3 + 4 //(uncommited files count + aheadW + behindW + 4 space)
+	RemoteStateW = 40
 )
 
 var (

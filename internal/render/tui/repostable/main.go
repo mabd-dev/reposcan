@@ -40,7 +40,7 @@ func New(
 
 	// if no repos, show an empty placeholder row so the table renders nicely
 	if len(rows) == 0 {
-		t.SetRows([]table.Row{{"", "", ""}})
+		t.SetRows([]table.Row{{"", "", "", ""}})
 	}
 
 	t.SetStyles(table.Styles{

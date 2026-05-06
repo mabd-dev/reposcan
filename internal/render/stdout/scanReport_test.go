@@ -30,8 +30,8 @@ func sampleReport() report.ScanReport {
 		Version:     1,
 		GeneratedAt: time.Date(2025, 8, 31, 22, 0, 0, 0, time.UTC),
 		RepoStates: []report.RepoState{
-			{Repo: "clean", Branch: "main", Path: "/tmp/clean"},
-			{Repo: "dirty", Branch: "dev", Path: "/tmp/dirty", UncommitedFiles: []string{"a.txt"}},
+			{Repo: "clean", VCSType: "git", Branch: "main", Path: "/tmp/clean"},
+			{Repo: "dirty", VCSType: "git", Branch: "dev", Path: "/tmp/dirty", UncommitedFiles: []string{"a.txt"}},
 		},
 		Warnings: []string{"test warning"},
 	}
@@ -75,9 +75,10 @@ func TestRenderScanReportAsTable_PrintsOutgoingCommitDetails(t *testing.T) {
 		GeneratedAt: time.Date(2025, 8, 31, 22, 0, 0, 0, time.UTC),
 		RepoStates: []report.RepoState{
 			{
-				Repo:   "jj-repo",
-				Branch: "main",
-				Path:   "/tmp/jj-repo",
+				Repo:    "jj-repo",
+				VCSType: "jj",
+				Branch:  "main",
+				Path:    "/tmp/jj-repo",
 				RemoteStatus: []report.RemoteStatus{
 					{Ahead: 1, OutgoingCommits: []string{"abc123 change 1"}},
 				},
@@ -91,5 +92,46 @@ func TestRenderScanReportAsTable_PrintsOutgoingCommitDetails(t *testing.T) {
 	}
 	if !strings.Contains(out, "abc123 change 1") {
 		t.Fatalf("missing outgoing commit details: %s", out)
+	}
+}
+
+func TestRenderScanReportAsTable_PrintsVCSAndRemoteStateColumns(t *testing.T) {
+	reportWithVCSState := report.ScanReport{
+		Version:     1,
+		GeneratedAt: time.Date(2025, 8, 31, 22, 0, 0, 0, time.UTC),
+		RepoStates: []report.RepoState{
+			{
+				Repo:    "git-repo",
+				VCSType: "git",
+				Branch:  "main",
+				Path:    "/tmp/git-repo",
+				RemoteStatus: []report.RemoteStatus{
+					{Remote: "origin", Ahead: 2, Behind: 1},
+				},
+			},
+			{
+				Repo:    "jj-repo",
+				VCSType: "jj",
+				Branch:  "@",
+				Path:    "/tmp/jj-repo",
+				RemoteStatus: []report.RemoteStatus{
+					{Remote: "upstream", Ahead: 0, Behind: 3},
+				},
+			},
+		},
+	}
+
+	out := captureStdout(t, func() { RenderScanReportAsTable(reportWithVCSState) })
+	if !strings.Contains(out, "VCS") {
+		t.Fatalf("missing VCS header: %s", out)
+	}
+	if !strings.Contains(out, "git") || !strings.Contains(out, "jj") {
+		t.Fatalf("missing VCS values: %s", out)
+	}
+	if !strings.Contains(out, "↑2") || !strings.Contains(out, "↓1") || !strings.Contains(out, "↓3") {
+		t.Fatalf("missing ahead/behind state: %s", out)
+	}
+	if !strings.Contains(out, "(upstream)") {
+		t.Fatalf("missing non-origin remote name: %s", out)
 	}
 }

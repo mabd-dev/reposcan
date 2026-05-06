@@ -11,19 +11,22 @@ import (
 )
 
 const (
-	RepoW        = 30
-	BranchW      = 30
-	RemoteStateW = 40
+	RepoW        = 37
+	VCSW         = 6
+	BranchW      = 20
+	RemoteStateW = 37
 )
 
 func createColumns(maxWidth int) []table.Column {
 	repoW := maxWidth * RepoW / 100
 	branchW := maxWidth * BranchW / 100
+	vcsW := maxWidth * VCSW / 100
 	remoteStateW := maxWidth * RemoteStateW / 100
 
 	return []table.Column{
 		{Title: "Repo", Width: repoW},
 		{Title: "Branch", Width: branchW},
+		{Title: "VCS", Width: vcsW},
 		{Title: "State", Width: remoteStateW},
 	}
 }
@@ -36,6 +39,7 @@ func createRows(repoStates []report.RepoState, theme theme.Theme) []table.Row {
 		rows = append(rows, table.Row{
 			rs.Repo,
 			rs.Branch,
+			rs.VCSType,
 			state,
 		})
 	}
