@@ -35,3 +35,13 @@ func (r *Registry) Get(repoType Type) (Provider, bool) {
 	provider, ok := r.providers[repoType]
 	return provider, ok
 }
+
+func (r *Registry) GetActionProvider(repoType Type) (ActionProvider, bool) {
+	provider, ok := r.Get(repoType)
+	if !ok {
+		return nil, false
+	}
+
+	actionProvider, ok := provider.(ActionProvider)
+	return actionProvider, ok
+}

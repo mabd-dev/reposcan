@@ -16,10 +16,7 @@ func GenerateScanReport(
 ) report.ScanReport {
 	reportWarnings := []string{}
 
-	registry := vcs.NewRegistry(
-		vcsgit.New(),
-		vcsjj.New(),
-	)
+	registry := NewVCSRegistry()
 
 	repoPaths, warnings := scan.FindRepos(configs.Roots, configs.DirIgnore)
 
@@ -43,6 +40,13 @@ func GenerateScanReport(
 		RepoStates:  repoStates,
 		Warnings:    reportWarnings,
 	}
+}
+
+func NewVCSRegistry() *vcs.Registry {
+	return vcs.NewRegistry(
+		vcsgit.New(),
+		vcsjj.New(),
+	)
 }
 
 // Filter repoState based on config only filter

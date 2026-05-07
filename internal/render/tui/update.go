@@ -25,14 +25,14 @@ func (m Model) updateReposTable(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
+		// case "p":
+		// 	return m.runVCSAction(vcsActionPull)
+		// case "P":
+		// 	return m.runVCSAction(vcsActionPush)
+		// case "f":
+		// 	return m.runVCSAction(vcsActionFetch)
 		case "q", "esc", "ctrl+c":
 			return m, tea.Quit
-		// case "p":
-		// 	return m, gitPull(m)
-		// case "P":
-		// 	return m, gitPush(m)
-		// case "f":
-		// 	return m, gitFetch(m)
 		case "c":
 			rs := m.reposTable.GetCurrentRepoState()
 			if rs == nil {
@@ -126,45 +126,25 @@ func defaultUpdate(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width, m.height = msg.Width, msg.Height
 		return m, nil
 
-	case gitPushResultMsg:
-		return m, gitRefreshRepo(m)
-
-	case gitPullResultMsg:
+	case vcsActionResultMsg:
 		if len(msg.Err) != 0 {
 			logger.Warn(msg.Err)
-			return m, nil
+			m.removeRepoBeingUpdated(msg.RepoID)
+			return m, func() tea.Msg {
+				return alerts.AddAlertMsg{
+					Msg: alerts.Alert{
+						Type:    alerts.MsgTypeError,
+						Title:   "Action failed",
+						Message: msg.Err,
+					},
+				}
+			}
 		}
 
-		rs := m.reposTable.GetCurrentRepoState()
-		if rs == nil {
-			return m, nil
-		}
+		m.removeRepoBeingUpdated(msg.RepoID)
+		return m, refreshRepo(m, msg.Index)
 
-		index := getRepoIndex(m.reposBeingUpdated, rs.ID)
-		if index != -1 {
-			m.reposBeingUpdated = deleteRepo(m.reposBeingUpdated, index)
-		}
-		return m, gitRefreshRepo(m)
-
-	case gitFetchResultMsg:
-		if len(msg.Err) != 0 {
-			logger.Warn(msg.Err)
-			return m, nil
-		}
-
-		rs := m.reposTable.GetCurrentRepoState()
-		if rs == nil {
-			return m, nil
-		}
-
-		index := getRepoIndex(m.reposBeingUpdated, rs.ID)
-		if index != -1 {
-			m.reposBeingUpdated = deleteRepo(m.reposBeingUpdated, index)
-		}
-
-		return m, gitRefreshRepo(m)
-
-	case gitRefreshRepoResultMsg:
+	case vcsRefreshRepoResultMsg:
 		m.reposTable.UpdateRepoState(msg.index, msg.newRepoState)
 
 		return m, nil
@@ -180,4 +160,11 @@ func defaultUpdate(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	return nil, nil
+}
+
+func (m *Model) removeRepoBeingUpdated(repoID string) {
+	index := getRepoIndex(m.reposBeingUpdated, repoID)
+	if index != -1 {
+		m.reposBeingUpdated = deleteRepo(m.reposBeingUpdated, index)
+	}
 }

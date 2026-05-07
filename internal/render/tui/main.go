@@ -6,6 +6,7 @@ import (
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/mabd-dev/reposcan/internal"
 	"github.com/mabd-dev/reposcan/internal/config"
 	"github.com/mabd-dev/reposcan/internal/logger"
 	"github.com/mabd-dev/reposcan/internal/render/tui/alerts"
@@ -67,6 +68,7 @@ func Render(
 
 	m := Model{
 		configs:     configs,
+		vcsRegistry: internal.NewVCSRegistry(),
 		reposTable:  reposTable,
 		repoDetails: repoDetails,
 		rtHeader:    reposTableHeader,

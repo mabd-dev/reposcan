@@ -21,3 +21,15 @@ func (p *Provider) CheckRepoState(path string) (report.RepoState, []string) {
 
 	return state, warnings
 }
+
+func (p *Provider) Fetch(path string) (string, error) {
+	return GitFetch(path)
+}
+
+func (p *Provider) Push(path string) (string, error) {
+	return GitPush(path)
+}
+
+func (p *Provider) Pull(path string) (string, error) {
+	return GitPull(path)
+}

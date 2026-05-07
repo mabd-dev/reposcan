@@ -1,7 +1,6 @@
 package jj
 
 import (
-	"bytes"
 	"fmt"
 	"net/url"
 	"os/exec"
@@ -320,20 +319,7 @@ func (p *Provider) getTrackedBookmarks(repoPath string) ([]trackedBookmark, erro
 }
 
 func (p *Provider) run(repoPath string, args ...string) (string, error) {
-	cmd := exec.Command(p.binary, append([]string{"-R", repoPath}, args...)...)
-
-	var stdout, stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-
-	if err := cmd.Run(); err != nil {
-		if msg := strings.TrimSpace(stderr.String()); msg != "" {
-			return "", fmt.Errorf("%w: %s", err, msg)
-		}
-		return "", err
-	}
-
-	return stdout.String(), nil
+	return runJJCommand(p.binary, repoPath, args...)
 }
 
 func buildTrackedOutgoingRevset(bookmarks []trackedBookmark) string {
