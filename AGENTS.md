@@ -60,9 +60,9 @@ go run . -o json
 - **`cmd/reposcan`**: CLI entry point, Cobra command setup, flag parsing, orchestration of the scan→filter→render pipeline
 - **`internal/config`**: Configuration types, validation, defaults, TOML loading. The `Config` struct in `types.go` is the central configuration object
 - **`internal/scan`**: Filesystem walking with `filepath.WalkDir`, directory ignore matching using `doublestar` globs, git repo detection
-- **`internal/vcs`**: VCS provider registry, repository metadata, and worker pool for parallel repo state checking across supported VCS types
+- **`internal/vcs`**: VCS provider registry (`Registry`), `Provider` interface for state checks, `ActionProvider` interface for TUI write operations (fetch/push/pull), and worker pool for parallel repo state checking across supported VCS types
 - **`internal/vcs/git`**: Git provider implementation and Git command wrappers for state checks, push, pull, and fetch operations
-- **`internal/vcs/jj`**: Jujutsu provider implementation for detecting and checking jj repositories
+- **`internal/vcs/jj`**: Jujutsu provider implementation for detecting and checking jj repositories. `commands.go` contains exported jj command wrappers and helpers; `jj.go` holds the `Provider` struct and `CheckRepoState` logic
 - **`internal/render`**: Three render paths:
   - `stdout`: Plain table (using `charmbracelet/lipgloss`) or JSON output
   - `file`: Writes JSON reports to disk
@@ -89,7 +89,7 @@ Built with Bubble Tea (Elm architecture):
 - **Focused Model Pattern**: Different input modes (table navigation, filter text input, help popup) each implement `focusedModel` interface to handle updates and keybindings
 - **Update Flow**: Messages route through focused model → update appropriate state → return new model + commands
 - **View**: Composed vertically: header → body (table + optional filter/details) → footer (keybindings)
-- **Git Operations**: TUI can trigger git push/pull/fetch via messages that execute git commands and update state
+- **VCS Operations**: TUI dispatches fetch/push/pull through the `vcs.ActionProvider` interface via the `Registry`, making actions VCS-agnostic. Providers that don't implement `ActionProvider` (e.g., jj for push/pull) surface an "unsupported action" alert. Action results and repo refresh are handled through `vcsActionResultMsg` and `vcsRefreshRepoResultMsg` messages
 
 ## Important Implementation Notes
 
@@ -117,5 +117,10 @@ Tests use standard Go testing:
 - Flag parsing tests in `cmd/reposcan/*_test.go`
 - Scan behavior tests in `internal/scan/scan_test.go`
 - File render tests in `internal/render/file/file_test.go`
+- jj provider tests in `internal/vcs/jj/jj_test.go` (require `jj` and `git` binaries — skipped when unavailable)
+- jj scan integration tests in `internal/scanGenerator_jj_test.go` (end-to-end filter and JSON field tests)
+- VCS registry tests in `internal/vcs/registry_test.go` (ActionProvider dispatch)
+- TUI table/column tests in `internal/render/tui/repostable/ui_test.go`
+- Stdout table rendering tests in `internal/render/stdout/scanReport_test.go`
 
 When writing tests, prefer table-driven tests for multiple scenarios.
