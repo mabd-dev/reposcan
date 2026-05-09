@@ -312,3 +312,31 @@ func TestProviderCheckRepoStateWarnsWhenBinaryMissing(t *testing.T) {
 		t.Fatalf("expected missing binary warning, got %v", warnings)
 	}
 }
+
+func TestProviderCheckRepoStateWarningsIncludeCommandFailureDetails(t *testing.T) {
+	if _, err := exec.LookPath("false"); err != nil {
+		t.Skip("false binary not available")
+	}
+
+	repoPath := filepath.Join(t.TempDir(), "repo")
+
+	_, warnings := (&Provider{binary: "false"}).CheckRepoState(repoPath)
+
+	if len(warnings) == 0 {
+		t.Fatal("expected warnings")
+	}
+
+	warning := warnings[0]
+	wantParts := []string{
+		"Failed to get repo name for jj repo",
+		"path=" + repoPath,
+		`command="false -R ` + repoPath + ` git remote list"`,
+		"failed: exit status 1",
+	}
+
+	for _, want := range wantParts {
+		if !strings.Contains(warning, want) {
+			t.Fatalf("expected warning to contain %q, got %q", want, warning)
+		}
+	}
+}

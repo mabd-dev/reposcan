@@ -19,6 +19,27 @@ type trackedBookmark struct {
 
 var ErrJJActionNotImplemented = errors.New("jj action semantics are not implemented")
 
+type commandError struct {
+	Binary   string
+	RepoPath string
+	Args     []string
+	Stderr   string
+	Err      error
+}
+
+func (e commandError) Error() string {
+	command := append([]string{e.Binary, "-R", e.RepoPath}, e.Args...)
+	message := fmt.Sprintf("command=%q failed: %v", strings.Join(command, " "), e.Err)
+	if e.Stderr != "" {
+		message += ": " + e.Stderr
+	}
+	return message
+}
+
+func (e commandError) Unwrap() error {
+	return e.Err
+}
+
 // JJFetch fetches remote bookmark state using jj's Git interop.
 func JJFetch(path string) (string, error) {
 	return RunJJCommand(path, "git", "fetch")
@@ -270,10 +291,13 @@ func runJJCommand(binary string, repoPath string, args ...string) (string, error
 	cmd.Stderr = &stderr
 
 	if err := cmd.Run(); err != nil {
-		if msg := strings.TrimSpace(stderr.String()); msg != "" {
-			return "", fmt.Errorf("%w: %s", err, msg)
+		return "", commandError{
+			Binary:   binary,
+			RepoPath: repoPath,
+			Args:     args,
+			Stderr:   strings.TrimSpace(stderr.String()),
+			Err:      err,
 		}
-		return "", err
 	}
 
 	return stdout.String(), nil
