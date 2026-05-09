@@ -66,19 +66,19 @@ func (p *Provider) CheckRepoState(path string) (report.RepoState, []string) {
 		state.UncommitedFiles = uncommittedFiles
 	}
 
-	outgoingCommits, err := getOutgoingCommits(p.binary, path)
+	remoteStatuses, err := getBookmarkRemoteStatuses(p.binary, path, strings.Split(state.Branch, ","))
 	if err != nil {
-		warnings = append(warnings, jjWarning("get outgoing commits", path, err))
-	} else {
-		state.RemoteStatus[0].Ahead = len(outgoingCommits)
-		state.RemoteStatus[0].OutgoingCommits = outgoingCommits
-	}
-
-	incomingCommits, err := getIncomingCommits(p.binary, path)
-	if err != nil {
-		warnings = append(warnings, jjWarning("get incoming commits", path, err))
-	} else {
-		state.RemoteStatus[0].Behind = len(incomingCommits)
+		warnings = append(warnings, jjWarning("get remote status", path, err))
+	} else if len(remoteStatuses) > 0 {
+		state.RemoteStatus = make([]report.RemoteStatus, 0, len(remoteStatuses))
+		for _, remoteStatus := range remoteStatuses {
+			state.RemoteStatus = append(state.RemoteStatus, report.RemoteStatus{
+				Remote:          remoteStatus.Remote,
+				Ahead:           len(remoteStatus.OutgoingCommits),
+				Behind:          len(remoteStatus.IncomingCommits),
+				OutgoingCommits: remoteStatus.OutgoingCommits,
+			})
+		}
 	}
 
 	return state, warnings

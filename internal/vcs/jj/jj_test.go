@@ -205,6 +205,14 @@ func TestProviderCheckRepoStateCollectsTrackedBookmarkOutgoingCommits(t *testing
 		t.Fatalf("expected ahead count 1 from tracked bookmark commits, got %d", state.RemoteStatus[0].Ahead)
 	}
 
+	if state.RemoteStatus[0].Remote != "origin" {
+		t.Fatalf("expected remote status to be scoped to origin, got %q", state.RemoteStatus[0].Remote)
+	}
+
+	if state.Branch != "main" {
+		t.Fatalf("expected branch display to use the current bookmark, got %q", state.Branch)
+	}
+
 	if len(state.RemoteStatus[0].OutgoingCommits) != 1 {
 		t.Fatalf("expected exactly 1 outgoing commit, got %d: %v", len(state.RemoteStatus[0].OutgoingCommits), state.RemoteStatus[0].OutgoingCommits)
 	}
@@ -284,6 +292,14 @@ func TestProviderCheckRepoStateCollectsTrackedBookmarkIncomingCommits(t *testing
 
 	if state.RemoteStatus[0].Behind != 1 {
 		t.Fatalf("expected behind count 1 from tracked bookmark incoming commits, got %d", state.RemoteStatus[0].Behind)
+	}
+
+	if state.RemoteStatus[0].Remote != "origin" {
+		t.Fatalf("expected remote status to be scoped to origin, got %q", state.RemoteStatus[0].Remote)
+	}
+
+	if state.Branch != "main" {
+		t.Fatalf("expected branch display to use the current bookmark, got %q", state.Branch)
 	}
 
 	if state.RemoteStatus[0].Ahead != 1 {

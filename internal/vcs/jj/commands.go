@@ -17,6 +17,12 @@ type trackedBookmark struct {
 	Remote string
 }
 
+type bookmarkRemoteStatus struct {
+	Remote          string
+	OutgoingCommits []string
+	IncomingCommits []string
+}
+
 var ErrJJActionNotImplemented = errors.New("jj action semantics are not implemented")
 
 type commandError struct {
@@ -114,7 +120,7 @@ func getBranchDisplay(binary string, repoPath string) (string, error) {
 		repoPath,
 		"log",
 		"-r",
-		"@",
+		"latest(ancestors(@) & bookmarks()) | @",
 		"--no-graph",
 		"-T",
 		`bookmarks.join(",") ++ "|" ++ change_id.short() ++ "\n"`,
@@ -123,25 +129,58 @@ func getBranchDisplay(binary string, repoPath string) (string, error) {
 		return "", err
 	}
 
-	line := strings.TrimSpace(output)
-	if line == "" {
+	output = strings.TrimSpace(output)
+	if output == "" {
 		return "-", nil
 	}
 
-	parts := strings.SplitN(line, "|", 2)
-	if len(parts) != 2 {
-		return line, nil
+	fallback := "-"
+	for _, line := range strings.Split(output, "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+
+		parts := strings.SplitN(line, "|", 2)
+		if len(parts) != 2 {
+			if fallback == "-" {
+				fallback = line
+			}
+			continue
+		}
+
+		if bookmarkDisplay := cleanBookmarkDisplay(parts[0]); bookmarkDisplay != "" {
+			return bookmarkDisplay, nil
+		}
+
+		if changeID := strings.TrimSpace(parts[1]); changeID != "" && fallback == "-" {
+			fallback = changeID
+		}
 	}
 
-	if strings.TrimSpace(parts[0]) != "" {
-		return strings.TrimSpace(parts[0]), nil
+	return fallback, nil
+}
+
+func cleanBookmarkDisplay(display string) string {
+	bookmarks := []string{}
+
+	for _, bookmark := range strings.Split(display, ",") {
+		bookmark = cleanBookmarkName(bookmark)
+		if strings.Contains(bookmark, "@") {
+			continue
+		}
+		if bookmark != "" {
+			bookmarks = append(bookmarks, bookmark)
+		}
 	}
 
-	if strings.TrimSpace(parts[1]) != "" {
-		return strings.TrimSpace(parts[1]), nil
-	}
+	return strings.Join(bookmarks, ",")
+}
 
-	return "-", nil
+func cleanBookmarkName(bookmark string) string {
+	bookmark = strings.TrimSpace(bookmark)
+	bookmark = strings.TrimRight(bookmark, "*?")
+	return strings.TrimSpace(bookmark)
 }
 
 func GetUncommittedFiles(repoPath string) ([]string, error) {
@@ -212,6 +251,88 @@ func getIncomingCommits(binary string, repoPath string) ([]string, error) {
 	}
 
 	revset := buildTrackedIncomingRevset(trackedBookmarks)
+	output, err := runJJCommand(
+		binary,
+		repoPath,
+		"log",
+		"-r",
+		revset,
+		"--no-graph",
+		"-T",
+		`commit_id.short() ++ "|" ++ description.first_line() ++ "\n"`,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return parseCommitSummaries(output), nil
+}
+
+func getBookmarkRemoteStatuses(
+	binary string,
+	repoPath string,
+	bookmarkNames []string,
+) ([]bookmarkRemoteStatus, error) {
+	if len(bookmarkNames) == 0 {
+		return []bookmarkRemoteStatus{}, nil
+	}
+
+	trackedBookmarks, err := getTrackedBookmarks(binary, repoPath)
+	if err != nil {
+		return nil, err
+	}
+
+	statuses := []bookmarkRemoteStatus{}
+	seenBookmarks := map[string]struct{}{}
+	for _, bookmarkName := range bookmarkNames {
+		bookmarkName = cleanBookmarkName(bookmarkName)
+		if bookmarkName == "" {
+			continue
+		}
+		if _, ok := seenBookmarks[bookmarkName]; ok {
+			continue
+		}
+		seenBookmarks[bookmarkName] = struct{}{}
+
+		for _, tracked := range trackedBookmarks {
+			if tracked.Name != bookmarkName {
+				continue
+			}
+
+			outgoingCommits, err := getCommitsForRevset(
+				binary,
+				repoPath,
+				buildTrackedOutgoingRevset([]trackedBookmark{tracked}),
+			)
+			if err != nil {
+				return nil, err
+			}
+
+			incomingCommits, err := getCommitsForRevset(
+				binary,
+				repoPath,
+				buildTrackedIncomingRevset([]trackedBookmark{tracked}),
+			)
+			if err != nil {
+				return nil, err
+			}
+
+			statuses = append(statuses, bookmarkRemoteStatus{
+				Remote:          tracked.Remote,
+				OutgoingCommits: outgoingCommits,
+				IncomingCommits: incomingCommits,
+			})
+		}
+	}
+
+	return statuses, nil
+}
+
+func getCommitsForRevset(binary string, repoPath string, revset string) ([]string, error) {
+	if strings.TrimSpace(revset) == "" {
+		return []string{}, nil
+	}
+
 	output, err := runJJCommand(
 		binary,
 		repoPath,
