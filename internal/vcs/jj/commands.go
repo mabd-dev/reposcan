@@ -294,15 +294,21 @@ func getBookmarkRemoteStatuses(
 		}
 		seenBookmarks[bookmarkName] = struct{}{}
 
-		for _, tracked := range trackedBookmarks {
-			if tracked.Name != bookmarkName {
-				continue
+		remotes := matchingRemotes(trackedBookmarks, bookmarkName)
+		if len(remotes) == 0 {
+			remotes, err = getUntrackedRemotesForBookmark(binary, repoPath, bookmarkName)
+			if err != nil {
+				return nil, err
 			}
+		}
+
+		for _, remote := range remotes {
+			tb := trackedBookmark{Name: bookmarkName, Remote: remote}
 
 			outgoingCommits, err := getCommitsForRevset(
 				binary,
 				repoPath,
-				buildTrackedOutgoingRevset([]trackedBookmark{tracked}),
+				buildTrackedOutgoingRevset([]trackedBookmark{tb}),
 			)
 			if err != nil {
 				return nil, err
@@ -311,14 +317,14 @@ func getBookmarkRemoteStatuses(
 			incomingCommits, err := getCommitsForRevset(
 				binary,
 				repoPath,
-				buildTrackedIncomingRevset([]trackedBookmark{tracked}),
+				buildTrackedIncomingRevset([]trackedBookmark{tb}),
 			)
 			if err != nil {
 				return nil, err
 			}
 
 			statuses = append(statuses, bookmarkRemoteStatus{
-				Remote:          tracked.Remote,
+				Remote:          remote,
 				OutgoingCommits: outgoingCommits,
 				IncomingCommits: incomingCommits,
 			})
@@ -326,6 +332,55 @@ func getBookmarkRemoteStatuses(
 	}
 
 	return statuses, nil
+}
+
+func matchingRemotes(bookmarks []trackedBookmark, name string) []string {
+	var remotes []string
+	for _, b := range bookmarks {
+		if b.Name == name {
+			remotes = append(remotes, b.Remote)
+		}
+	}
+	return remotes
+}
+
+func getUntrackedRemotesForBookmark(binary string, repoPath string, bookmarkName string) ([]string, error) {
+	output, err := runJJCommand(
+		binary,
+		repoPath,
+		"bookmark",
+		"list",
+		"--all",
+		bookmarkName,
+		"-T",
+		`name ++ "|" ++ remote ++ "\n"`,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	var remotes []string
+	for _, line := range strings.Split(strings.TrimRight(output, "\n"), "\n") {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+
+		parts := strings.SplitN(line, "|", 2)
+		if len(parts) != 2 {
+			continue
+		}
+
+		name := strings.TrimSpace(parts[0])
+		remote := strings.TrimSpace(parts[1])
+		if name != bookmarkName || remote == "" || remote == "git" {
+			continue
+		}
+
+		remotes = append(remotes, remote)
+	}
+
+	return remotes, nil
 }
 
 func getCommitsForRevset(binary string, repoPath string, revset string) ([]string, error) {
