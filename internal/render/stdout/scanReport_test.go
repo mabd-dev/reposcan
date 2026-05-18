@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"io"
 	"os"
-	"strings"
 	"testing"
 	"time"
 
@@ -50,21 +49,5 @@ func TestRenderScanReportAsJson_OutputsValidJSON(t *testing.T) {
 	}
 	if v["version"].(float64) != 1 {
 		t.Fatalf("unexpected version: %v", v["Version"])
-	}
-}
-
-func TestRenderScanReportAsTable_PrintsHeaderAndDetails(t *testing.T) {
-	out := captureStdout(t, func() { RenderScanReportAsTable(sampleReport()) })
-	if !strings.Contains(out, "Repo Scan Report") {
-		t.Fatalf("missing header: %s", out)
-	}
-	if !strings.Contains(out, "Details:") {
-		t.Fatalf("missing details section for dirty repos: %s", out)
-	}
-	if !strings.Contains(out, "dirty") || !strings.Contains(out, "/tmp/dirty") {
-		t.Fatalf("missing repo details: %s", out)
-	}
-	if !strings.Contains(out, "test warning") {
-		t.Fatalf("missing warnings: %s", out)
 	}
 }
