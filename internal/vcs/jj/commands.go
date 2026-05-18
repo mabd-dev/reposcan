@@ -46,24 +46,6 @@ func (e commandError) Unwrap() error {
 	return e.Err
 }
 
-// JJFetch fetches remote bookmark state using jj's Git interop.
-func (p *Provider) Fetch(path string) (string, error) {
-	return RunJJCommand(path, "git", "fetch")
-}
-
-// JJPush is intentionally not wired into vcs.ActionProvider yet. Define the
-// bookmark selection/update semantics before enabling this operation.
-func (p *Provider) Push(path string) (string, error) {
-	return "", fmt.Errorf("%w: push bookmark behavior needs to be defined", ErrJJActionNotImplemented)
-}
-
-// JJPull is intentionally not wired into vcs.ActionProvider yet. jj does not
-// have a direct Git-equivalent pull operation, so the desired behavior needs to
-// be defined before enabling this operation.
-func (p *Provider) Pull(path string) (string, error) {
-	return "", fmt.Errorf("%w: pull has no direct Git-equivalent jj operation", ErrJJActionNotImplemented)
-}
-
 func GetRepoName(repoPath string) (string, error) {
 	return getRepoName("jj", repoPath)
 }
