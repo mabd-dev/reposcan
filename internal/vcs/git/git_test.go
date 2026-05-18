@@ -41,6 +41,14 @@ func TestProviderCheckRepoStateSetsVCSType(t *testing.T) {
 	}
 }
 
+func TestGitProviderImplementsVcsProvider(t *testing.T) {
+	var _ vcs.Provider = (*Provider)(nil)
+}
+
+func TestGitProviderImplementsVcsActionProvider(t *testing.T) {
+	var _ vcs.ActionProvider = (*Provider)(nil)
+}
+
 func TestProviderCheckRepoStateCollectsOutgoingCommits(t *testing.T) {
 	if _, err := exec.LookPath("git"); err != nil {
 		t.Skip("git binary not available")

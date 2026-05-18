@@ -71,6 +71,14 @@ func initTrackedJJRepo(t *testing.T) trackedJJRepo {
 	}
 }
 
+func TestJJProviderImplementsVcsProvider(t *testing.T) {
+	var _ vcs.Provider = (*Provider)(nil)
+}
+
+func TestJJProviderImplementsVcsActionProvider(t *testing.T) {
+	var _ vcs.ActionProvider = (*Provider)(nil)
+}
+
 func TestProviderCheckRepoStateHandlesMissingRemotesAndBookmarks(t *testing.T) {
 	if _, err := exec.LookPath("jj"); err != nil {
 		t.Skip("jj binary not available")
