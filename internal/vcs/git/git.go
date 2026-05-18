@@ -23,13 +23,26 @@ func (p *Provider) CheckRepoState(path string) (report.RepoState, []string) {
 }
 
 func (p *Provider) Fetch(path string) (string, error) {
-	return GitFetch(path)
+	str, err := RunGitCommand(path, "fetch", "--porcelain")
+	if err != nil {
+		return "", err
+	}
+	return str, nil
 }
 
+// GitPush pushed git repo at given path using `git push` command and returns stdout of the command + error if any
 func (p *Provider) Push(path string) (string, error) {
-	return GitPush(path)
+	str, err := RunGitCommand(path, "push", "--porcelain")
+	if err != nil {
+		return "", err
+	}
+	return str, nil
 }
 
 func (p *Provider) Pull(path string) (string, error) {
-	return GitPull(path)
+	str, err := RunGitCommand(path, "pull")
+	if err != nil {
+		return "", err
+	}
+	return str, nil
 }
