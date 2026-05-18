@@ -22,24 +22,6 @@ func RenderScanReportAsJson(r report.ScanReport) error {
 	return nil
 }
 
-// RenderScanReportAsTable prints a human-readable table view of the ScanReport
-// to stdout. The Path column is printed last and not truncated.
-func RenderScanReportAsTable(r report.ScanReport) {
-	totalRepos := len(r.RepoStates)
-	dirtyRepos := r.DirtyReposCount()
-
-	Warnings(r.Warnings)
-	renderReportHeader(r, totalRepos, dirtyRepos)
-
-	if len(r.RepoStates) > 0 {
-		RenderReposTable(r)
-	}
-
-	if dirtyRepos > 0 {
-		renderDirtyReposDetails(r)
-	}
-}
-
 func renderReportHeader(r report.ScanReport, totalRepos int, dirtyRepos int) {
 	fmt.Printf("\n\n")
 	fmt.Printf("%s\n", BoldS("Repo Scan Report"))
@@ -50,34 +32,6 @@ func renderReportHeader(r report.ScanReport, totalRepos int, dirtyRepos int) {
 	} else {
 		fmt.Printf("Total repositories: %s  |  Dirty: %s\n\n",
 			BoldS("%d", totalRepos), GreenS("%d", dirtyRepos))
-	}
-}
-
-func renderDirtyReposDetails(r report.ScanReport) {
-	fmt.Printf("\n%s\n", CyanBold("Details:"))
-	for _, rs := range r.RepoStates {
-		outgoingCommits := rs.OutgoingCommits()
-		if len(rs.UncommitedFiles) == 0 && len(outgoingCommits) == 0 {
-			continue
-		}
-		fmt.Printf("\n%s %s\n%s %s\n",
-			MagBold("Repo:"), rs.Repo,
-			MagBold("Path:"), rs.Path,
-		)
-
-		if len(rs.UncommitedFiles) > 0 {
-			fmt.Printf("%s\n", MagBold("File Changes:"))
-			for _, f := range rs.UncommitedFiles {
-				fmt.Printf("  %s\n", GrayS("- %s", f))
-			}
-		}
-
-		if len(outgoingCommits) > 0 {
-			fmt.Printf("%s\n", MagBold("Outgoing Commits:"))
-			for _, commit := range outgoingCommits {
-				fmt.Printf("  %s\n", GrayS("- %s", commit))
-			}
-		}
 	}
 }
 

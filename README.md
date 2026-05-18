@@ -33,11 +33,13 @@ https://github.com/user-attachments/assets/1c8370c6-3b94-4490-bc96-fc179ef14f1d
 ## 📦 Installation
 
 ### Go install (latest)
+
 ```sh
 go install github.com/mabd-dev/reposcan@latest
 ```
 
-Make sure $GOPATH/bin (or $HOME/go/bin) is in your $PATH.
+Make sure # $GOPATH/bin (or $HOME/go/bin) is in your $PATH
+
 
 ### From source
 ```sh

@@ -4,16 +4,6 @@ import (
 	"github.com/fatih/color"
 )
 
-const (
-	RepoW        = 24
-	VCSW         = 5
-	BranchW      = 30
-	UncommW      = 3
-	AheadW       = 3
-	BehindW      = 3
-	RemoteStateW = 40
-)
-
 var (
 	BoldS    = color.New(color.Bold).SprintfFunc()
 	DimS     = color.New(color.Faint).SprintfFunc()

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"io"
 	"os"
-	"strings"
 	"testing"
 	"time"
 
@@ -50,88 +49,5 @@ func TestRenderScanReportAsJson_OutputsValidJSON(t *testing.T) {
 	}
 	if v["version"].(float64) != 1 {
 		t.Fatalf("unexpected version: %v", v["Version"])
-	}
-}
-
-func TestRenderScanReportAsTable_PrintsHeaderAndDetails(t *testing.T) {
-	out := captureStdout(t, func() { RenderScanReportAsTable(sampleReport()) })
-	if !strings.Contains(out, "Repo Scan Report") {
-		t.Fatalf("missing header: %s", out)
-	}
-	if !strings.Contains(out, "Details:") {
-		t.Fatalf("missing details section for dirty repos: %s", out)
-	}
-	if !strings.Contains(out, "dirty") || !strings.Contains(out, "/tmp/dirty") {
-		t.Fatalf("missing repo details: %s", out)
-	}
-	if !strings.Contains(out, "test warning") {
-		t.Fatalf("missing warnings: %s", out)
-	}
-}
-
-func TestRenderScanReportAsTable_PrintsOutgoingCommitDetails(t *testing.T) {
-	reportWithOutgoing := report.ScanReport{
-		Version:     1,
-		GeneratedAt: time.Date(2025, 8, 31, 22, 0, 0, 0, time.UTC),
-		RepoStates: []report.RepoState{
-			{
-				Repo:    "jj-repo",
-				VCSType: "jj",
-				Branch:  "main",
-				Path:    "/tmp/jj-repo",
-				RemoteStatus: []report.RemoteStatus{
-					{Ahead: 1, OutgoingCommits: []string{"abc123 change 1"}},
-				},
-			},
-		},
-	}
-
-	out := captureStdout(t, func() { RenderScanReportAsTable(reportWithOutgoing) })
-	if !strings.Contains(out, "Outgoing Commits:") {
-		t.Fatalf("missing outgoing commits section: %s", out)
-	}
-	if !strings.Contains(out, "abc123 change 1") {
-		t.Fatalf("missing outgoing commit details: %s", out)
-	}
-}
-
-func TestRenderScanReportAsTable_PrintsVCSAndRemoteStateColumns(t *testing.T) {
-	reportWithVCSState := report.ScanReport{
-		Version:     1,
-		GeneratedAt: time.Date(2025, 8, 31, 22, 0, 0, 0, time.UTC),
-		RepoStates: []report.RepoState{
-			{
-				Repo:    "git-repo",
-				VCSType: "git",
-				Branch:  "main",
-				Path:    "/tmp/git-repo",
-				RemoteStatus: []report.RemoteStatus{
-					{Remote: "origin", Ahead: 2, Behind: 1},
-				},
-			},
-			{
-				Repo:    "jj-repo",
-				VCSType: "jj",
-				Branch:  "@",
-				Path:    "/tmp/jj-repo",
-				RemoteStatus: []report.RemoteStatus{
-					{Remote: "upstream", Ahead: 0, Behind: 3},
-				},
-			},
-		},
-	}
-
-	out := captureStdout(t, func() { RenderScanReportAsTable(reportWithVCSState) })
-	if !strings.Contains(out, "VCS") {
-		t.Fatalf("missing VCS header: %s", out)
-	}
-	if !strings.Contains(out, "git") || !strings.Contains(out, "jj") {
-		t.Fatalf("missing VCS values: %s", out)
-	}
-	if !strings.Contains(out, "↑2") || !strings.Contains(out, "↓1") || !strings.Contains(out, "↓3") {
-		t.Fatalf("missing ahead/behind state: %s", out)
-	}
-	if !strings.Contains(out, "(upstream)") {
-		t.Fatalf("missing non-origin remote name: %s", out)
 	}
 }
