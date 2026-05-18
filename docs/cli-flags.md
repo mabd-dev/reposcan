@@ -63,14 +63,3 @@ This document explains each CLI flag, its equivalent `config.toml` field, what i
   - Description: Enable/disable logging mode. Log file will be in `~/.config/reposcan/logs/`
   - Example: `--debug=false` or `--debug` same as `--debug=true`
 
-## jj support notes
-
-RepoScan supports read-only jj repository reporting. It discovers repositories with `.jj` directories and reports shared fields such as repo name, path, current bookmark/change display, uncommitted files, and remote status.
-
-Current jj limitations:
-
-- TUI fetch, push, and pull keybindings are inactive.
-- `jj git fetch` has an internal command wrapper, but fetch is not exposed through TUI actions yet.
-- jj push and pull are not enabled until their bookmark and pull semantics are defined.
-- jj unpulled detection depends on tracked bookmarks and already-fetched remote bookmark state.
-- jj remote status is currently represented as one synthetic status entry rather than remote/bookmark-level entries.
