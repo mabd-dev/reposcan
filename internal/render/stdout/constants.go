@@ -4,15 +4,6 @@ import (
 	"github.com/fatih/color"
 )
 
-const (
-	RepoW        = 24
-	BranchW      = 30
-	UncommW      = 3
-	AheadW       = 3
-	BehindW      = 3
-	RemoteStateW = 3 + 3 + 3 + 4 //(uncommited files count + aheadW + behindW + 4 space)
-)
-
 var (
 	BoldS    = color.New(color.Bold).SprintfFunc()
 	DimS     = color.New(color.Faint).SprintfFunc()
