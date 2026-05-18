@@ -32,32 +32,13 @@ https://github.com/user-attachments/assets/1c8370c6-3b94-4490-bc96-fc179ef14f1d
 
 ## 📦 Installation
 
-### Install script (recommended)
-
-The easiest way to install `reposcan`. Detects your OS and architecture automatically and installs the latest release binary into a directory on your `$PATH`:
+### Go install (latest)
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | sh
+go install github.com/mabd-dev/reposcan@latest
 ```
 
-Supports **linux/amd64**, **darwin/amd64**, and **darwin/arm64**.
-
-
-#### Migrating from `go install`
-
-If you previously installed reposcan via `go install`, the binary lives in `$GOPATH/bin` (usually `~/go/bin/reposcan`). The curl installer puts the binary in a different location, so both can coexist silently — meaning the old one may take precedence in your `$PATH`.
-
-To avoid this, remove the old binary first:
-
-```sh
-rm "$(which reposcan)"
-```
-
-Then install using the curl installer:
-
-```sh
-curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | sh
-```
+Make sure # $GOPATH/bin (or $HOME/go/bin) is in your $PATH
 
 
 ### From source
