@@ -42,6 +42,28 @@ curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh |
 
 Supports **linux/amd64**, **darwin/amd64**, and **darwin/arm64**.
 
+
+#### Install environment variables
+
+- `VERSION`: download specific version
+- `ALIAS`: specify binary name
+
+```sh
+# with version
+curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | VERSION=v1.3.8 sh
+```
+
+```sh
+# with alias
+curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | ALIAS=reposcan-dev sh
+```
+
+```sh
+# with both
+curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | VERSION=v1.3.8 ALIAS=reposcan-dev sh
+```
+
+
 #### Migrating from `go install`
 
 If you previously installed reposcan via `go install`, the binary lives in `$GOPATH/bin` (usually `~/go/bin/reposcan`). The curl installer puts the binary in a different location, so both can coexist silently — meaning the old one may take precedence in your `$PATH`.
