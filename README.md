@@ -45,8 +45,10 @@ Supports **linux/amd64**, **darwin/amd64**, and **darwin/arm64**.
 
 #### Install environment variables
 
-- `VERSION`: download specific version
-- `ALIAS`: specify binary name
+| env vars | Required | Default | Description |
+|---|---|---|---|
+| `VERION` | false | latest | download a specific version |
+| `ALIAS` | false | reposcan | specify binary name |
 
 ```sh
 # with version
@@ -55,12 +57,12 @@ curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh |
 
 ```sh
 # with alias
-curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | ALIAS=reposcan-dev sh
+curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | ALIAS=reposcan sh
 ```
 
 ```sh
 # with both
-curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | VERSION=v1.3.8 ALIAS=reposcan-dev sh
+curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | VERSION=v1.3.8 ALIAS=reposcan sh
 ```
 
 
