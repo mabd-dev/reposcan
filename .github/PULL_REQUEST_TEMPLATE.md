@@ -27,6 +27,7 @@
 
 ## Checklist
 
+- [ ] I have starred the repository
 - [ ] My code follows the project's code style
 - [ ] I have updated the documentation (README, cli-flags, etc...)
 - [ ] My changes generate no new warnings
