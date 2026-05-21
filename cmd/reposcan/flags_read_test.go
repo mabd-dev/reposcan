@@ -110,7 +110,7 @@ func TestReadTableOutput_SwitchToInteractiveOutput(t *testing.T) {
 		"--json-output-path", "/tmp/out",
 		"-w", "16",
 		"--debug=true",
-		"no-telemetry=false",
+		"--no-telemetry=false",
 		// "--colorscheme", "something",
 	}
 	cmd.SetArgs(args)
