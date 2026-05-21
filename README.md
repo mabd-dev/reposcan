@@ -47,7 +47,7 @@ Supports **linux/amd64**, **darwin/amd64**, and **darwin/arm64**.
 
 | env vars | Required | Default | Description |
 |---|---|---|---|
-| `VERION` | false | latest | download a specific version |
+| `VERSION` | false | latest | download a specific version |
 | `ALIAS` | false | reposcan | specify binary name |
 
 ```sh

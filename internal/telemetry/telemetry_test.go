@@ -325,7 +325,7 @@ func TestGetTelemetryFilePath_ConfigDirError_ReturnsError(t *testing.T) {
 
 // ---- Send ----
 
-func TestSend_CIEnvironment_PrintsMsgAndSkipsAnalytics(t *testing.T) {
+func TestSend_CIEnvironment_SendsAnalytics(t *testing.T) {
 	t.Setenv("CI", "true")
 	mock := &mockAnalytics{}
 	setAnalytics(t, mock)

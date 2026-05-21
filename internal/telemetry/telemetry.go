@@ -62,7 +62,9 @@ func Send(
 		fmt.Fprintln(stdout, "More info: https://github.com/mabd-dev/reposcan#telemetry")
 
 		telemetry.Warned = true
-		writeTelemetry(filePath, telemetry)
+		if err := writeTelemetry(filePath, telemetry); err != nil {
+			logger.Error("Failed to persist telemetry warned state, error=%v", err.Error())
+		}
 	}
 
 	sendTelemetry(token, debug, filter, outputFormat, repoCount, isCI)
@@ -90,7 +92,7 @@ func sendTelemetry(
 	})
 
 	if err != nil {
-		logger.Error("Failed to send analytics, error")
+		logger.Error("Failed to send analytics, error=%v", err.Error())
 	}
 }
 
@@ -113,7 +115,9 @@ func getOrCreateTelemetry(filePath string) (Telemetry, error) {
 		UUID:   uuid.New().String(),
 		Warned: false,
 	}
-	writeTelemetry(filePath, telemetry)
+	if err := writeTelemetry(filePath, telemetry); err != nil {
+		logger.Error("Failed to write new telemetry file, error=%v", err.Error())
+	}
 	return telemetry, nil
 }
 
