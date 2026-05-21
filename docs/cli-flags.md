@@ -60,3 +60,8 @@ This document explains each CLI flag, its equivalent `config.toml` field, what i
   - Config: `debug = true/false`
   - Description: Enable/disable logging mode. Log file will be in `~/.config/reposcan/logs/`
   - Example: `--debug=false` or `--debug` same as `--debug=true`
+
+- `--no-telemetry true/false`
+  - Config: `no-telemetry = true/false`
+  - Description: Enable/disable sending telemetry data
+  - Example: `--no-telemetry=true` or `--no-telemetry`

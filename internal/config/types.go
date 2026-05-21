@@ -15,7 +15,8 @@ type Config struct {
 	MaxWorkers int `toml:"maxWorkers"`
 
 	// Debug if true, enable logging to a file in [DefaultLogFileDir]
-	Debug bool `toml:"debug"`
+	Debug       bool `toml:"debug"`
+	NoTelemetry bool `toml:"no-telemetry"`
 
 	Version int `toml:"version"`
 }

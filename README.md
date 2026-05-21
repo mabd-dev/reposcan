@@ -32,14 +32,55 @@ https://github.com/user-attachments/assets/1c8370c6-3b94-4490-bc96-fc179ef14f1d
 
 ## 📦 Installation
 
-### Go install (latest)
+### Install script (recommended)
+
+The easiest way to install `reposcan`. Detects your OS and architecture automatically and installs the latest release binary into a directory on your `$PATH`:
 
 ```sh
-go install github.com/mabd-dev/reposcan@latest
+curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | sh
 ```
 
-Make sure # $GOPATH/bin (or $HOME/go/bin) is in your $PATH
+Supports **linux/amd64**, **darwin/amd64**, and **darwin/arm64**.
 
+
+#### Install environment variables
+
+| env vars | Required | Default | Description |
+|---|---|---|---|
+| `VERSION` | false | latest | download a specific version |
+| `ALIAS` | false | reposcan | specify binary name |
+
+```sh
+# with version
+curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | VERSION=v1.3.8 sh
+```
+
+```sh
+# with alias
+curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | ALIAS=reposcan sh
+```
+
+```sh
+# with both
+curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | VERSION=v1.3.8 ALIAS=reposcan sh
+```
+
+
+#### Migrating from `go install`
+
+If you previously installed reposcan via `go install`, the binary lives in `$GOPATH/bin` (usually `~/go/bin/reposcan`). The curl installer puts the binary in a different location, so both can coexist silently — meaning the old one may take precedence in your `$PATH`.
+
+To avoid this, remove the old binary first:
+
+```sh
+rm "$(which reposcan)"
+```
+
+Then install using the curl installer:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | sh
+```
 
 ### From source
 ```sh
@@ -132,6 +173,28 @@ Each step overrides the one before it
 - [ ] Support git worktrees
 - [ ] Perform git push/pull/fetch on repos
 - [ ] Show branches with their states on each repo
+
+
+## Telemetry
+
+reposcan collects anonymous usage data to help understand how the tool is used and improve it over time.
+You'll see a one-time notice about this on first run.
+
+What is collected:
+- `os` — operating system (linux, windows, darwin)
+- `arch` — device cpu architecture 
+- `tool-version` — tool version being used
+- `ci` — whether the tool is running in a CI environment
+
+and other tool specific cli-flags like `filter`, `output_format`, `repo_count`
+
+Nothing personal is collected — no usernames, tokens, or file paths.
+Events are sent to a [mixpanel](https://mixpanel.com/home/) (a third-party analytics service) and visible only to the maintainer.
+
+
+### Disable telemetry
+
+Add `--no-telemetry` when running the command. Or in `~/.config/reposcan/config.toml` add `no-telemetry = true` at the top of the file (check [sample.toml](sample/config.toml))
 
 
 ## 🤝 Contributing
