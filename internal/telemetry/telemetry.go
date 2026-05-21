@@ -102,7 +102,7 @@ func getOrCreateTelemetry(filePath string) (Telemetry, error) {
 		telemetry, err := readTelemetry(filePath)
 		if err != nil {
 			logger.Error("Failed to read telemetry, error=%v", err.Error())
-			return Telemetry{}, nil
+			return Telemetry{}, err
 		}
 		return telemetry, nil
 	}
