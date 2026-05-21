@@ -6,7 +6,7 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 
-## [1.3.8] - 2026-04-27
+## [1.3.8-alpha] - 2026-04-27
 
 ### Added
 
