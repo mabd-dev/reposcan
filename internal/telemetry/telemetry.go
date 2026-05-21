@@ -33,6 +33,13 @@ func Send(
 	}
 
 	// TODO: if !warned -> warn user
+	warned := false
+	if !warned {
+		fmt.Println("reposcan collects anonymous usage telemetry to help improve the tool.")
+		fmt.Println("No personal data or file paths are collected.")
+		fmt.Println("To disable: pass --no-telemetry")
+		fmt.Println("More info: https://github.com/mabd-dev/reposcan#telemetry")
+	}
 
 	analyticsService := analytics.New(token, debug)
 
