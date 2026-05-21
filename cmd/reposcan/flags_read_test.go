@@ -71,7 +71,7 @@ func TestReadFlags_AppliesAllFlags(t *testing.T) {
 		t.Fatalf("debug not applied: %t", cfg.Debug)
 	}
 	if cfg.NoTelemetry != false {
-		t.Fatalf("telemetry not applied: %t", cfg.Debug)
+		t.Fatalf("telemetry not applied: %t", cfg.NoTelemetry)
 	}
 }
 
