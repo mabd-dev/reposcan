@@ -38,11 +38,10 @@ func Send(
 	filter config.OnlyFilter,
 	outputFormat config.OutputFormat,
 	repoCount int,
-	scanDurationMs int,
 ) {
 	isCI := os.Getenv("CI") != ""
 	if isCI {
-		fmt.Fprintln(stdout, "Send telemetry")
+		sendTelemetry(token, debug, filter, outputFormat, repoCount)
 		return
 	}
 
@@ -66,9 +65,19 @@ func Send(
 		writeTelemetry(filePath, telemetry)
 	}
 
+	sendTelemetry(token, debug, filter, outputFormat, repoCount)
+}
+
+func sendTelemetry(
+	token string,
+	debug bool,
+	filter config.OnlyFilter,
+	outputFormat config.OutputFormat,
+	repoCount int,
+) {
 	analyticsService := newAnalyticsService(token, debug)
 
-	err = analyticsService.Send("usage", map[string]any{
+	err := analyticsService.Send("usage", map[string]any{
 		"os":            runtime.GOOS,
 		"arch":          runtime.GOARCH,
 		"filter":        filter,

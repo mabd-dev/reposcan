@@ -329,15 +329,11 @@ func TestSend_CIEnvironment_PrintsMsgAndSkipsAnalytics(t *testing.T) {
 	t.Setenv("CI", "true")
 	mock := &mockAnalytics{}
 	setAnalytics(t, mock)
-	buf := captureStdout(t)
 
-	Send("token", false, config.OnlyAll, config.OutputTable, 1, 100)
+	Send("token", false, config.OnlyAll, config.OutputTable, 1)
 
-	if mock.event != "" {
-		t.Error("analytics.Send should not be called in CI")
-	}
-	if !strings.Contains(buf.String(), "Send telemetry") {
-		t.Errorf("expected 'Send telemetry' in output, got: %q", buf.String())
+	if mock.event == "" {
+		t.Error("analytics.Send should be called in CI")
 	}
 }
 
@@ -347,7 +343,7 @@ func TestSend_FilePathError_SkipsAnalytics(t *testing.T) {
 	mock := &mockAnalytics{}
 	setAnalytics(t, mock)
 
-	Send("token", false, config.OnlyAll, config.OutputTable, 1, 100)
+	Send("token", false, config.OnlyAll, config.OutputTable, 1)
 
 	if mock.event != "" {
 		t.Error("analytics.Send should not be called when file path resolution fails")
@@ -362,7 +358,7 @@ func TestSend_FirstRun_PrintsWarningAndPersistsWarnedTrue(t *testing.T) {
 	setAnalytics(t, mock)
 	buf := captureStdout(t)
 
-	Send("token", false, config.OnlyAll, config.OutputTable, 2, 500)
+	Send("token", false, config.OnlyAll, config.OutputTable, 2)
 
 	if !strings.Contains(buf.String(), "anonymous usage telemetry") {
 		t.Errorf("expected telemetry warning in output, got: %q", buf.String())
@@ -391,7 +387,7 @@ func TestSend_AlreadyWarned_NoPrintNoFileUpdate(t *testing.T) {
 	setAnalytics(t, mock)
 	buf := captureStdout(t)
 
-	Send("token", false, config.OnlyAll, config.OutputTable, 1, 100)
+	Send("token", false, config.OnlyAll, config.OutputTable, 1)
 
 	if strings.Contains(buf.String(), "anonymous usage telemetry") {
 		t.Error("warning should not be printed when already warned")
@@ -406,7 +402,7 @@ func TestSend_AnalyticsCalledWithUsageEvent(t *testing.T) {
 	setAnalytics(t, mock)
 	captureStdout(t)
 
-	Send("token", false, config.OnlyAll, config.OutputTable, 3, 200)
+	Send("token", false, config.OnlyAll, config.OutputTable, 3)
 
 	if mock.event != "usage" {
 		t.Errorf("expected event 'usage', got %q", mock.event)
@@ -428,5 +424,5 @@ func TestSend_AnalyticsError_DoesNotPanic(t *testing.T) {
 	captureStdout(t)
 
 	// should complete without panic
-	Send("token", false, config.OnlyAll, config.OutputTable, 1, 100)
+	Send("token", false, config.OnlyAll, config.OutputTable, 1)
 }

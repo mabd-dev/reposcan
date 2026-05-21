@@ -153,7 +153,7 @@ func run(configs config.Config) error {
 	report := internal.GenerateScanReport(configs)
 
 	if !configs.NoTelemetry {
-		telemetry.Send(mixpanelToken, configs.Debug, configs.Only, configs.Output.Type, len(report.RepoStates), 0)
+		telemetry.Send(mixpanelToken, configs.Debug, configs.Only, configs.Output.Type, len(report.RepoStates))
 	}
 
 	switch configs.Output.Type {
