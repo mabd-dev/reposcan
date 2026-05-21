@@ -20,6 +20,7 @@ func TestReadFlags_AppliesAllFlags(t *testing.T) {
 	cmd.Flags().String("json-output-path", "", "")
 	cmd.Flags().IntP("max-workers", "w", 8, "")
 	cmd.Flags().BoolP("debug", "", false, "")
+	cmd.Flags().BoolP("no-telemetry", "", false, "")
 	// cmd.Flags().StringP("colorscheme", "", "", "")
 
 	args := []string{
@@ -31,7 +32,8 @@ func TestReadFlags_AppliesAllFlags(t *testing.T) {
 		"-f", "all",
 		"--json-output-path", "/tmp/out",
 		"-w", "16",
-		"--debug", "true",
+		"--debug=true",
+		"--no-telemetry=false",
 		// "--colorscheme", "something",
 	}
 	cmd.SetArgs(args)
@@ -66,7 +68,10 @@ func TestReadFlags_AppliesAllFlags(t *testing.T) {
 		t.Fatalf("max workers not applied: %d", cfg.MaxWorkers)
 	}
 	if cfg.Debug != true {
-		t.Fatalf("debugnot applied: %t", cfg.Debug)
+		t.Fatalf("debug not applied: %t", cfg.Debug)
+	}
+	if cfg.NoTelemetry != false {
+		t.Fatalf("telemetry not applied: %t", cfg.Debug)
 	}
 }
 
@@ -92,6 +97,7 @@ func TestReadTableOutput_SwitchToInteractiveOutput(t *testing.T) {
 	cmd.Flags().String("json-output-path", "", "")
 	cmd.Flags().IntP("max-workers", "w", 8, "")
 	cmd.Flags().BoolP("debug", "", false, "")
+	cmd.Flags().BoolP("no-telemetry", "", false, "")
 	// cmd.Flags().StringP("colorscheme", "", "", "")
 
 	args := []string{
@@ -103,7 +109,8 @@ func TestReadTableOutput_SwitchToInteractiveOutput(t *testing.T) {
 		"-f", "all",
 		"--json-output-path", "/tmp/out",
 		"-w", "16",
-		"--debug", "true",
+		"--debug=true",
+		"no-telemetry=false",
 		// "--colorscheme", "something",
 	}
 	cmd.SetArgs(args)
