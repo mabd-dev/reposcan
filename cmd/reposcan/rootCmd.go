@@ -11,6 +11,7 @@ import (
 	"github.com/mabd-dev/reposcan/internal/render/file"
 	"github.com/mabd-dev/reposcan/internal/render/stdout"
 	"github.com/mabd-dev/reposcan/internal/render/tui"
+	"github.com/mabd-dev/reposcan/internal/telemetry"
 	"github.com/spf13/cobra"
 )
 
@@ -71,6 +72,7 @@ var RootCmd = &cobra.Command{
 //   - max-workers (-w)     		: number of concurrent git checks
 //   - debug (--debug)      		: enable/disable debug mode
 //   - colorscheme (--colorscheme)  : enable/disable debug mode
+//   - no-telemetry					: enable/disable sending telemetry data
 func readFlags(cmd *cobra.Command, configs *config.Config) error {
 	// Read roots flags
 	roots, err := cmd.Flags().GetStringArray("root")
@@ -137,11 +139,21 @@ func readFlags(cmd *cobra.Command, configs *config.Config) error {
 	}
 	(*configs).Debug = debug
 
+	noTelemetry, err := cmd.Flags().GetBool("no-telemetry")
+	if err != nil {
+		return err
+	}
+	(*configs).NoTelemetry = noTelemetry
+
 	return nil
 }
 
 func run(configs config.Config) error {
 	report := internal.GenerateScanReport(configs)
+
+	if !configs.NoTelemetry {
+		telemetry.Send(mixpanelToken, configs.Debug, configs.Only, configs.Output.Type, len(report.RepoStates))
+	}
 
 	switch configs.Output.Type {
 	case config.OutputJson:

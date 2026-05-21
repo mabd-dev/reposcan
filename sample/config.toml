@@ -2,6 +2,7 @@ version = 1
 
 # When true log file will appear in ~/.config/reposcan/logs/
 debug = false
+no-telemetry = false
 
 roots = [
     "/home/mabd/"

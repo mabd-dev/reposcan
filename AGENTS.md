@@ -15,6 +15,10 @@ go build -o reposcan .
 
 # Install
 curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | sh
+
+# VERSION: is optional with default value='latests'
+# ALIAS: is optional with default value='reposcan'
+curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | VERSION=v1.3.8 ALIAS=reposcan sh 
 ```
 
 ### Testing
