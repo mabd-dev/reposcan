@@ -5,8 +5,12 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-- feat/telemetry send anonymous telemetry usage by @mabd-dev in [#39](https://github.com/mabd-dev/reposcan/pull/39)
 
+## [1.3.8] - 2026-05-21
+
+### Added
+
+- feat/telemetry send anonymous telemetry usage by @mabd-dev in [#39](https://github.com/mabd-dev/reposcan/pull/39)
 
 ## [1.3.8-alpha] - 2026-04-27
 
