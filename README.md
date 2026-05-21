@@ -175,5 +175,27 @@ Each step overrides the one before it
 - [ ] Show branches with their states on each repo
 
 
+## Telemetry
+
+reposcan collects anonymous usage data to help understand how the tool is used and improve it over time.
+You'll see a one-time notice about this on first run.
+
+What is collected:
+- `os` — operating system (linux, windows, darwin)
+- `arch` — device cpu architecture 
+- `tool-version` — tool version being used
+- `ci` — whether the tool is running in a CI environment
+
+and other tool specific cli-flags like `filter`, `output_format`, `repo_count`
+
+Nothing personal is collected — no usernames, tokens, or file paths.
+Events are sent to a [mixpanel](https://mixpanel.com/home/) (a third-party analytics service) and visible only to the maintainer.
+
+
+### Disable telemetry
+
+Add `--no-telemetry` when running the command. Or in `~/.config/reposcan/config.toml` add `no-telemetry = true` at the top of the file (check [sample.toml](sample/config.toml))
+
+
 ## 🤝 Contributing
 PRs, bug reports, and feature requests are welcome.
