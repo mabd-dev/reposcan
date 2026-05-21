@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -18,8 +19,11 @@ import (
 )
 
 var (
-	toolName         = "reposcan"
-	telemtryFileName = "telemetry.json"
+	toolName                      = "reposcan"
+	telemtryFileName              = "telemetry.json"
+	userConfigDir                 = os.UserConfigDir
+	newAnalyticsService           = analytics.New
+	stdout              io.Writer = os.Stdout
 )
 
 type Telemetry struct {
@@ -36,9 +40,13 @@ func Send(
 	repoCount int,
 	scanDurationMs int,
 ) {
+
+	fmt.Printf("token=%v\n", token)
+	fmt.Printf("debug=%v\n", debug)
+
 	isCI := os.Getenv("CI") != ""
 	if isCI {
-		fmt.Println("Send telemetry")
+		fmt.Fprintln(stdout, "Send telemetry")
 		return
 	}
 
@@ -53,16 +61,16 @@ func Send(
 	}
 
 	if !telemetry.Warned {
-		fmt.Println("reposcan collects anonymous usage telemetry to help improve the tool.")
-		fmt.Println("No personal data or file paths are collected.")
-		fmt.Println("To disable: pass --no-telemetry")
-		fmt.Println("More info: https://github.com/mabd-dev/reposcan#telemetry")
+		fmt.Fprintln(stdout, "reposcan collects anonymous usage telemetry to help improve the tool.")
+		fmt.Fprintln(stdout, "No personal data or file paths are collected.")
+		fmt.Fprintln(stdout, "To disable: pass --no-telemetry")
+		fmt.Fprintln(stdout, "More info: https://github.com/mabd-dev/reposcan#telemetry")
 
 		telemetry.Warned = true
 		writeTelemetry(filePath, telemetry)
 	}
 
-	analyticsService := analytics.New(token, debug)
+	analyticsService := newAnalyticsService(token, debug)
 
 	err = analyticsService.Send("usage", map[string]any{
 		"os":            runtime.GOOS,
@@ -103,13 +111,13 @@ func getOrCreateTelemetry(filePath string) (Telemetry, error) {
 }
 
 func getTelemetryFilePath() (string, error) {
-	configDir, err := os.UserConfigDir()
+	configDir, err := userConfigDir()
 	if err != nil {
 		return "", err
 	}
 
 	dir := filepath.Join(configDir, toolName)
-	if err := os.Mkdir(dir, 0755); err != nil {
+	if err := os.MkdirAll(dir, 0755); err != nil {
 		return "", err
 	}
 
