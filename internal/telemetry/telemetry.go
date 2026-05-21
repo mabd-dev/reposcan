@@ -41,7 +41,7 @@ func Send(
 ) {
 	isCI := os.Getenv("CI") != ""
 	if isCI {
-		sendTelemetry(token, debug, filter, outputFormat, repoCount)
+		sendTelemetry(token, debug, filter, outputFormat, repoCount, isCI)
 		return
 	}
 
@@ -65,7 +65,7 @@ func Send(
 		writeTelemetry(filePath, telemetry)
 	}
 
-	sendTelemetry(token, debug, filter, outputFormat, repoCount)
+	sendTelemetry(token, debug, filter, outputFormat, repoCount, isCI)
 }
 
 func sendTelemetry(
@@ -74,12 +74,14 @@ func sendTelemetry(
 	filter config.OnlyFilter,
 	outputFormat config.OutputFormat,
 	repoCount int,
+	isCI bool,
 ) {
 	analyticsService := newAnalyticsService(token, debug)
 
 	err := analyticsService.Send("usage", map[string]any{
 		"os":            runtime.GOOS,
 		"arch":          runtime.GOARCH,
+		"ci":            isCI,
 		"filter":        filter,
 		"output_format": outputFormat,
 		"repo_count":    repoCount,
@@ -95,7 +97,7 @@ func sendTelemetry(
 func getOrCreateTelemetry(filePath string) (Telemetry, error) {
 	exists, err := fileExists(filePath)
 	if err != nil {
-		return Telemetry{}, nil
+		return Telemetry{}, err
 	}
 
 	if exists {
