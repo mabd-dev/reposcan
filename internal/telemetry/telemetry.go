@@ -40,10 +40,6 @@ func Send(
 	repoCount int,
 	scanDurationMs int,
 ) {
-
-	fmt.Printf("token=%v\n", token)
-	fmt.Printf("debug=%v\n", debug)
-
 	isCI := os.Getenv("CI") != ""
 	if isCI {
 		fmt.Fprintln(stdout, "Send telemetry")
