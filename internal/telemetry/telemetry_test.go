@@ -275,8 +275,8 @@ func TestGetOrCreateTelemetry_InvalidJSON_ReturnsEmptyTelemetry(t *testing.T) {
 	os.WriteFile(path, []byte("bad json{{"), 0o644)
 
 	got, err := getOrCreateTelemetry(path)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if err == nil {
+		t.Fatal("Error expected, but found nil")
 	}
 	if got != (Telemetry{}) {
 		t.Errorf("expected empty Telemetry on bad JSON, got %+v", got)
