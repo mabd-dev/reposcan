@@ -3,13 +3,13 @@ package repostable
 import tea "github.com/charmbracelet/bubbletea"
 
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
-	// Guard: skip keyboard navigation when there are no repos to display.
-	if m.ReposCount() == 0 {
-		return m, nil
-	}
-
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
+		// Guard: skip keyboard navigation when there are no repos to display.
+		if m.ReposCount() == 0 {
+			return m, nil
+		}
+
 		switch msg.String() {
 		case "j":
 			if m.tbl.Cursor() == len(m.tbl.Rows())-1 {
