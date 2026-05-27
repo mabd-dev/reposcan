@@ -59,14 +59,15 @@ func isGitRepo(path string) bool {
 	if file, err := os.Lstat(gitPath); err == nil {
 		if file.IsDir() {
 			return true
-		} else {
-			// git worktrees has gitdir: folder
-			b, err := os.ReadFile(path)
-			if err != nil {
-				return false
-			}
-			return strings.Contains(string(b), "gitdir:")
 		}
+
+		// git worktrees use a .git file containing "gitdir: ..."
+		b, err := os.ReadFile(gitPath)
+		if err != nil {
+			return false
+		}
+
+		return strings.Contains(string(b), "gitdir:")
 	}
 	return false
 }
