@@ -38,11 +38,6 @@ func New(
 	km := table.DefaultKeyMap()
 	setKeymaps(km)
 
-	// if no repos, show an empty placeholder row so the table renders nicely
-	if len(rows) == 0 {
-		t.SetRows([]table.Row{{"", "", ""}})
-	}
-
 	t.SetStyles(table.Styles{
 		Header:   model.theme.Styles.TableHeader,
 		Selected: model.theme.Styles.TableSelectedRow,
