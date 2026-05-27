@@ -61,7 +61,7 @@ func TestFindGitRepos_RespectsDirIgnore(t *testing.T) {
 func TestFindGitRepos_GitWorktree(t *testing.T) {
 	root := t.TempDir()
 
-	worktree := filepath.Join(root, "workree1")
+	worktree := filepath.Join(root, "worktree1")
 	makeDir(t, worktree)
 
 	gitFilepath := filepath.Join(worktree, ".git")
