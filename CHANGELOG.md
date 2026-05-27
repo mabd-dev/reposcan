@@ -5,6 +5,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Changes
+
+- feat/supportWorktree: Detect git worktrees and submodules (`.git` file with `gitdir:` pointer) during repo scan by @mabd-dev in [#43](https://github.com/mabd-dev/reposcan/pull/43)
 
 ## [1.3.8] - 2026-05-21
 
