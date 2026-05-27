@@ -23,6 +23,7 @@ func New(
 		report:        report,
 		filteredRepos: report.RepoStates,
 		filterQuery:   "",
+		totalRepos:    report.TotalRepos,
 	}
 
 	cols := createColumns(width)
@@ -52,6 +53,7 @@ func (rt Model) Init() tea.Cmd { return nil }
 
 func (m *Model) SetReport(report report.ScanReport) {
 	m.report = report
+	m.totalRepos = report.TotalRepos
 	m.Filter(m.filterQuery)
 }
 

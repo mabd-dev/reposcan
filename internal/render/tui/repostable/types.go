@@ -16,4 +16,5 @@ type Model struct {
 	report        report.ScanReport
 	filteredRepos []report.RepoState
 	filterQuery   string
+	totalRepos    int
 }

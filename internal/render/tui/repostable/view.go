@@ -26,7 +26,13 @@ func (m Model) View() string {
 
 // renderEmptyState returns a styled, centered message when the repo list is empty.
 func (m Model) renderEmptyState() string {
-	msg := "✨ No repositories found — your workspace is spotless!"
+	var msg string
+	if m.totalRepos == 0 {
+		msg = "🔍 No repositories found in the scanned directory."
+	} else {
+		msg = "✨ All repositories are clean — your workspace is spotless!"
+	}
+
 	styled := m.theme.Styles.Base.
 		Foreground(m.theme.Colors.Accent).
 		Render(msg)
