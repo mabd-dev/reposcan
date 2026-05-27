@@ -34,6 +34,39 @@ func stubTheme() theme.Theme {
 	return theme.Theme{Colors: colors, Styles: styles}
 }
 
+func TestView_EmptyState_FilterNoMatches(t *testing.T) {
+	m := New(
+		stubTheme(),
+		report.ScanReport{
+			RepoStates: []report.RepoState{
+				{Repo: "alpha", Branch: "main", ID: "alpha"},
+				{Repo: "beta", Branch: "main", ID: "beta"},
+			},
+			TotalRepos: 2,
+		},
+		80,
+		20,
+	)
+
+	// Apply a text filter that matches nothing.
+	m.Filter("zzzz")
+
+	view := m.View()
+
+	if !strings.Contains(view, "No repositories match your search") {
+		t.Errorf("expected 'no match' message when filter returns empty, got:\n%s", view)
+	}
+
+	if !strings.Contains(view, "🔎") {
+		t.Errorf("expected search emoji, got:\n%s", view)
+	}
+
+	// Make sure we do NOT show the misleading 'all clean' message.
+	if strings.Contains(view, "spotless") {
+		t.Errorf("expected NO 'spotless' message when filter is active, got:\n%s", view)
+	}
+}
+
 func TestView_EmptyState_NoReposFound(t *testing.T) {
 	m := New(
 		stubTheme(),

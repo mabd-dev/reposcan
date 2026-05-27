@@ -27,9 +27,12 @@ func (m Model) View() string {
 // renderEmptyState returns a styled, centered message when the repo list is empty.
 func (m Model) renderEmptyState() string {
 	var msg string
-	if m.totalRepos == 0 {
+	switch {
+	case m.totalRepos == 0:
 		msg = "🔍 No repositories found in the scanned directory."
-	} else {
+	case m.filterQuery != "":
+		msg = "🔎 No repositories match your search."
+	default:
 		msg = "✨ All repositories are clean — your workspace is spotless!"
 	}
 
