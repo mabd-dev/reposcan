@@ -5,6 +5,9 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Changes
+
+- feat/supportWorktree by @mabd-dev
 
 ## [1.3.8] - 2026-05-21
 

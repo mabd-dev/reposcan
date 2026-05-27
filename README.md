@@ -170,7 +170,7 @@ Each step overrides the one before it
 - [x] Export Report to json file
 - [x] Support dirignore
 - [x] Worker pool for speed
-- [ ] Support git worktrees
+- [x] Support git worktrees
 - [ ] Perform git push/pull/fetch on repos
 - [ ] Show branches with their states on each repo
 
