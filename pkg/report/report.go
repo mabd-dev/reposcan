@@ -34,14 +34,19 @@ type ScanReport struct {
 }
 
 // IsDirty reports whether the repository has uncommitted changes or is ahead/behind.
-func (r *RepoState) IsDirty() bool {
+// When countStashAsDirty is true, a repo whose only local state is stashed work
+// is also reported as dirty.
+func (r *RepoState) IsDirty(countStashAsDirty bool) bool {
 	atLeastOneDirtyRemote := false
 	for _, remoteStatus := range r.RemoteStatus {
 		if remoteStatus.Ahead > 0 || remoteStatus.Behind > 0 {
 			atLeastOneDirtyRemote = true
 		}
 	}
-	return len(r.UncommitedFiles) > 0 || atLeastOneDirtyRemote
+	if len(r.UncommitedFiles) > 0 || atLeastOneDirtyRemote {
+		return true
+	}
+	return countStashAsDirty && r.HaveStashes()
 }
 
 func (r *RepoState) HaveUnpushedCommits() bool {
@@ -73,11 +78,11 @@ func (r *RepoState) StashCount() int {
 }
 
 // DirtyReposCount count all dirty repos based on [IsDirty] function on RepoState struct.
-// When countStashAsDirty is true, repos whose only local state is stashed work are also counted.
+// countStashAsDirty is forwarded to IsDirty.
 func (sc *ScanReport) DirtyReposCount(countStashAsDirty bool) int {
 	dirtyRepos := 0
 	for _, rs := range sc.RepoStates {
-		if rs.IsDirty() || (countStashAsDirty && rs.HaveStashes()) {
+		if rs.IsDirty(countStashAsDirty) {
 			dirtyRepos++
 		}
 	}

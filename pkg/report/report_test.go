@@ -20,10 +20,13 @@ func TestHaveStashesAndStashCount(t *testing.T) {
 	}
 }
 
-func TestIsDirty_StashOnlyIsNotDirty(t *testing.T) {
+func TestIsDirty_StashOnlyRespectsFlag(t *testing.T) {
 	rs := RepoState{Stashes: []string{"stash@{0}: WIP"}}
-	if rs.IsDirty() {
-		t.Fatalf("IsDirty must not consider stashes; stash-only repo should be clean")
+	if rs.IsDirty(false) {
+		t.Fatalf("IsDirty(false) must not consider stashes; stash-only repo should be clean")
+	}
+	if !rs.IsDirty(true) {
+		t.Fatalf("IsDirty(true) must consider stash-only repo as dirty")
 	}
 }
 

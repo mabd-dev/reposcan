@@ -47,7 +47,7 @@ func filter(f config.OnlyFilter, repoState report.RepoState, countStashAsDirty b
 	case config.OnlyAll:
 		return true
 	case config.OnlyDirty:
-		if repoState.IsDirty() || (countStashAsDirty && repoState.HaveStashes()) {
+		if repoState.IsDirty(countStashAsDirty) {
 			return true
 		}
 	case config.OnlyUncommitted:

@@ -47,10 +47,11 @@ func createRows(repoStates []report.RepoState, theme theme.Theme) []table.Row {
 }
 
 func stashColumnStr(rs report.RepoState) string {
-	if rs.StashCount() == 0 {
+	n := rs.StashCount()
+	if n == 0 {
 		return ""
 	}
-	return fmt.Sprintf("%d", rs.StashCount())
+	return fmt.Sprintf("%d", n)
 }
 
 func getStateColumnStr(rs report.RepoState, theme theme.Theme) string {
