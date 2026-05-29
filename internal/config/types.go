@@ -11,6 +11,11 @@ type Config struct {
 
 	Output Output `toml:"output"`
 
+	// CountStashAsDirty, when true, makes repos with only stashed work count as
+	// dirty for IsDirty-based filtering (--filter dirty) and the dirty total.
+	// The --filter stash value is unaffected by this setting.
+	CountStashAsDirty bool `toml:"count_stash_as_dirty,omitempty"`
+
 	// Max git checker workers
 	MaxWorkers int `toml:"maxWorkers"`
 

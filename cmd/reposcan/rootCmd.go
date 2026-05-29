@@ -68,7 +68,7 @@ var RootCmd = &cobra.Command{
 //   - root (-r)					: repeatable directory roots to scan
 //   - dirIgnore (-d)       		: repeatable glob patterns to ignore during scan
 //   - output (-o)          		: output format: json|interactive|none
-//   - filter (-f)          		: repository filter: all|dirty|uncommitted|unpushed|unpulled
+//   - filter (-f)          		: repository filter: all|dirty|uncommitted|unpushed|unpulled|stash
 //   - json-output-path     		: directory to write JSON report files
 //   - max-workers (-w)     		: number of concurrent git checks
 //   - debug (--debug)      		: enable/disable debug mode

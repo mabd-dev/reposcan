@@ -21,6 +21,7 @@ type RepoState struct {
 	Branch          string         `json:"branch"`
 	UncommitedFiles []string       `json:"uncommitedFiles"`
 	RemoteStatus    []RemoteStatus `json:"remoteStatus"`
+	Stashes         []string       `json:"stashes"`
 }
 
 // ScanReport aggregates the results of scanning one or more directories for
@@ -61,11 +62,22 @@ func (r *RepoState) HaveUnpulledCommits() bool {
 	return false
 }
 
-// DirtyReposCount count all dirty repos based on [IsDirty] function on RepoState struct
-func (sc *ScanReport) DirtyReposCount() int {
+// HaveStashes reports whether the repository has any stash entries.
+func (r *RepoState) HaveStashes() bool {
+	return len(r.Stashes) > 0
+}
+
+// StashCount returns the number of stash entries for the repository.
+func (r *RepoState) StashCount() int {
+	return len(r.Stashes)
+}
+
+// DirtyReposCount count all dirty repos based on [IsDirty] function on RepoState struct.
+// When countStashAsDirty is true, repos whose only local state is stashed work are also counted.
+func (sc *ScanReport) DirtyReposCount(countStashAsDirty bool) int {
 	dirtyRepos := 0
 	for _, rs := range sc.RepoStates {
-		if rs.IsDirty() {
+		if rs.IsDirty() || (countStashAsDirty && rs.HaveStashes()) {
 			dirtyRepos++
 		}
 	}

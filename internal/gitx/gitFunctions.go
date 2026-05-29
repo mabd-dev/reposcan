@@ -80,6 +80,21 @@ func GetUncommitedFiles(path string) (changes []string, err error) {
 	return changes, nil
 }
 
+// GetStashes returns the list of stash entries (one per `git stash list` line)
+// for the Git repository at path. Stashes are stored in the shared refs/stash
+// of the common dir, so linked worktrees report the same stashes.
+func GetStashes(path string) (stashes []string, err error) {
+	str, err := RunGitCommand(path, "stash", "list")
+	if err != nil {
+		return []string{}, err
+	}
+
+	stashes = strings.Split(strings.TrimRight(str, "\n"), "\n")
+	stashes = removeEmptyStrings(stashes)
+
+	return stashes, nil
+}
+
 // GetUpstreamStatus returns the ahead/behind counts relative to the upstream
 // tracking branch for the repository at path.
 func GetUpstreamStatus(path string) (ahead int, behind int, err error) {
