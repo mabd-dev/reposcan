@@ -15,9 +15,10 @@ func (m *Model) View() string {
 	}
 
 	style := m.theme.Styles.Base.Foreground(m.theme.Colors.Info).Bold(true)
+	pathStyle := m.theme.Styles.Base.Foreground(m.theme.Colors.Foreground)
 
 	lines := []string{
-		fmt.Sprintf("%s %s", style.Render("Path:"), m.repoState.Path),
+		fmt.Sprintf("%s %s", style.Render("Path:"), pathStyle.Render(m.repoState.Path)),
 		style.Render("File Changes:"),
 	}
 
