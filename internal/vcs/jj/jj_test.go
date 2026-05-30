@@ -1,6 +1,7 @@
 package jj
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -348,11 +349,11 @@ func TestProviderCheckRepoStateWarningsIncludeCommandFailureDetails(t *testing.T
 	}
 
 	warning := warnings[0]
+	command := strings.Join([]string{failingBinary, "-R", repoPath, "git", "remote", "list"}, " ")
 	wantParts := []string{
 		"Failed to get repo name for jj repo",
 		"path=" + repoPath,
-		`command="` + failingBinary,
-		` -R ` + repoPath + ` git remote list"`,
+		fmt.Sprintf("command=%q", command),
 		"failed:",
 	}
 
