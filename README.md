@@ -138,7 +138,7 @@ only = "dirty"
 
 # Count repos whose only local state is stashed work as dirty (default false).
 # Only affects `only = "dirty"`; `only = "stash"` is unaffected.
-count_stash_as_dirty = false
+countStashAsDirty = false
 
 # Skip these directories (glob patterns)
 dirIgnore = [

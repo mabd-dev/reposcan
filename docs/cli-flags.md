@@ -27,11 +27,11 @@ This document explains each CLI flag, its equivalent `config.toml` field, what i
 - `-f, --filter TYPE`
   - Config: `only = "dirty" | "all" | "uncommitted" | "unpushed" | "unpulled" | "stash"`
   - Description: Filter which repositories to include in the report.
-    - `dirty`: any of uncommitted files, ahead, or behind (and stashes when `count_stash_as_dirty = true`).
+    - `dirty`: any of uncommitted files, ahead, or behind (and stashes when `countStashAsDirty = true`).
     - `uncommitted`: only repos with uncommitted files.
     - `unpushed`: only repos with commits ahead of upstream.
     - `unpulled`: only repos with commits behind upstream.
-    - `stash`: only repos with stash entries (independent of `count_stash_as_dirty`).
+    - `stash`: only repos with stash entries (independent of `countStashAsDirty`).
     - `all`: all repos discovered.
   - Examples:
     - `reposcan --filter dirty`
@@ -40,8 +40,8 @@ This document explains each CLI flag, its equivalent `config.toml` field, what i
     - `reposcan --filter unpulled`
     - `reposcan --filter stash`
 
-- `count_stash_as_dirty` (config only, no CLI flag)
-  - Config: `count_stash_as_dirty = false` (default)
+- `countStashAsDirty` (config only, no CLI flag)
+  - Config: `countStashAsDirty = false` (default)
   - Description: When `true`, repositories whose only local state is stashed work
     are treated as dirty for `--filter dirty` and the dirty total. The
     `--filter stash` value is unaffected by this setting.
