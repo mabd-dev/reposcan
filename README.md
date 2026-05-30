@@ -104,7 +104,7 @@ reposcan -r ~/Code -r ~/work
 Common flags
 ```sh
 -d, --dirIgnore stringArray     # (default [$HOME])
--f, --filter string             # Repository filter: all|dirty|uncommitted|unpushed|unpulled (default "dirty")
+-f, --filter string             # Repository filter: all|dirty|uncommitted|unpushed|unpulled|stash (default "dirty")
 -h, --help                      # help for reposcan
     --json-output-path string   # Write scan report JSON files to this directory (optional)
 -w, --max-workers int           # Number of concurrent git checks (default 8)
@@ -155,6 +155,10 @@ roots = ["~/Code", "~/work"]
 
 only = "dirty"
 
+# Count repos whose only local state is stashed work as dirty (default false).
+# Only affects `only = "dirty"`; `only = "stash"` is unaffected.
+countStashAsDirty = false
+
 # Skip these directories (glob patterns)
 dirIgnore = [
   "/node_modules/",
@@ -185,12 +189,13 @@ Each step overrides the one before it
 - [x] Scan filesystem for repos
 - [x] Detect uncommitted files, unpushed commits and unpulled commits
 - [x] Detect Git and jj repositories
+- [x] Detect stashed changes
 - [x] Stdout Ouput in 3 formats: json, interactive, none
 - [x] Read user customizable `config.toml` file
 - [x] Export Report to json file
 - [x] Support dirignore
 - [x] Worker pool for speed
-- [ ] Support git worktrees
+- [x] Support git worktrees
 - [ ] Perform git push/pull/fetch on repos
 - [ ] Show branches with their states on each repo
 

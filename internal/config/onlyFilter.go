@@ -22,12 +22,14 @@ const (
     OnlyUnpushed    = "unpushed"
     // OnlyUnpulled includes repositories with upstream commits not yet pulled.
     OnlyUnpulled    = "unpulled"
+    // OnlyStash includes repositories that have stash entries.
+    OnlyStash       = "stash"
 )
 
 // IsValid reports whether f is a recognized OnlyFilter value.
 func (f OnlyFilter) IsValid() bool {
     switch f {
-    case OnlyAll, OnlyDirty, OnlyUncommitted, OnlyUnpushed, OnlyUnpulled:
+    case OnlyAll, OnlyDirty, OnlyUncommitted, OnlyUnpushed, OnlyUnpulled, OnlyStash:
         return true
     }
     return false
@@ -49,6 +51,8 @@ func CreateOnlyFilter(s string) (OnlyFilter, error) {
         return OnlyUnpushed, nil
     case string(OnlyUnpulled):
         return OnlyUnpulled, nil
+    case string(OnlyStash):
+        return OnlyStash, nil
     }
 
     return OnlyAll, errors.New(s + " is not valid only filter")

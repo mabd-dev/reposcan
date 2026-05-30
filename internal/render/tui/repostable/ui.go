@@ -11,22 +11,25 @@ import (
 )
 
 const (
-	RepoW        = 37
-	VCSW         = 6
+	RepoW        = 32
 	BranchW      = 20
-	RemoteStateW = 37
+	VCSW         = 6
+	StashW       = 6
+	RemoteStateW = 36
 )
 
 func createColumns(maxWidth int) []table.Column {
 	repoW := maxWidth * RepoW / 100
 	branchW := maxWidth * BranchW / 100
 	vcsW := maxWidth * VCSW / 100
+	stashW := maxWidth * StashW / 100
 	remoteStateW := maxWidth * RemoteStateW / 100
 
 	return []table.Column{
 		{Title: "Repo", Width: repoW},
 		{Title: "Branch", Width: branchW},
 		{Title: "VCS", Width: vcsW},
+		{Title: "Stash", Width: stashW},
 		{Title: "State", Width: remoteStateW},
 	}
 }
@@ -40,10 +43,19 @@ func createRows(repoStates []report.RepoState, theme theme.Theme) []table.Row {
 			rs.Repo,
 			rs.Branch,
 			rs.VCSType,
+			stashColumnStr(rs),
 			state,
 		})
 	}
 	return rows
+}
+
+func stashColumnStr(rs report.RepoState) string {
+	n := rs.StashCount()
+	if n == 0 {
+		return ""
+	}
+	return fmt.Sprintf("%d", n)
 }
 
 func getStateColumnStr(rs report.RepoState, theme theme.Theme) string {

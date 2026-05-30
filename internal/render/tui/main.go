@@ -57,7 +57,7 @@ func Render(
 	reposTableHeader := rth.Header{
 		Theme: theme,
 	}
-	reposTableHeader.SetReport(r)
+	reposTableHeader.SetReport(r, configs.CountStashAsDirty)
 
 	var repoDetails repodetails.Model
 	if len(r.RepoStates) == 0 {

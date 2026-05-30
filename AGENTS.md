@@ -109,7 +109,7 @@ All root paths and dirIgnore patterns support environment variable expansion via
 The `filter` function in `rootCmd.go` applies `OnlyFilter` after all repos are discovered and checked. This means all git operations happen regardless of filter—filtering only affects output.
 
 ### Error Handling in Scan
-`scan.FindGitRepos` collects warnings (e.g., permission denied) but continues walking. Warnings are included in `ScanReport.Warnings`.
+`scan.FindRepos` collects warnings (e.g., permission denied) but continues walking. Warnings are included in `ScanReport.Warnings`.
 
 ### Git Command Wrapper
 `git.RunGitCommand` uses `git -C <dir>` to run commands in a specific directory without changing the process's working directory. Stderr is captured but only used for error detection—stdout is returned.

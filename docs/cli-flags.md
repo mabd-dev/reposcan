@@ -25,12 +25,13 @@ This document explains each CLI flag, its equivalent `config.toml` field, what i
       ```
 
 - `-f, --filter TYPE`
-  - Config: `only = "dirty" | "all" | "uncommitted" | "unpushed" | "unpulled"`
+  - Config: `only = "dirty" | "all" | "uncommitted" | "unpushed" | "unpulled" | "stash"`
   - Description: Filter which repositories to include in the report.
-    - `dirty`: any of uncommitted files, ahead, or behind.
+    - `dirty`: any of uncommitted files, ahead, or behind (and stashes when `countStashAsDirty = true`).
     - `uncommitted`: only repos with uncommitted files.
     - `unpushed`: only repos with commits ahead of upstream.
     - `unpulled`: only repos with commits behind upstream.
+    - `stash`: only repos with stash entries (independent of `countStashAsDirty`).
     - `all`: all repos discovered.
   - jj note: `unpushed` uses outgoing commits for tracked bookmarks. `unpulled` uses incoming commits inferred from already-fetched remote bookmark state.
   - Examples:
@@ -38,6 +39,13 @@ This document explains each CLI flag, its equivalent `config.toml` field, what i
     - `reposcan --filter uncommitted`
     - `reposcan --filter unpushed`
     - `reposcan --filter unpulled`
+    - `reposcan --filter stash`
+
+- `countStashAsDirty` (config only, no CLI flag)
+  - Config: `countStashAsDirty = false` (default)
+  - Description: When `true`, repositories whose only local state is stashed work
+    are treated as dirty for `--filter dirty` and the dirty total. The
+    `--filter stash` value is unaffected by this setting.
 
 - `-o, --output TYPE`
   - Config: `output.type = "json" | "interactive" | "none"`

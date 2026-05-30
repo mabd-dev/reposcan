@@ -84,6 +84,7 @@ func isGitRepo(path string) bool {
 		if err != nil {
 			return false
 		}
+
 		return strings.Contains(string(b), "gitdir:")
 	}
 

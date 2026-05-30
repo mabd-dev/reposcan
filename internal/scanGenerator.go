@@ -29,7 +29,7 @@ func GenerateScanReport(
 
 	// filter repo states based on config OnlyFilter
 	for _, repoState := range allRepoStates {
-		if filter(configs.Only, repoState) {
+		if filter(configs.Only, repoState, configs.CountStashAsDirty) {
 			repoStates = append(repoStates, repoState)
 		}
 	}
@@ -50,13 +50,14 @@ func NewVCSRegistry() *vcs.Registry {
 }
 
 // Filter repoState based on config only filter
-// Returns true if repoState should be in output, false otherwise
-func filter(f config.OnlyFilter, repoState report.RepoState) bool {
+// Returns true if repoState should be in output, false otherwise.
+// countStashAsDirty only affects the OnlyDirty case; OnlyStash is independent.
+func filter(f config.OnlyFilter, repoState report.RepoState, countStashAsDirty bool) bool {
 	switch f {
 	case config.OnlyAll:
 		return true
 	case config.OnlyDirty:
-		if repoState.IsDirty() {
+		if repoState.IsDirty(countStashAsDirty) {
 			return true
 		}
 	case config.OnlyUncommitted:
@@ -67,6 +68,8 @@ func filter(f config.OnlyFilter, repoState report.RepoState) bool {
 		return repoState.HaveUnpushedCommits()
 	case config.OnlyUnpulled:
 		return repoState.HaveUnpulledCommits()
+	case config.OnlyStash:
+		return repoState.HaveStashes()
 	}
 
 	return false

@@ -114,3 +114,26 @@ func TestFindRepos_PrefersJJWhenGitAndJJAreCoLocated(t *testing.T) {
 		t.Fatalf("expected %s to be detected as jj repo, got %v", mixedRepo, repos[0])
 	}
 }
+
+func TestFindRepos_GitWorktree(t *testing.T) {
+	root := t.TempDir()
+
+	worktree := filepath.Join(root, "worktree1")
+	makeDir(t, worktree)
+
+	gitFilepath := filepath.Join(worktree, ".git")
+
+	gitFileContent := []byte("gitdir: /Users/someone/worktreeRepo.git/worktrees/worktree1\n")
+	err := os.WriteFile(gitFilepath, gitFileContent, 0o644)
+
+	if err != nil {
+		t.Fatalf("error writing to file, error=%v", err.Error())
+	}
+
+	patterns := []string{"**/node_modules/**", "/ignored/**"}
+	reposInfo, _ := FindRepos([]string{root}, patterns)
+
+	if len(reposInfo) != 1 || reposInfo[0].Path != worktree {
+		t.Fatalf("expected only %s, got %v", worktree, reposInfo)
+	}
+}
