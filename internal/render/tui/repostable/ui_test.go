@@ -8,13 +8,29 @@ import (
 )
 
 func TestCreateColumnsIncludesVCSColumn(t *testing.T) {
-	columns := createColumns(100)
+	columns := createColumns(100, Options{ShowVCS: true})
 
 	if len(columns) != 5 {
 		t.Fatalf("expected 5 columns, got %d: %v", len(columns), columns)
 	}
 	if columns[2].Title != "VCS" {
 		t.Fatalf("expected third column to be VCS, got %q", columns[2].Title)
+	}
+}
+
+func TestCreateColumnsOmitsVCSColumnWhenDisabled(t *testing.T) {
+	columns := createColumns(100, Options{ShowVCS: false})
+
+	if len(columns) != 4 {
+		t.Fatalf("expected 4 columns, got %d: %v", len(columns), columns)
+	}
+	for _, c := range columns {
+		if c.Title == "VCS" {
+			t.Fatalf("did not expect a VCS column, got columns: %v", columns)
+		}
+	}
+	if columns[3].Title != "State" || columns[3].Width != RemoteStateW+VCSW {
+		t.Fatalf("expected State column to reclaim VCS width, got %+v", columns[3])
 	}
 }
 
@@ -28,7 +44,7 @@ func TestCreateRowsIncludesVCSValue(t *testing.T) {
 				{Remote: "origin", Ahead: 1, Behind: 2},
 			},
 		},
-	}, theme.Theme{})
+	}, theme.Theme{}, Options{ShowVCS: true})
 
 	if len(rows) != 1 {
 		t.Fatalf("expected 1 row, got %d", len(rows))
@@ -41,5 +57,28 @@ func TestCreateRowsIncludesVCSValue(t *testing.T) {
 	}
 	if rows[0][4] != "⏳0 ↑1 ↓2" {
 		t.Fatalf("unexpected state cell: %q", rows[0][4])
+	}
+}
+
+func TestCreateRowsOmitsVCSValueWhenDisabled(t *testing.T) {
+	rows := createRows([]report.RepoState{
+		{
+			Repo:    "jj-repo",
+			VCSType: "jj",
+			Branch:  "@",
+			RemoteStatus: []report.RemoteStatus{
+				{Remote: "origin", Ahead: 1, Behind: 2},
+			},
+		},
+	}, theme.Theme{}, Options{ShowVCS: false})
+
+	if len(rows) != 1 {
+		t.Fatalf("expected 1 row, got %d", len(rows))
+	}
+	if len(rows[0]) != 4 {
+		t.Fatalf("expected 4 cells, got %d: %v", len(rows[0]), rows[0])
+	}
+	if rows[0][3] != "⏳0 ↑1 ↓2" {
+		t.Fatalf("unexpected state cell: %q", rows[0][3])
 	}
 }
