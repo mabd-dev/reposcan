@@ -61,6 +61,10 @@ func (m *Model) buildUncommittedFiles() []string {
 }
 
 func getFileStatusColor(symbol string, colors theme.LipglossScheme) lipgloss.Color {
+	if len(symbol) != 2 {
+		return colors.Foreground
+	}
+
 	staged := string(symbol[0])
 	unstaged := string(symbol[1])
 
