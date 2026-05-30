@@ -103,13 +103,22 @@ func activeColumnDefs(options Options) []columnDef {
 		}
 		active = append(active, def)
 	}
+	redistributeHiddenWidth(active, hiddenWidth)
+
+	return active
+}
+
+func redistributeHiddenWidth(active []columnDef, hiddenWidth int) {
+	if hiddenWidth == 0 || len(active) == 0 {
+		return
+	}
 	for i := range active {
 		if active[i].expand {
 			active[i].widthPercent += hiddenWidth
+			return
 		}
 	}
-
-	return active
+	active[len(active)-1].widthPercent += hiddenWidth
 }
 
 func stashColumnStr(rs report.RepoState) string {

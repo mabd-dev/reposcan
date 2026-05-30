@@ -82,3 +82,36 @@ func TestCreateRowsOmitsVCSValueWhenDisabled(t *testing.T) {
 		t.Fatalf("unexpected state cell: %q", rows[0][3])
 	}
 }
+
+func TestRedistributeHiddenWidthFallsBackToLastColumn(t *testing.T) {
+	active := []columnDef{
+		{title: "Repo", widthPercent: RepoW},
+		{title: "Branch", widthPercent: BranchW},
+	}
+
+	redistributeHiddenWidth(active, VCSW)
+
+	if active[0].widthPercent != RepoW {
+		t.Fatalf("expected first column width to stay %d, got %d", RepoW, active[0].widthPercent)
+	}
+	if active[1].widthPercent != BranchW+VCSW {
+		t.Fatalf("expected last column to reclaim hidden width, got %d", active[1].widthPercent)
+	}
+}
+
+func TestRedistributeHiddenWidthPrefersExpandableColumn(t *testing.T) {
+	active := []columnDef{
+		{title: "Repo", widthPercent: RepoW},
+		{title: "State", widthPercent: RemoteStateW, expand: true},
+		{title: "Branch", widthPercent: BranchW},
+	}
+
+	redistributeHiddenWidth(active, VCSW)
+
+	if active[1].widthPercent != RemoteStateW+VCSW {
+		t.Fatalf("expected expandable column to reclaim hidden width, got %d", active[1].widthPercent)
+	}
+	if active[2].widthPercent != BranchW {
+		t.Fatalf("expected last column width to stay %d, got %d", BranchW, active[2].widthPercent)
+	}
+}
