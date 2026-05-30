@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"github.com/charmbracelet/lipgloss"
+	"github.com/mabd-dev/reposcan/internal/theme"
 )
 
 func (m *Model) View() string {
@@ -46,7 +47,9 @@ func (m *Model) buildUncommittedFiles() []string {
 	}
 
 	for _, f := range files {
-		lines = append(lines, "  "+fileStyle.Render(f))
+		changeSymbol := f[:2]
+		color := getFileStatusColor(changeSymbol, m.theme.Colors)
+		lines = append(lines, "  "+fileStyle.Foreground(color).Render(f))
 	}
 
 	if trimUncommitedFiles {
@@ -55,4 +58,35 @@ func (m *Model) buildUncommittedFiles() []string {
 	}
 
 	return lines
+}
+
+func getFileStatusColor(symbol string, colors theme.LipglossScheme) lipgloss.Color {
+	staged := string(symbol[0])
+	unstaged := string(symbol[1])
+
+	if symbol == "??" {
+		return colors.Muted
+	}
+
+	if staged == "A" {
+		return colors.Success
+	}
+
+	if staged == "D" || unstaged == "D" {
+		return colors.Error
+	}
+
+	if staged == "R" {
+		return colors.Accent
+	}
+
+	if staged == "U" || unstaged == "U" {
+		return colors.Warning
+	}
+
+	if staged == "M" || unstaged == "M" {
+		return colors.PopupTitle
+	}
+
+	return colors.Foreground
 }
