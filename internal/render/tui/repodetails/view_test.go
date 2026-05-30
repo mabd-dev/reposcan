@@ -89,7 +89,7 @@ func TestGetFileStatusColor(t *testing.T) {
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("Test Color %v", test.symbol), func(t *testing.T) {
 			if color := getFileStatusColor(test.symbol, colors); color != test.expectedColor {
-				t.Fatalf("expected %v found %v (symbol=??)", test.expectedColor, color)
+				t.Fatalf("expected %v found %v (symbol=%v)", test.expectedColor, color, test.symbol)
 			}
 		})
 	}
