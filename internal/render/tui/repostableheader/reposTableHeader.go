@@ -15,9 +15,9 @@ type Header struct {
 	Theme           theme.Theme
 }
 
-func (h *Header) SetReport(report report.ScanReport) {
+func (h *Header) SetReport(report report.ScanReport, countStashAsDirty bool) {
 	h.repoStatesCount = len(report.RepoStates)
-	h.dirtyRepos = report.DirtyReposCount()
+	h.dirtyRepos = report.DirtyReposCount(countStashAsDirty)
 
 }
 

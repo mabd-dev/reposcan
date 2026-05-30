@@ -65,6 +65,12 @@ func CheckRepoState(path string) (repoState report.RepoState, warnings []string)
 		warnings = append(warnings, msg)
 	}
 
+	stashes, err := GetStashes(path)
+	if err != nil {
+		msg := "Failed to get stashes, path=" + path
+		warnings = append(warnings, msg)
+	}
+
 	return report.RepoState{
 		ID:              utils.Hash(path),
 		Path:            path,
@@ -72,6 +78,7 @@ func CheckRepoState(path string) (repoState report.RepoState, warnings []string)
 		Branch:          branch,
 		UncommitedFiles: uncommitedFiles,
 		RemoteStatus:    remoteStatuses,
+		Stashes:         stashes,
 	}, warnings
 }
 
