@@ -171,6 +171,11 @@ dirIgnore = [
 type = "interactive"
 jsonPath = "/somewhere/nice"
 
+[tui]
+# Show the "VCS" column in the interactive table (default true).
+# Set to false to hide it, e.g. if you only use git.
+showVCS = true
+
 
 ```
 > You can still override everything via CLI flags.

@@ -15,6 +15,7 @@ func New(
 	report report.ScanReport,
 	width int,
 	height int,
+	options Options,
 ) Model {
 	model := Model{
 		width:         width,
@@ -23,10 +24,11 @@ func New(
 		report:        report,
 		filteredRepos: report.RepoStates,
 		filterQuery:   "",
+		options:       options,
 	}
 
-	cols := createColumns(width)
-	rows := createRows(model.report.RepoStates, theme)
+	cols := createColumns(width, model.options)
+	rows := createRows(model.report.RepoStates, theme, model.options)
 
 	t := table.New(
 		table.WithColumns(cols),
@@ -40,7 +42,7 @@ func New(
 
 	// if no repos, show an empty placeholder row so the table renders nicely
 	if len(rows) == 0 {
-		t.SetRows([]table.Row{{"", "", "", ""}})
+		t.SetRows([]table.Row{make(table.Row, len(cols))})
 	}
 
 	t.SetStyles(table.Styles{
@@ -65,7 +67,7 @@ func (m *Model) UpdateWindowSize(width int, height int) Model {
 	m.height = height - 2 // border corners
 
 	m.tbl.SetHeight(m.height)
-	cols := createColumns(m.width)
+	cols := createColumns(m.width, m.options)
 	m.tbl.SetColumns(cols)
 
 	return *m
@@ -89,7 +91,7 @@ func (m *Model) Filter(query string) {
 
 	cursorPosition := m.tbl.Cursor()
 
-	rows := createRows(m.filteredRepos, m.theme)
+	rows := createRows(m.filteredRepos, m.theme, m.options)
 	m.tbl.SetRows(rows)
 
 	if cursorPosition < len(m.filteredRepos) {
@@ -108,7 +110,7 @@ func (m *Model) UpdateRepoState(index int, newState report.RepoState) {
 		m.report.RepoStates[originalIndex] = newState
 	}
 
-	rows := createRows(m.filteredRepos, m.theme)
+	rows := createRows(m.filteredRepos, m.theme, m.options)
 	m.tbl.SetRows(rows)
 }
 

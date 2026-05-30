@@ -1,6 +1,7 @@
 package jj
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -338,24 +339,22 @@ func TestProviderCheckRepoStateWarnsWhenBinaryMissing(t *testing.T) {
 }
 
 func TestProviderCheckRepoStateWarningsIncludeCommandFailureDetails(t *testing.T) {
-	if _, err := exec.LookPath("false"); err != nil {
-		t.Skip("false binary not available")
-	}
-
 	repoPath := filepath.Join(t.TempDir(), "repo")
+	failingBinary := os.Args[0]
 
-	_, warnings := (&Provider{binary: "false"}).CheckRepoState(repoPath)
+	_, warnings := (&Provider{binary: failingBinary}).CheckRepoState(repoPath)
 
 	if len(warnings) == 0 {
 		t.Fatal("expected warnings")
 	}
 
 	warning := warnings[0]
+	command := strings.Join([]string{failingBinary, "-R", repoPath, "git", "remote", "list"}, " ")
 	wantParts := []string{
 		"Failed to get repo name for jj repo",
 		"path=" + repoPath,
-		`command="false -R ` + repoPath + ` git remote list"`,
-		"failed: exit status 1",
+		fmt.Sprintf("command=%q", command),
+		"failed:",
 	}
 
 	for _, want := range wantParts {

@@ -18,36 +18,107 @@ const (
 	RemoteStateW = 36
 )
 
-func createColumns(maxWidth int) []table.Column {
-	repoW := maxWidth * RepoW / 100
-	branchW := maxWidth * BranchW / 100
-	vcsW := maxWidth * VCSW / 100
-	stashW := maxWidth * StashW / 100
-	remoteStateW := maxWidth * RemoteStateW / 100
-
-	return []table.Column{
-		{Title: "Repo", Width: repoW},
-		{Title: "Branch", Width: branchW},
-		{Title: "VCS", Width: vcsW},
-		{Title: "Stash", Width: stashW},
-		{Title: "State", Width: remoteStateW},
-	}
+type columnDef struct {
+	title        string
+	widthPercent int
+	show         func(Options) bool
+	cell         func(report.RepoState, theme.Theme) string
+	expand       bool
 }
 
-func createRows(repoStates []report.RepoState, theme theme.Theme) []table.Row {
-	rows := make([]table.Row, 0, len(repoStates))
-	for _, rs := range repoStates {
-		state := getStateColumnStr(rs, theme)
-
-		rows = append(rows, table.Row{
-			rs.Repo,
-			rs.Branch,
-			rs.VCSType,
-			stashColumnStr(rs),
-			state,
+func createColumns(maxWidth int, options Options) []table.Column {
+	defs := activeColumnDefs(options)
+	columns := make([]table.Column, 0, len(defs))
+	for _, def := range defs {
+		columns = append(columns, table.Column{
+			Title: def.title,
+			Width: maxWidth * def.widthPercent / 100,
 		})
 	}
+	return columns
+}
+
+func createRows(repoStates []report.RepoState, theme theme.Theme, options Options) []table.Row {
+	defs := activeColumnDefs(options)
+	rows := make([]table.Row, 0, len(repoStates))
+	for _, rs := range repoStates {
+		row := make(table.Row, 0, len(defs))
+		for _, def := range defs {
+			row = append(row, def.cell(rs, theme))
+		}
+		rows = append(rows, row)
+	}
 	return rows
+}
+
+func activeColumnDefs(options Options) []columnDef {
+	defs := []columnDef{
+		{
+			title:        "Repo",
+			widthPercent: RepoW,
+			cell: func(rs report.RepoState, _ theme.Theme) string {
+				return rs.Repo
+			},
+		},
+		{
+			title:        "Branch",
+			widthPercent: BranchW,
+			cell: func(rs report.RepoState, _ theme.Theme) string {
+				return rs.Branch
+			},
+		},
+		{
+			title:        "VCS",
+			widthPercent: VCSW,
+			show: func(options Options) bool {
+				return options.ShowVCS
+			},
+			cell: func(rs report.RepoState, _ theme.Theme) string {
+				return rs.VCSType
+			},
+		},
+		{
+			title:        "Stash",
+			widthPercent: StashW,
+			cell: func(rs report.RepoState, _ theme.Theme) string {
+				return stashColumnStr(rs)
+			},
+		},
+		{
+			title:        "State",
+			widthPercent: RemoteStateW,
+			expand:       true,
+			cell: func(rs report.RepoState, theme theme.Theme) string {
+				return getStateColumnStr(rs, theme)
+			},
+		},
+	}
+
+	hiddenWidth := 0
+	active := make([]columnDef, 0, len(defs))
+	for _, def := range defs {
+		if def.show != nil && !def.show(options) {
+			hiddenWidth += def.widthPercent
+			continue
+		}
+		active = append(active, def)
+	}
+	redistributeHiddenWidth(active, hiddenWidth)
+
+	return active
+}
+
+func redistributeHiddenWidth(active []columnDef, hiddenWidth int) {
+	if hiddenWidth == 0 || len(active) == 0 {
+		return
+	}
+	for i := range active {
+		if active[i].expand {
+			active[i].widthPercent += hiddenWidth
+			return
+		}
+	}
+	active[len(active)-1].widthPercent += hiddenWidth
 }
 
 func stashColumnStr(rs report.RepoState) string {
