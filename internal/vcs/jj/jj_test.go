@@ -338,13 +338,10 @@ func TestProviderCheckRepoStateWarnsWhenBinaryMissing(t *testing.T) {
 }
 
 func TestProviderCheckRepoStateWarningsIncludeCommandFailureDetails(t *testing.T) {
-	if _, err := exec.LookPath("false"); err != nil {
-		t.Skip("false binary not available")
-	}
-
 	repoPath := filepath.Join(t.TempDir(), "repo")
+	failingBinary := os.Args[0]
 
-	_, warnings := (&Provider{binary: "false"}).CheckRepoState(repoPath)
+	_, warnings := (&Provider{binary: failingBinary}).CheckRepoState(repoPath)
 
 	if len(warnings) == 0 {
 		t.Fatal("expected warnings")
@@ -354,8 +351,9 @@ func TestProviderCheckRepoStateWarningsIncludeCommandFailureDetails(t *testing.T
 	wantParts := []string{
 		"Failed to get repo name for jj repo",
 		"path=" + repoPath,
-		`command="false -R ` + repoPath + ` git remote list"`,
-		"failed: exit status 1",
+		`command="` + failingBinary,
+		` -R ` + repoPath + ` git remote list"`,
+		"failed:",
 	}
 
 	for _, want := range wantParts {
