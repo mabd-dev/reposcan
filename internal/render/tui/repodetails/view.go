@@ -13,34 +13,46 @@ func (m *Model) View() string {
 		return ""
 	}
 
-	style := m.theme.Styles.Base.Foreground(m.theme.Colors.Info)
+	style := m.theme.Styles.Base.Foreground(m.theme.Colors.Info).Bold(true)
 
 	lines := []string{
-		//m.theme.Styles.Base.Foreground(m.theme.Colors.Muted).Italic(true).Render("Details"),
 		fmt.Sprintf("%s %s", style.Render("Path:"), m.repoState.Path),
 		style.Render("File Changes:"),
 	}
-	if len(m.repoState.UncommitedFiles) > 0 {
-		files := m.repoState.UncommitedFiles
 
-		maxUncommitedFilesToShow := m.height - len(lines) - 1
-		trimUncommitedFiles := len(files) > maxUncommitedFilesToShow
-
-		if trimUncommitedFiles {
-			files = files[:maxUncommitedFilesToShow]
-		}
-
-		for _, f := range files {
-			lines = append(lines, "  "+m.theme.Styles.Muted.Render(f))
-		}
-
-		if trimUncommitedFiles {
-			more := len(m.repoState.UncommitedFiles) - maxUncommitedFilesToShow
-			lines = append(lines, m.theme.Styles.Muted.Render("  ... (+"+strconv.Itoa(more)+" more)"))
-		}
-	} else {
-		lines = append(lines, m.theme.Styles.Muted.Render("    no changes"))
-	}
+	lines = append(lines, m.buildUncommittedFiles()...)
 
 	return lipgloss.JoinVertical(lipgloss.Left, lines...)
+}
+
+func (m *Model) buildUncommittedFiles() []string {
+
+	files := m.repoState.UncommitedFiles
+	if len(files) == 0 {
+		return []string{
+			m.theme.Styles.Muted.Render("    no changes"),
+		}
+	}
+
+	lines := []string{}
+
+	fileStyle := m.theme.Styles.Base.Foreground(m.theme.Colors.Foreground)
+
+	maxUncommitedFilesToShow := m.height - len(files) - 1
+	trimUncommitedFiles := len(files) > maxUncommitedFilesToShow
+
+	if trimUncommitedFiles {
+		files = files[:maxUncommitedFilesToShow]
+	}
+
+	for _, f := range files {
+		lines = append(lines, "  "+fileStyle.Render(f))
+	}
+
+	if trimUncommitedFiles {
+		more := len(m.repoState.UncommitedFiles) - maxUncommitedFilesToShow
+		lines = append(lines, fileStyle.Render("  ... (+"+strconv.Itoa(more)+" more)"))
+	}
+
+	return lines
 }
