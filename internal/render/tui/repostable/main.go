@@ -23,6 +23,7 @@ func New(
 		report:        report,
 		filteredRepos: report.RepoStates,
 		filterQuery:   "",
+		totalRepos:    report.TotalRepos,
 	}
 
 	cols := createColumns(width)
@@ -38,11 +39,6 @@ func New(
 	km := table.DefaultKeyMap()
 	setKeymaps(km)
 
-	// if no repos, show an empty placeholder row so the table renders nicely
-	if len(rows) == 0 {
-		t.SetRows([]table.Row{{"", "", ""}})
-	}
-
 	t.SetStyles(table.Styles{
 		Header:   model.theme.Styles.TableHeader,
 		Selected: model.theme.Styles.TableSelectedRow,
@@ -57,6 +53,7 @@ func (rt Model) Init() tea.Cmd { return nil }
 
 func (m *Model) SetReport(report report.ScanReport) {
 	m.report = report
+	m.totalRepos = report.TotalRepos
 	m.Filter(m.filterQuery)
 }
 

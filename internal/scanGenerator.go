@@ -35,6 +35,7 @@ func GenerateScanReport(
 		Version:     configs.Version,
 		GeneratedAt: time.Now(),
 		RepoStates:  repoStates,
+		TotalRepos:  len(allRepoStates),
 		Warnings:    reportWarnings,
 	}
 }

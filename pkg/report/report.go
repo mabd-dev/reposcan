@@ -29,6 +29,7 @@ type RepoState struct {
 type ScanReport struct {
 	Version     int         `json:"version"`
 	RepoStates  []RepoState `json:"repoStates"`
+	TotalRepos  int         `json:"totalRepos"`
 	GeneratedAt time.Time   `json:"generatedAt"`
 	Warnings    []string    `json:"warnings"`
 }
