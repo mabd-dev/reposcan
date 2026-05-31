@@ -17,13 +17,13 @@ func New(
 	height int,
 ) Model {
 	model := Model{
-		width:         width,
-		height:        height,
-		theme:         theme,
-		report:        report,
-		filteredRepos: report.RepoStates,
-		filterQuery:   "",
-		totalRepos:    report.TotalRepos,
+		width:             width,
+		height:            height,
+		theme:             theme,
+		report:            report,
+		filteredRepos:     report.RepoStates,
+		filterQuery:       "",
+		totalScannedRepos: report.TotalScannedRepos,
 	}
 
 	cols := createColumns(width)
@@ -53,7 +53,7 @@ func (rt Model) Init() tea.Cmd { return nil }
 
 func (m *Model) SetReport(report report.ScanReport) {
 	m.report = report
-	m.totalRepos = report.TotalRepos
+	m.totalScannedRepos = report.TotalScannedRepos
 	m.Filter(m.filterQuery)
 }
 

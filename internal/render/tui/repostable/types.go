@@ -13,8 +13,8 @@ type Model struct {
 
 	tbl table.Model
 
-	report        report.ScanReport
-	filteredRepos []report.RepoState
-	filterQuery   string
-	totalRepos    int
+	report            report.ScanReport
+	filteredRepos     []report.RepoState
+	filterQuery       string
+	totalScannedRepos int
 }

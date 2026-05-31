@@ -28,7 +28,7 @@ func (m Model) View() string {
 func (m Model) renderEmptyState() string {
 	var msg string
 	switch {
-	case m.totalRepos == 0:
+	case m.totalScannedRepos == 0:
 		msg = "🔍 No repositories found in the scanned directory."
 	case m.filterQuery != "":
 		msg = "🔎 No repositories match your search."

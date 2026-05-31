@@ -13,13 +13,13 @@ import (
 // stubTheme returns a minimal theme sufficient for view tests.
 func stubTheme() theme.Theme {
 	colors := theme.LipglossScheme{
-		Foreground:     lipgloss.Color("#ffffff"),
-		Accent:         lipgloss.Color("#00ff00"),
-		Border:         lipgloss.Color("#444444"),
-		BorderActive:   lipgloss.Color("#00ff00"),
+		Foreground:   lipgloss.Color("#ffffff"),
+		Accent:       lipgloss.Color("#00ff00"),
+		Border:       lipgloss.Color("#444444"),
+		BorderActive: lipgloss.Color("#00ff00"),
 	}
 	styles := theme.Styles{
-		Base: lipgloss.NewStyle(),
+		Base:  lipgloss.NewStyle(),
 		Muted: lipgloss.NewStyle(),
 		Box: lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
@@ -27,8 +27,8 @@ func stubTheme() theme.Theme {
 		BoxMuted: lipgloss.NewStyle().
 			Border(lipgloss.RoundedBorder()).
 			BorderForeground(colors.Border),
-		TableHeader:    lipgloss.NewStyle(),
-		TableRow:       lipgloss.NewStyle(),
+		TableHeader:      lipgloss.NewStyle(),
+		TableRow:         lipgloss.NewStyle(),
 		TableSelectedRow: lipgloss.NewStyle(),
 	}
 	return theme.Theme{Colors: colors, Styles: styles}
@@ -42,7 +42,7 @@ func TestView_EmptyState_FilterNoMatches(t *testing.T) {
 				{Repo: "alpha", Branch: "main", ID: "alpha"},
 				{Repo: "beta", Branch: "main", ID: "beta"},
 			},
-			TotalRepos: 2,
+			TotalScannedRepos: 2,
 		},
 		80,
 		20,
@@ -71,8 +71,8 @@ func TestView_EmptyState_NoReposFound(t *testing.T) {
 	m := New(
 		stubTheme(),
 		report.ScanReport{
-			RepoStates: []report.RepoState{},
-			TotalRepos: 0,
+			RepoStates:        []report.RepoState{},
+			TotalScannedRepos: 0,
 		},
 		80, // width
 		20, // height
@@ -93,8 +93,8 @@ func TestView_EmptyState_AllClean(t *testing.T) {
 	m := New(
 		stubTheme(),
 		report.ScanReport{
-			RepoStates: []report.RepoState{},
-			TotalRepos: 3, // 3 repos found but all clean / filtered out
+			RepoStates:        []report.RepoState{},
+			TotalScannedRepos: 3, // 3 repos found but all clean / filtered out
 		},
 		80,
 		20,
@@ -115,8 +115,8 @@ func TestView_EmptyState_NoTablePlaceholder(t *testing.T) {
 	m := New(
 		stubTheme(),
 		report.ScanReport{
-			RepoStates: []report.RepoState{},
-			TotalRepos: 0,
+			RepoStates:        []report.RepoState{},
+			TotalScannedRepos: 0,
 		},
 		80,
 		20,
@@ -138,7 +138,7 @@ func TestView_WithRepos_RendersTable(t *testing.T) {
 			RepoStates: []report.RepoState{
 				{Repo: "foo", Branch: "main", ID: "foo"},
 			},
-			TotalRepos: 1,
+			TotalScannedRepos: 1,
 		},
 		80,
 		20,
@@ -159,8 +159,8 @@ func TestUpdate_EmptyState_DoesNotCrash(t *testing.T) {
 	m := New(
 		stubTheme(),
 		report.ScanReport{
-			RepoStates: []report.RepoState{},
-			TotalRepos: 0,
+			RepoStates:        []report.RepoState{},
+			TotalScannedRepos: 0,
 		},
 		80,
 		20,
@@ -178,8 +178,8 @@ func TestUpdate_EmptyState_WindowSize_PassesThrough(t *testing.T) {
 	m := New(
 		stubTheme(),
 		report.ScanReport{
-			RepoStates: []report.RepoState{},
-			TotalRepos: 0,
+			RepoStates:        []report.RepoState{},
+			TotalScannedRepos: 0,
 		},
 		80,
 		20,
@@ -197,8 +197,8 @@ func TestReposCount_Empty_ReturnsZero(t *testing.T) {
 	m := New(
 		stubTheme(),
 		report.ScanReport{
-			RepoStates: []report.RepoState{},
-			TotalRepos: 0,
+			RepoStates:        []report.RepoState{},
+			TotalScannedRepos: 0,
 		},
 		80,
 		20,
@@ -217,7 +217,7 @@ func TestReposCount_NonEmpty_ReturnsCount(t *testing.T) {
 				{Repo: "a", ID: "a"},
 				{Repo: "b", ID: "b"},
 			},
-			TotalRepos: 2,
+			TotalScannedRepos: 2,
 		},
 		80,
 		20,
@@ -232,8 +232,8 @@ func TestSetReport_UpdatesTotalRepos(t *testing.T) {
 	m := New(
 		stubTheme(),
 		report.ScanReport{
-			RepoStates: []report.RepoState{},
-			TotalRepos: 0,
+			RepoStates:        []report.RepoState{},
+			TotalScannedRepos: 0,
 		},
 		80,
 		20,
@@ -243,10 +243,10 @@ func TestSetReport_UpdatesTotalRepos(t *testing.T) {
 		RepoStates: []report.RepoState{
 			{Repo: "x", ID: "x"},
 		},
-		TotalRepos: 5,
+		TotalScannedRepos: 5,
 	})
 
-	if m.totalRepos != 5 {
-		t.Errorf("expected totalRepos=5 after SetReport, got %d", m.totalRepos)
+	if m.totalScannedRepos != 5 {
+		t.Errorf("expected totalRepos=5 after SetReport, got %d", m.totalScannedRepos)
 	}
 }
