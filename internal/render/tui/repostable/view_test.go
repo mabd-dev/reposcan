@@ -246,7 +246,7 @@ func TestSetReport_UpdatesTotalRepos(t *testing.T) {
 		TotalScannedRepos: 5,
 	})
 
-	if m.totalScannedRepos != 5 {
-		t.Errorf("expected totalRepos=5 after SetReport, got %d", m.totalScannedRepos)
+	if m.report.TotalScannedRepos != 5 {
+		t.Errorf("expected totalRepos=5 after SetReport, got %d", m.report.TotalScannedRepos)
 	}
 }
