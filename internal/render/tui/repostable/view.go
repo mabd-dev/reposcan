@@ -8,6 +8,12 @@ import (
 )
 
 func (m Model) View() string {
+	// When no repos match the current filter, show a friendly empty-state
+	// message instead of an empty table. See issue #41.
+	if m.ReposCount() == 0 {
+		return m.renderEmptyState()
+	}
+
 	body := m.theme.Styles.
 		BoxFor(m.tbl.Focused()).
 		Render(m.tbl.View())
@@ -16,6 +22,37 @@ func (m Model) View() string {
 	body = m.addSectionTitle(body)
 
 	return body
+}
+
+// renderEmptyState returns a styled, centered message when the repo list is empty.
+func (m Model) renderEmptyState() string {
+	var msg string
+	switch {
+	case m.report.TotalScannedRepos == 0:
+		msg = "🔍 No repositories found in the scanned directory."
+	case m.filterQuery != "":
+		msg = "🔎 No repositories match your search."
+	default:
+		msg = "✨ All repositories are clean — your workspace is spotless!"
+	}
+
+	styled := m.theme.Styles.Base.
+		Foreground(m.theme.Colors.Accent).
+		Render(msg)
+
+	// Center the message horizontally and vertically inside the box area.
+	// Use the table height as the target so the layout stays consistent.
+	centered := lipgloss.Place(
+		m.width-4,  // account for box borders + padding
+		m.height-2, // account for box borders
+		lipgloss.Center,
+		lipgloss.Center,
+		styled,
+	)
+
+	return m.theme.Styles.
+		BoxFor(m.tbl.Focused()).
+		Render(centered)
 }
 
 func (m Model) addIndicator(body string) string {

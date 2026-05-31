@@ -27,10 +27,11 @@ type RepoState struct {
 // ScanReport aggregates the results of scanning one or more directories for
 // Git repositories and summarizing their status.
 type ScanReport struct {
-	Version     int         `json:"version"`
-	RepoStates  []RepoState `json:"repoStates"`
-	GeneratedAt time.Time   `json:"generatedAt"`
-	Warnings    []string    `json:"warnings"`
+	Version           int         `json:"version"`
+	RepoStates        []RepoState `json:"repoStates"`
+	TotalScannedRepos int         `json:"totalScannedRepos"`
+	GeneratedAt       time.Time   `json:"generatedAt"`
+	Warnings          []string    `json:"warnings"`
 }
 
 // IsDirty reports whether the repository has uncommitted changes or is ahead/behind.
