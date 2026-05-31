@@ -118,7 +118,7 @@ Help
 reposcan --help
 ```
 
-More details on flags and config mapping can be found in [docs/cli-flags.md](docs/cli-flags.md).
+More details on flags and config mapping can be found in [docs/cli-flags-and-configs.md](docs/cli-flags-and-configs.md).
 
 ## ⚙️ Configuration
 By default, `reposcan` looks for a config file in: 

@@ -40,12 +40,6 @@ This document explains each CLI flag, its equivalent `config.toml` field, what i
     - `reposcan --filter unpulled`
     - `reposcan --filter stash`
 
-- `countStashAsDirty` (config only, no CLI flag)
-  - Config: `countStashAsDirty = false` (default)
-  - Description: When `true`, repositories whose only local state is stashed work
-    are treated as dirty for `--filter dirty` and the dirty total. The
-    `--filter stash` value is unaffected by this setting.
-
 - `-o, --output TYPE`
   - Config: `output.type = "json" | "interactive" | "none"`
   - Description: Select how results are printed to stdout.
@@ -73,3 +67,12 @@ This document explains each CLI flag, its equivalent `config.toml` field, what i
   - Config: `no-telemetry = true/false`
   - Description: Enable/disable sending telemetry data
   - Example: `--no-telemetry=true` or `--no-telemetry`
+
+
+## Config Only
+
+- `countStashAsDirty` (config only, no CLI flag)
+  - Config: `countStashAsDirty = false` (default)
+  - Description: When `true`, repositories whose only local state is stashed work
+    are treated as dirty for `--filter dirty` and the dirty total. The
+    `--filter stash` value is unaffected by this setting.

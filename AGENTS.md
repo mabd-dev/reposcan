@@ -4,7 +4,7 @@ This file provides guidance to AI coding agents working with this repository.
 
 ## Project Overview
 
-RepoScan is a Go CLI tool that scans filesystems for Git repositories and reports their status (uncommitted files, unpushed/unpulled commits). It provides multiple output formats: interactive TUI (using Bubble Tea), table, JSON, and can write reports to disk.
+RepoScan is a Go CLI tool that scans filesystems for Git repositories and reports their status (uncommitted files, unpushed/unpulled commits). It provides multiple output formats: interactive TUI (using Bubble Tea), JSON, and can write reports to disk.
 
 ## Build & Test Commands
 
