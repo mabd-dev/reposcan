@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"os/exec"
 
 	"github.com/hashicorp/go-version"
 	"github.com/mabd-dev/reposcan/internal"
@@ -26,14 +28,19 @@ var updateCmd = &cobra.Command{
 			return fmt.Errorf("something went wrong. error=%v", err.Error())
 		}
 
-		if needUpdate {
-			fmt.Printf("New version available: %s (current: %s)\n", latestVersion, currentVersion)
-			fmt.Println("Installing update...")
-
-			return update()
+		if !needUpdate {
+			fmt.Printf("Already on the latest version (%s)\n", currentVersion)
+			return nil
 		}
 
-		fmt.Printf("Already on the latest version (%s)\n", currentVersion)
+		fmt.Printf("New version available: %s (current: %s)\n", latestVersion, currentVersion)
+		fmt.Println("Installing update...")
+
+		if err = update(); err != nil {
+			return fmt.Errorf("something went wrong. error=%v", err.Error())
+		}
+
+		fmt.Printf("Successfully updated to %s\n", latestVersion)
 		return nil
 	},
 }
@@ -77,5 +84,13 @@ func needToUpdate(currentVersionStr string, latestVersionStr string) (bool, erro
 }
 
 func update() error {
+	sh := exec.Command("sh", "-c",
+		"curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | sh")
+	sh.Stdout = os.Stdout
+	sh.Stderr = os.Stderr
+	if err := sh.Run(); err != nil {
+		return fmt.Errorf("update failed: %w", err)
+	}
+
 	return nil
 }
