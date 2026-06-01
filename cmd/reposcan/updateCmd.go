@@ -52,7 +52,7 @@ var updateCmd = &cobra.Command{
 
 		alias, err := cmd.Flags().GetString("alias")
 		if err != nil {
-			alias = ""
+			alias = "reposcan"
 		}
 
 		if err = update(alias, realShellRunner); err != nil {
