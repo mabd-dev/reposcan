@@ -12,7 +12,9 @@ import (
 
 func (m Model) View() tea.View {
 	if m.loading {
-		return tea.NewView("Loading...")
+		view := tea.NewView("Loading...")
+		view.AltScreen = true
+		return view
 	}
 
 	footer := m.getFooterView()
