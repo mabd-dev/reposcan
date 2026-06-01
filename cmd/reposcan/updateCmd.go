@@ -2,15 +2,29 @@ package reposcan
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/hashicorp/go-version"
 	"github.com/mabd-dev/reposcan/internal"
 	"github.com/spf13/cobra"
 )
+
+type shellRunner func(name string, args ...string) error
+
+var realShellRunner = func(name string, args ...string) error {
+	sh := exec.Command(name, args...)
+	sh.Stdout = os.Stdout
+	sh.Stderr = os.Stderr
+	if err := sh.Run(); err != nil {
+		return err
+	}
+	return nil
+}
 
 var updateCmd = &cobra.Command{
 	Use:   "update",
@@ -41,7 +55,7 @@ var updateCmd = &cobra.Command{
 			alias = ""
 		}
 
-		if err = update(alias); err != nil {
+		if err = update(alias, realShellRunner); err != nil {
 			return fmt.Errorf("something went wrong. error=%v", err.Error())
 		}
 
@@ -88,19 +102,24 @@ func needToUpdate(currentVersionStr string, latestVersionStr string) (bool, erro
 	return v1.LessThan(v2), nil
 }
 
-func update(alias string) error {
-	aliasParam := ""
-	if alias != "" {
-		aliasParam = fmt.Sprintf("ALIAS=%v", alias)
+func update(alias string, runner shellRunner) error {
+	if err := validateAlias(alias); err != nil {
+		return err
 	}
 
-	url := fmt.Sprintf("curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | %v sh", aliasParam)
-	sh := exec.Command("sh", "-c", url)
-	sh.Stdout = os.Stdout
-	sh.Stderr = os.Stderr
-	if err := sh.Run(); err != nil {
-		return fmt.Errorf("update failed: %w", err)
-	}
+	url := fmt.Sprintf("curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | ALIAS=%v sh", alias)
+	return runner("sh", "-c", url)
+}
 
+func validateAlias(alias string) error {
+	if alias == "" {
+		return errors.New("alias cannot be empty")
+	}
+	if strings.ContainsAny(alias, "/ \t\n\r\x00;&|><`$(){}") {
+		return errors.New("alias contains invalid characters")
+	}
+	if strings.HasPrefix(alias, "-") {
+		return errors.New("alias cannot start with a dash")
+	}
 	return nil
 }

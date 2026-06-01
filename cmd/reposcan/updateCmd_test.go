@@ -2,6 +2,7 @@ package reposcan
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/mabd-dev/reposcan/internal"
@@ -106,5 +107,48 @@ func TestNeedToUpdate(t *testing.T) {
 				t.Fatalf("currentVersion=%v, latestVersion%v, expectedOutput=%v, found=%v", test.currentVersion, test.latestVersion, test.expectedOutput, needToUpdate)
 			}
 		})
+	}
+}
+
+func TestUpdateFunction(t *testing.T) {
+	fakeShellRunner := func(name string, args ...string) error {
+		var sb strings.Builder
+
+		sb.WriteString(name)
+		for _, arg := range args {
+			sb.WriteString(" ")
+			sb.WriteString(arg)
+		}
+		return fmt.Errorf("%v", sb.String())
+	}
+
+	alias := "fake-reposcan"
+	err := update(alias, fakeShellRunner)
+	if err == nil {
+		t.Fatal("expected error, found nil")
+	}
+
+	msg := err.Error()
+	expectedMsg := fmt.Sprintf("sh -c curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | ALIAS=%v sh", alias)
+
+	if msg != expectedMsg {
+		t.Fatalf("wrong cmd, expected=%v, found=%v", expectedMsg, msg)
+	}
+}
+
+func TestUpdateFunction_InvalidAlias(t *testing.T) {
+	invalidAliases := []string{
+		"", "-", "repo/scan", "repo scan", "rs;whoami", "-reposcan",
+	}
+
+	fakeShellRunner := func(name string, args ...string) error {
+		return nil
+	}
+
+	for _, alias := range invalidAliases {
+		err := update(alias, fakeShellRunner)
+		if err == nil {
+			t.Fatalf("expected error, found nil, alias=%v", alias)
+		}
 	}
 }

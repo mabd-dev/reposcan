@@ -44,6 +44,6 @@ func init() {
 
 	RootCmd.AddCommand(versionCmd)
 
-	updateCmd.PersistentFlags().StringP("alias", "a", "", "reposcan binary name")
+	updateCmd.PersistentFlags().StringP("alias", "a", "reposcan", "reposcan binary name")
 	RootCmd.AddCommand(updateCmd)
 }
