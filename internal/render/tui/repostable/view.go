@@ -3,7 +3,7 @@ package repostable
 import (
 	"strconv"
 
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/lipgloss/v2"
 	"github.com/mabd-dev/reposcan/internal/render/tui/overlay"
 )
 

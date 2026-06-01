@@ -1,7 +1,7 @@
 package repodetails
 
 import (
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
 	"github.com/mabd-dev/reposcan/internal/theme"
 	"github.com/mabd-dev/reposcan/pkg/report"
 )

@@ -2,9 +2,10 @@ package repodetails
 
 import (
 	"fmt"
+	"image/color"
 	"strconv"
 
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/lipgloss/v2"
 	"github.com/mabd-dev/reposcan/internal/theme"
 )
 
@@ -28,7 +29,6 @@ func (m *Model) View() string {
 }
 
 func (m *Model) buildUncommittedFiles() []string {
-
 	files := m.repoState.UncommitedFiles
 	if len(files) == 0 {
 		return []string{
@@ -40,8 +40,8 @@ func (m *Model) buildUncommittedFiles() []string {
 
 	fileStyle := m.theme.Styles.Base.Foreground(m.theme.Colors.Foreground)
 
-	maxUncommitedFilesToShow := m.height - len(files) - 1
-	trimUncommitedFiles := len(files) > maxUncommitedFilesToShow
+	trimUncommitedFiles := len(files) > m.height-3
+	maxUncommitedFilesToShow := m.height - 3
 
 	if trimUncommitedFiles {
 		files = files[:maxUncommitedFilesToShow]
@@ -61,7 +61,7 @@ func (m *Model) buildUncommittedFiles() []string {
 	return lines
 }
 
-func getFileStatusColor(symbol string, colors theme.LipglossScheme) lipgloss.Color {
+func getFileStatusColor(symbol string, colors theme.LipglossScheme) color.Color {
 	if len(symbol) != 2 {
 		return colors.Foreground
 	}

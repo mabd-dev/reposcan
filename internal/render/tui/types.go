@@ -3,8 +3,8 @@ package tui
 import (
 	"strings"
 
-	"github.com/charmbracelet/bubbles/textinput"
-	tea "github.com/charmbracelet/bubbletea"
+	"charm.land/bubbles/v2/textinput"
+	tea "charm.land/bubbletea/v2"
 	"github.com/mabd-dev/reposcan/internal"
 	"github.com/mabd-dev/reposcan/internal/config"
 	"github.com/mabd-dev/reposcan/internal/render/tui/alerts"

@@ -1,7 +1,7 @@
 package tui
 
 import (
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/lipgloss/v2"
 	"github.com/mabd-dev/reposcan/internal"
 	"github.com/mabd-dev/reposcan/internal/render/tui/common"
 	"github.com/mabd-dev/reposcan/internal/theme"

@@ -3,7 +3,7 @@ package tui
 import (
 	"strings"
 
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
 	"github.com/mabd-dev/reposcan/internal/logger"
 	"github.com/mabd-dev/reposcan/internal/render/tui/alerts"
 	"golang.design/x/clipboard"
@@ -23,7 +23,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m Model) updateReposTable(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		switch msg.String() {
 		case "q", "esc", "ctrl+c":
 			return m, tea.Quit
@@ -77,7 +77,7 @@ func (m Model) updateReposTable(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m Model) updateReposFilter(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		switch msg.String() {
 		case "esc", "ctrl+c":
 			m.popFocus(true)
@@ -103,7 +103,7 @@ func (m Model) updateReposFilter(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m Model) keybindingPopup(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		switch msg.String() {
 		case "q", "esc":
 			m.popFocus(true)

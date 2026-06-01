@@ -4,7 +4,7 @@ import (
 	"embed"
 	"strings"
 
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/lipgloss/v2"
 	"github.com/mabd-dev/reposcan/internal/logger"
 	"gopkg.in/yaml.v3"
 )

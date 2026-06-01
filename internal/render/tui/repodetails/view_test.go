@@ -2,9 +2,10 @@ package repodetails
 
 import (
 	"fmt"
+	"image/color"
 	"testing"
 
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/lipgloss/v2"
 	"github.com/mabd-dev/reposcan/internal/theme"
 )
 
@@ -38,7 +39,7 @@ func TestGetFileStatusColor(t *testing.T) {
 
 	tests := []struct {
 		symbol        string
-		expectedColor lipgloss.Color
+		expectedColor color.Color
 	}{
 		{
 			symbol:        "??",

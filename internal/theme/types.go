@@ -3,7 +3,9 @@
 package theme
 
 import (
-	"github.com/charmbracelet/lipgloss"
+	"image/color"
+
+	"charm.land/lipgloss/v2"
 )
 
 type Base24ColorSchema struct {
@@ -63,25 +65,25 @@ type ColorScheme struct {
 }
 
 type LipglossScheme struct {
-	Background lipgloss.Color
-	Foreground lipgloss.Color
-	Accent     lipgloss.Color
-	Muted      lipgloss.Color
-	Error      lipgloss.Color
-	Warning    lipgloss.Color
-	Success    lipgloss.Color
-	Info       lipgloss.Color
+	Background color.Color
+	Foreground color.Color
+	Accent     color.Color
+	Muted      color.Color
+	Error      color.Color
+	Warning    color.Color
+	Success    color.Color
+	Info       color.Color
 
-	Border       lipgloss.Color
-	BorderActive lipgloss.Color
+	Border       color.Color
+	BorderActive color.Color
 
-	TableHeader lipgloss.Color
-	TableRow    lipgloss.Color
-	TableAltRow lipgloss.Color
+	TableHeader color.Color
+	TableRow    color.Color
+	TableAltRow color.Color
 
-	PopupBackground lipgloss.Color
-	PopupBorder     lipgloss.Color
-	PopupTitle      lipgloss.Color
+	PopupBackground color.Color
+	PopupBorder     color.Color
+	PopupTitle      color.Color
 }
 
 type Styles struct {

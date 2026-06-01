@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/charmbracelet/bubbles/table"
-	tea "github.com/charmbracelet/bubbletea"
+	"charm.land/bubbles/v2/table"
 	"github.com/mabd-dev/reposcan/internal/theme"
 	"github.com/mabd-dev/reposcan/pkg/report"
 )
@@ -97,8 +96,8 @@ func getStateColumnStr(rs report.RepoState, theme theme.Theme) string {
 func setKeymaps(km table.KeyMap) {
 	km.LineUp.SetKeys("up", "k")
 	km.LineDown.SetKeys("down", "j")
-	km.PageUp.SetKeys("pgup", tea.KeyCtrlU.String())
-	km.PageDown.SetKeys("pgdn", tea.KeyCtrlD.String())
+	km.PageUp.SetKeys("pgup", "ctrl+u")
+	km.PageDown.SetKeys("pgdn", "ctrl+d")
 	km.GotoTop.SetKeys("home", "g")
 	km.GotoBottom.SetKeys("end", "G")
 }

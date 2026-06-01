@@ -4,8 +4,8 @@ package tui
 import (
 	"os"
 
-	"github.com/charmbracelet/bubbles/textinput"
-	tea "github.com/charmbracelet/bubbletea"
+	"charm.land/bubbles/v2/textinput"
+	tea "charm.land/bubbletea/v2"
 	"github.com/mabd-dev/reposcan/internal/config"
 	"github.com/mabd-dev/reposcan/internal/logger"
 	"github.com/mabd-dev/reposcan/internal/render/tui/alerts"
@@ -83,7 +83,7 @@ func Render(
 		logger.Warn(err.Error())
 	}
 
-	p := tea.NewProgram(m, tea.WithOutput(os.Stdout), tea.WithAltScreen())
+	p := tea.NewProgram(m, tea.WithOutput(os.Stdout))
 	_, err = p.Run()
 	return err
 }
@@ -93,6 +93,6 @@ func createRrepoFilter() textinput.Model {
 	ti.Placeholder = "Filter by repo/branch name"
 	//ti.Focus()
 	ti.CharLimit = 156
-	ti.Width = 100
+	ti.SetWidth(100)
 	return ti
 }
