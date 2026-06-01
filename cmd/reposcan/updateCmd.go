@@ -78,6 +78,10 @@ func getLatestVersion() (string, error) {
 		return "", err
 	}
 
+	if response.StatusCode != 200 {
+		return "", errors.New("failed to fetch latest version")
+	}
+
 	defer response.Body.Close()
 
 	var release ghRelease
