@@ -1,7 +1,9 @@
 package reposcan
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 
 	"github.com/hashicorp/go-version"
 	"github.com/mabd-dev/reposcan/internal"
@@ -14,7 +16,10 @@ var updateCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		fmt.Println("Checking for updates...")
 		currentVersion := getCurrentVersion()
-		latestVersion := getLatestVersion()
+		latestVersion, err := getLatestVersion()
+		if err != nil {
+			return fmt.Errorf("something went wrong. error=%v", err.Error())
+		}
 
 		needUpdate, err := needToUpdate(currentVersion, latestVersion)
 		if err != nil {
@@ -22,11 +27,13 @@ var updateCmd = &cobra.Command{
 		}
 
 		if needUpdate {
-			fmt.Printf("New version found: %v, updating...", latestVersion)
+			fmt.Printf("New version available: %s (current: %s)\n", latestVersion, currentVersion)
+			fmt.Println("Installing update...")
+
 			return update()
 		}
 
-		fmt.Println("You are up to date")
+		fmt.Printf("Already on the latest version (%s)\n", currentVersion)
 		return nil
 	},
 }
@@ -35,8 +42,24 @@ func getCurrentVersion() string {
 	return internal.VERSION
 }
 
-func getLatestVersion() string {
-	return ""
+type ghRelease struct {
+	TagName string `json:"tag_name"`
+}
+
+func getLatestVersion() (string, error) {
+	response, err := http.Get("https://api.github.com/repos/mabd-dev/reposcan/releases/latest")
+	if err != nil {
+		return "", err
+	}
+
+	defer response.Body.Close()
+
+	var release ghRelease
+	if err := json.NewDecoder(response.Body).Decode(&release); err != nil {
+		return "", fmt.Errorf("failed to parse release info: %w", err)
+	}
+
+	return release.TagName, nil
 }
 
 func needToUpdate(currentVersionStr string, latestVersionStr string) (bool, error) {
