@@ -139,6 +139,7 @@ func TestUpdateFunction(t *testing.T) {
 func TestUpdateFunction_InvalidAlias(t *testing.T) {
 	invalidAliases := []string{
 		"", "-", "repo/scan", "repo scan", "rs;whoami", "-reposcan",
+		"repo'scan", `repo"scan`, `repo\scan`,
 	}
 
 	fakeShellRunner := func(name string, args ...string) error {

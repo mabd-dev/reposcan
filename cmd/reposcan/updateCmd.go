@@ -119,7 +119,7 @@ func validateAlias(alias string) error {
 	if alias == "" {
 		return errors.New("alias cannot be empty")
 	}
-	if strings.ContainsAny(alias, "/ \t\n\r\x00;&|><`$(){}") {
+	if strings.ContainsAny(alias, "/ \t\n\r\x00;&|><`$(){}'\"\\ ") {
 		return errors.New("alias contains invalid characters")
 	}
 	if strings.HasPrefix(alias, "-") {
