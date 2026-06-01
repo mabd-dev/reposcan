@@ -43,4 +43,7 @@ func init() {
 	// RootCmd.PersistentFlags().StringP("colorscheme", "", configs.Output.ColorSchemeName, "Used only if 'output' is 'interactive'")
 
 	RootCmd.AddCommand(versionCmd)
+
+	updateCmd.PersistentFlags().StringP("alias", "a", "reposcan", "reposcan binary name")
+	RootCmd.AddCommand(updateCmd)
 }
