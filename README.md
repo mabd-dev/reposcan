@@ -52,17 +52,13 @@ Supports **linux/amd64**, **darwin/amd64**, and **darwin/arm64**.
 
 ```sh
 # with version
-curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | VERSION=v1.3.8 sh
-```
+curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | VERSION=<x.y.x> sh
 
-```sh
 # with alias
 curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | ALIAS=reposcan sh
-```
 
-```sh
 # with both
-curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | VERSION=v1.3.8 ALIAS=reposcan sh
+curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | VERSION=<x.y.z> ALIAS=reposcan sh
 ```
 
 
@@ -118,7 +114,7 @@ Help
 reposcan --help
 ```
 
-More details on flags and config mapping can be found in [docs/cli-flags.md](docs/cli-flags.md).
+More details on flags and config mapping can be found in [docs/cli-flags-and-configs.md](docs/cli-flags-and-configs.md).
 
 ## ⚙️ Configuration
 By default, `reposcan` looks for a config file in: 

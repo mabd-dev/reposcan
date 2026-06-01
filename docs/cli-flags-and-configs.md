@@ -2,7 +2,23 @@
 
 This document explains each CLI flag, its equivalent `config.toml` field, what it does, and examples with output snippets.
 
-## Flags Overview
+## Table of contents
+
+- [reposcan command](#reposcan-flags-overview)
+- [configs](#config-only)
+- [sub commands](#sub-commands)
+  - [update](#update)
+
+
+## reposcan
+
+```sh
+reposcan [flags]
+```
+
+### flags
+
+below are all available flags
 
 - `-r, --root PATH` (repeatable)
   - Config: `roots = ["/path1", "/path2"]`
@@ -40,12 +56,6 @@ This document explains each CLI flag, its equivalent `config.toml` field, what i
     - `reposcan --filter unpulled`
     - `reposcan --filter stash`
 
-- `countStashAsDirty` (config only, no CLI flag)
-  - Config: `countStashAsDirty = false` (default)
-  - Description: When `true`, repositories whose only local state is stashed work
-    are treated as dirty for `--filter dirty` and the dirty total. The
-    `--filter stash` value is unaffected by this setting.
-
 - `-o, --output TYPE`
   - Config: `output.type = "json" | "interactive" | "none"`
   - Description: Select how results are printed to stdout.
@@ -73,3 +83,33 @@ This document explains each CLI flag, its equivalent `config.toml` field, what i
   - Config: `no-telemetry = true/false`
   - Description: Enable/disable sending telemetry data
   - Example: `--no-telemetry=true` or `--no-telemetry`
+
+
+
+## Config Only
+
+List of configs that does not have equivilant cli-flag
+
+- `countStashAsDirty` (config only, no CLI flag)
+  - Config: `countStashAsDirty = false` (default)
+  - Description: When `true`, repositories whose only local state is stashed work
+    are treated as dirty for `--filter dirty` and the dirty total. The
+    `--filter stash` value is unaffected by this setting.
+
+
+## Sub-commands
+
+### update
+
+Checks if a newer version of reposcan is available on GitHub and installs it automatically.
+
+```sh
+reposcan update [flags]
+```
+
+#### flags
+
+- `-a`, `--alias` NAME
+  - Description: Binary name to use when installing the update. Only needed if you originally installed reposcan under a custom name via ALIAS=.
+  - Default: reposcan
+  - Example: reposcan update --alias rs
