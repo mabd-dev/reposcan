@@ -12,15 +12,17 @@ var updateCmd = &cobra.Command{
 	Use:   "update",
 	Short: "Update reposcan",
 	RunE: func(cmd *cobra.Command, args []string) error {
+		fmt.Println("Checking for updates...")
 		currentVersion := getCurrentVersion()
 		latestVersion := getLatestVersion()
 
 		needUpdate, err := needToUpdate(currentVersion, latestVersion)
 		if err != nil {
-			return err
+			return fmt.Errorf("something went wrong. error=%v", err.Error())
 		}
 
 		if needUpdate {
+			fmt.Printf("New version found: %v, updating...", latestVersion)
 			return update()
 		}
 
