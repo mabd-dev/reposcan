@@ -36,7 +36,12 @@ var updateCmd = &cobra.Command{
 		fmt.Printf("New version available: %s (current: %s)\n", latestVersion, currentVersion)
 		fmt.Println("Installing update...")
 
-		if err = update(); err != nil {
+		alias, err := cmd.Flags().GetString("alias")
+		if err != nil {
+			alias = ""
+		}
+
+		if err = update(alias); err != nil {
 			return fmt.Errorf("something went wrong. error=%v", err.Error())
 		}
 
@@ -83,9 +88,14 @@ func needToUpdate(currentVersionStr string, latestVersionStr string) (bool, erro
 	return v1.LessThan(v2), nil
 }
 
-func update() error {
-	sh := exec.Command("sh", "-c",
-		"curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | sh")
+func update(alias string) error {
+	aliasParam := ""
+	if alias != "" {
+		aliasParam = fmt.Sprintf("ALIAS=%v", alias)
+	}
+
+	url := fmt.Sprintf("curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | %v sh", aliasParam)
+	sh := exec.Command("sh", "-c", url)
 	sh.Stdout = os.Stdout
 	sh.Stderr = os.Stderr
 	if err := sh.Run(); err != nil {
