@@ -7,6 +7,8 @@ All notable changes to this project will be documented in this file.
 
 ### Changes
 
+- feat/updateCmd: added new `reposcan update` command that updates binary to the latest version by @mabd-dev in [#55](https://github.com/mabd-dev/reposcan/pull/55)
+
 ---
 
 ## [1.4.0] - 2026-05-31
