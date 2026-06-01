@@ -9,8 +9,8 @@ import (
 	"github.com/mabd-dev/reposcan/internal/theme"
 )
 
-func generateFakeLipGlossScheme() theme.LipglossScheme {
-	return theme.LipglossScheme{
+func generateFakeLipGlossScheme() theme.ColorScheme {
+	return theme.ColorScheme{
 		Background: lipgloss.Color("#000001"),
 		Foreground: lipgloss.Color("#000002"),
 		Accent:     lipgloss.Color("#000003"),

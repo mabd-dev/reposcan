@@ -43,28 +43,6 @@ type Base24Palette struct {
 }
 
 type ColorScheme struct {
-	Background string
-	Foreground string
-	Accent     string
-	Muted      string
-	Error      string
-	Warning    string
-	Success    string
-	Info       string
-
-	Border       string
-	BorderActive string
-
-	TableHeader string
-	TableRow    string
-	TableAltRow string
-
-	PopupBackground string
-	PopupBorder     string
-	PopupTitle      string
-}
-
-type LipglossScheme struct {
 	Background color.Color
 	Foreground color.Color
 	Accent     color.Color
@@ -114,6 +92,6 @@ func (s Styles) BoxFor(isActive bool) lipgloss.Style {
 }
 
 type Theme struct {
-	Colors LipglossScheme
+	Colors ColorScheme
 	Styles Styles
 }

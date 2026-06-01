@@ -61,7 +61,7 @@ func (m *Model) buildUncommittedFiles() []string {
 	return lines
 }
 
-func getFileStatusColor(symbol string, colors theme.LipglossScheme) color.Color {
+func getFileStatusColor(symbol string, colors theme.ColorScheme) color.Color {
 	if len(symbol) != 2 {
 		return colors.Foreground
 	}
