@@ -11,6 +11,11 @@ var reposTableKeybindings = []common.Keybinding{
 		ShortDesc:   "Navigate",
 	},
 	{
+		Key:         "←/→",
+		Description: "Switch panel between unstaged changes and stashes (or h/l)",
+		ShortDesc:   "Switch panel",
+	},
+	{
 		Key:         "c",
 		Description: "Copy repo path to clipboard",
 		ShortDesc:   "Copy Path",
