@@ -38,7 +38,7 @@ func (m *Model) buildTabs() string {
 	colors := m.theme.Colors
 	box := lipgloss.NewStyle().Border(lipgloss.Border{Bottom: "━"})
 
-	lines := []string{}
+	renderedTabs := []string{}
 
 	for _, tab := range m.tabs {
 		line := ""
@@ -54,10 +54,10 @@ func (m *Model) buildTabs() string {
 			styledName = styles.Base.Foreground(colors.Muted).Render(tab.name)
 			line = box.BorderForeground(colors.Border).Render(fmt.Sprintf("%v %v", styledName, styledHighlightedText))
 		}
-		lines = append(lines, line)
+		renderedTabs = append(renderedTabs, line)
 	}
 
-	return lipgloss.JoinHorizontal(lipgloss.Left, lines...)
+	return lipgloss.JoinHorizontal(lipgloss.Bottom, renderedTabs...)
 }
 
 func (m *Model) buildUncommittedFiles() []string {
