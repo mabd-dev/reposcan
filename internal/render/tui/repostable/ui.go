@@ -93,15 +93,6 @@ func getStateColumnStr(rs report.RepoState, theme theme.Theme) string {
 	return s
 }
 
-func setKeymaps(km table.KeyMap) {
-	km.LineUp.SetKeys("up", "k")
-	km.LineDown.SetKeys("down", "j")
-	km.PageUp.SetKeys("pgup", "ctrl+u")
-	km.PageDown.SetKeys("pgdn", "ctrl+d")
-	km.GotoTop.SetKeys("home", "g")
-	km.GotoBottom.SetKeys("end", "G")
-}
-
 func getRepoIndex(repos []report.RepoState, id string) int {
 	for i, s := range repos {
 		if s.ID == id {

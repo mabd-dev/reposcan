@@ -36,9 +36,6 @@ func New(
 	)
 	t.Focus()
 
-	km := table.DefaultKeyMap()
-	setKeymaps(km)
-
 	t.SetStyles(table.Styles{
 		Header:   model.theme.Styles.TableHeader,
 		Selected: model.theme.Styles.TableSelectedRow,
