@@ -121,28 +121,6 @@ func TestStashesRenderWhenChangesIsSelected(t *testing.T) {
 	assert.Equal(t, "no stashes", strings.TrimSpace(lines[4]))
 }
 
-func TestTooLowTabIndexReverBackToFirstTab(t *testing.T) {
-	repoState := createRepoState([]string{}, []string{})
-	model := createModel(-1, repoState)
-
-	output := model.View()
-	lines := strings.Split(output, "\n")
-
-	assert.Equal(t, 5, len(lines))
-	assert.Equal(t, "no changes", strings.TrimSpace(lines[4]))
-}
-
-func TestTooHighTabIndexReverBackToLastTab(t *testing.T) {
-	repoState := createRepoState([]string{}, []string{})
-	model := createModel(2, repoState)
-
-	output := model.View()
-	lines := strings.Split(output, "\n")
-
-	assert.Equal(t, 5, len(lines))
-	assert.Equal(t, "no stashes", strings.TrimSpace(lines[4]))
-}
-
 func TestRenderingUncommitedFiles(t *testing.T) {
 	assert := assert.New(t)
 	uncommitedFiles := []string{

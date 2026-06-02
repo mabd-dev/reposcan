@@ -23,7 +23,7 @@ func (m *Model) View() string {
 		m.buildTabs(),
 	}
 
-	switch m.selectedTab().key {
+	switch m.tabs[m.selectedTabIndex].key {
 	case tabChanges:
 		lines = append(lines, m.buildUncommittedFiles()...)
 	case tabStashes:
@@ -45,7 +45,7 @@ func (m *Model) buildTabs() string {
 		styledName := ""
 		styledHighlightedText := ""
 
-		if tab.key == m.selectedTab().key {
+		if tab.key == m.tabs[m.selectedTabIndex].key {
 			styledHighlightedText = styles.Base.Foreground(colors.Accent).Render(tab.highlightedText)
 			styledName = styles.Base.Foreground(colors.Foreground).Render(tab.name)
 			line = box.BorderForeground(colors.BorderActive).Render(fmt.Sprintf("%v %v", styledName, styledHighlightedText))
