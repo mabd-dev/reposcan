@@ -9,7 +9,7 @@ type tabKey string
 
 const (
 	tabChanges tabKey = "changes"
-	tabStashes        = "stashes"
+	tabStashes tabKey = "stashes"
 )
 
 type tab struct {
