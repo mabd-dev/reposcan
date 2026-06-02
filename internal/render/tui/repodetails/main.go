@@ -13,9 +13,10 @@ func New(
 	theme theme.Theme,
 ) Model {
 	return Model{
-		theme:       theme,
-		repoState:   repoState,
-		selectedTab: tabChanges,
+		theme:            theme,
+		repoState:        repoState,
+		tabs:             createTabsList(*repoState),
+		selectedTabIndex: 0,
 	}
 }
 
@@ -25,19 +26,22 @@ func (m *Model) UpdateSize(height int) {
 
 func (m *Model) UpdateData(repoState *report.RepoState) {
 	m.repoState = repoState
+	m.tabs = createTabsList(*repoState)
+}
 
-	m.tabs = []tab{
+func (m Model) Init() tea.Cmd { return nil }
+
+func createTabsList(repoState report.RepoState) []tab {
+	return []tab{
 		{
 			key:             tabChanges,
 			name:            "Changes",
-			highlightedText: fmt.Sprintf("(%v)", len(m.repoState.UncommitedFiles)),
+			highlightedText: fmt.Sprintf("(%v)", len(repoState.UncommitedFiles)),
 		},
 		{
 			key:             tabStashes,
 			name:            "Stashes",
-			highlightedText: fmt.Sprintf("(%v)", len(m.repoState.Stashes)),
+			highlightedText: fmt.Sprintf("(%v)", len(repoState.Stashes)),
 		},
 	}
 }
-
-func (m Model) Init() tea.Cmd { return nil }

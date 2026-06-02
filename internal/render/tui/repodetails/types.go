@@ -24,6 +24,17 @@ type Model struct {
 
 	repoState *report.RepoState
 
-	tabs        []tab
-	selectedTab tabKey
+	tabs             []tab
+	selectedTabIndex int
+}
+
+func (m *Model) selectedTab() tab {
+	if m.selectedTabIndex == -1 {
+		m.selectedTabIndex = 0
+	}
+	if m.selectedTabIndex > len(m.tabs) {
+		m.selectedTabIndex = len(m.tabs) - 1
+	}
+
+	return m.tabs[m.selectedTabIndex]
 }
