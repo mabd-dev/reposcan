@@ -20,12 +20,37 @@ func (m *Model) View() string {
 
 	lines := []string{
 		fmt.Sprintf("%s %s", style.Render("Path:"), pathStyle.Render(m.repoState.Path)),
-		style.Render("File Changes:"),
+		m.buildTabs(),
 	}
 
 	lines = append(lines, m.buildUncommittedFiles()...)
 
 	return lipgloss.JoinVertical(lipgloss.Left, lines...)
+}
+
+func (m *Model) buildTabs() string {
+	styles := m.theme.Styles
+	colors := m.theme.Colors
+
+	lines := []string{}
+
+	for _, tab := range m.tabs {
+		line := ""
+		styledName := ""
+		styledHighlightedText := ""
+		if tab.key == m.selectedTab {
+			styledHighlightedText = styles.Base.Foreground(colors.Accent).Render(tab.highlightedText)
+			styledName = styles.Base.Foreground(colors.Foreground).Render(tab.name)
+			line = styles.Box.Render(fmt.Sprintf("%v %v", styledName, styledHighlightedText))
+		} else {
+			styledHighlightedText = styles.Base.Foreground(colors.Muted).Render(tab.highlightedText)
+			styledName = styles.Base.Foreground(colors.Muted).Render(tab.name)
+			line = styles.BoxMuted.Render(fmt.Sprintf("%v %v", styledName, styledHighlightedText))
+		}
+		lines = append(lines, line)
+	}
+
+	return lipgloss.JoinHorizontal(lipgloss.Left, lines...)
 }
 
 func (m *Model) buildUncommittedFiles() []string {
