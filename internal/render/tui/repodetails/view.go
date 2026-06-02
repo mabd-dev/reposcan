@@ -20,19 +20,51 @@ func (m *Model) View() string {
 
 	lines := []string{
 		fmt.Sprintf("%s %s", style.Render("Path:"), pathStyle.Render(m.repoState.Path)),
-		style.Render("File Changes:"),
+		m.buildTabs(),
 	}
 
-	lines = append(lines, m.buildUncommittedFiles()...)
+	switch m.tabs[m.selectedTabIndex].key {
+	case tabChanges:
+		lines = append(lines, m.buildUncommittedFiles()...)
+	case tabStashes:
+		lines = append(lines, m.buildStashes()...)
+	}
 
 	return lipgloss.JoinVertical(lipgloss.Left, lines...)
+}
+
+func (m *Model) buildTabs() string {
+	styles := m.theme.Styles
+	colors := m.theme.Colors
+	box := lipgloss.NewStyle().Border(lipgloss.Border{Bottom: "━"})
+
+	renderedTabs := []string{}
+
+	for _, tab := range m.tabs {
+		line := ""
+		styledName := ""
+		styledHighlightedText := ""
+
+		if tab.key == m.tabs[m.selectedTabIndex].key {
+			styledHighlightedText = styles.Base.Foreground(colors.Accent).Render(tab.highlightedText)
+			styledName = styles.Base.Foreground(colors.Foreground).Render(tab.name)
+			line = box.BorderForeground(colors.BorderActive).Render(fmt.Sprintf("%v %v", styledName, styledHighlightedText))
+		} else {
+			styledHighlightedText = styles.Base.Foreground(colors.Muted).Render(tab.highlightedText)
+			styledName = styles.Base.Foreground(colors.Muted).Render(tab.name)
+			line = box.BorderForeground(colors.Border).Render(fmt.Sprintf("%v %v", styledName, styledHighlightedText))
+		}
+		renderedTabs = append(renderedTabs, line)
+	}
+
+	return lipgloss.JoinHorizontal(lipgloss.Bottom, renderedTabs...)
 }
 
 func (m *Model) buildUncommittedFiles() []string {
 	files := m.repoState.UncommitedFiles
 	if len(files) == 0 {
 		return []string{
-			m.theme.Styles.Muted.Render("    no changes"),
+			m.theme.Styles.Muted.Render("no changes"),
 		}
 	}
 
@@ -53,7 +85,7 @@ func (m *Model) buildUncommittedFiles() []string {
 	for _, f := range files {
 		changeSymbol := f[:2]
 		color := getFileStatusColor(changeSymbol, m.theme.Colors)
-		lines = append(lines, "  "+fileStyle.Foreground(color).Render(f))
+		lines = append(lines, fileStyle.Foreground(color).Render(f))
 	}
 
 	if trimUncommitedFiles {
@@ -61,6 +93,20 @@ func (m *Model) buildUncommittedFiles() []string {
 		lines = append(lines, fileStyle.Render("  ... (+"+strconv.Itoa(more)+" more)"))
 	}
 
+	return lines
+}
+
+func (m *Model) buildStashes() []string {
+	if len(m.repoState.Stashes) == 0 {
+		return []string{
+			m.theme.Styles.Muted.Render("no stashes"),
+		}
+	}
+
+	lines := []string{}
+	for _, line := range m.repoState.Stashes {
+		lines = append(lines, m.theme.Styles.Base.Foreground(m.theme.Colors.Foreground).Render(line))
+	}
 	return lines
 }
 

@@ -5,9 +5,25 @@ import (
 	"github.com/mabd-dev/reposcan/pkg/report"
 )
 
+type tabKey string
+
+const (
+	tabChanges tabKey = "changes"
+	tabStashes tabKey = "stashes"
+)
+
+type tab struct {
+	key             tabKey
+	name            string
+	highlightedText string
+}
+
 type Model struct {
 	height int
+	theme  theme.Theme
 
 	repoState *report.RepoState
-	theme     theme.Theme
+
+	tabs             []tab
+	selectedTabIndex int
 }

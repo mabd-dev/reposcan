@@ -3,10 +3,12 @@ package repodetails
 import (
 	"fmt"
 	"image/color"
+	"strings"
 	"testing"
 
 	"charm.land/lipgloss/v2"
 	"github.com/mabd-dev/reposcan/internal/theme"
+	"github.com/stretchr/testify/assert"
 )
 
 func generateFakeLipGlossScheme() theme.ColorScheme {
@@ -35,6 +37,7 @@ func generateFakeLipGlossScheme() theme.ColorScheme {
 }
 
 func TestGetFileStatusColor(t *testing.T) {
+	assert := assert.New(t)
 	colors := generateFakeLipGlossScheme()
 
 	tests := []struct {
@@ -89,10 +92,67 @@ func TestGetFileStatusColor(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(fmt.Sprintf("Test Color %v", test.symbol), func(t *testing.T) {
-			if color := getFileStatusColor(test.symbol, colors); color != test.expectedColor {
-				t.Fatalf("expected %v found %v (symbol=%v)", test.expectedColor, color, test.symbol)
-			}
+			color := getFileStatusColor(test.symbol, colors)
+			assert.Equal(test.expectedColor, color)
 		})
 	}
 
+}
+
+func TestUncommitedFilesRenderWhenChangesIsSelected(t *testing.T) {
+	repoState := createRepoState([]string{}, []string{})
+	model := createModel(0, repoState)
+
+	output := model.View()
+	lines := strings.Split(output, "\n")
+
+	assert.Equal(t, 5, len(lines))
+	assert.Equal(t, "no changes", strings.TrimSpace(lines[4]))
+}
+
+func TestStashesRenderWhenChangesIsSelected(t *testing.T) {
+	repoState := createRepoState([]string{}, []string{})
+	model := createModel(1, repoState)
+
+	output := model.View()
+	lines := strings.Split(output, "\n")
+
+	assert.Equal(t, 5, len(lines))
+	assert.Equal(t, "no stashes", strings.TrimSpace(lines[4]))
+}
+
+func TestRenderingUncommitedFiles(t *testing.T) {
+	assert := assert.New(t)
+	uncommitedFiles := []string{
+		"file1", "file2", "file3",
+	}
+	repoState := createRepoState(uncommitedFiles, []string{})
+	model := createModel(0, repoState)
+
+	output := model.View()
+	lines := strings.Split(output, "\n")
+
+	assert.Equal(7, len(lines)) // lines: [path, space tab, tab line, content]
+
+	for i, line := range uncommitedFiles {
+		assert.Equal(line, strings.TrimSpace(lines[4+i]))
+	}
+}
+
+func TestRenderingStashedFiles(t *testing.T) {
+	assert := assert.New(t)
+	stashedLines := []string{
+		"file1", "file2", "file3",
+	}
+	repoState := createRepoState([]string{}, stashedLines)
+	model := createModel(1, repoState)
+
+	output := model.View()
+	lines := strings.Split(output, "\n")
+
+	assert.Equal(7, len(lines)) // lines: [path, space tab, tab line, content]
+
+	for i, line := range stashedLines {
+		assert.Equal(line, strings.TrimSpace(lines[4+i]))
+	}
 }
