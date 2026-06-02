@@ -4,8 +4,8 @@ package repostable
 import (
 	"strings"
 
-	"github.com/charmbracelet/bubbles/table"
-	tea "github.com/charmbracelet/bubbletea"
+	"charm.land/bubbles/v2/table"
+	tea "charm.land/bubbletea/v2"
 	"github.com/mabd-dev/reposcan/internal/theme"
 	"github.com/mabd-dev/reposcan/pkg/report"
 )
@@ -31,12 +31,10 @@ func New(
 	t := table.New(
 		table.WithColumns(cols),
 		table.WithRows(rows),
+		table.WithWidth(width),
 		table.WithHeight(height),
 	)
 	t.Focus()
-
-	km := table.DefaultKeyMap()
-	setKeymaps(km)
 
 	t.SetStyles(table.Styles{
 		Header:   model.theme.Styles.TableHeader,
@@ -59,6 +57,7 @@ func (m *Model) UpdateWindowSize(width int, height int) Model {
 	m.width = width - 2   // border corners
 	m.height = height - 2 // border corners
 
+	m.tbl.SetWidth(m.width)
 	m.tbl.SetHeight(m.height)
 	cols := createColumns(m.width)
 	m.tbl.SetColumns(cols)

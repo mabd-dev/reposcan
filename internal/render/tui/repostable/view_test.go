@@ -4,15 +4,15 @@ import (
 	"strings"
 	"testing"
 
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/mabd-dev/reposcan/internal/theme"
 	"github.com/mabd-dev/reposcan/pkg/report"
 )
 
 // stubTheme returns a minimal theme sufficient for view tests.
 func stubTheme() theme.Theme {
-	colors := theme.LipglossScheme{
+	colors := theme.ColorScheme{
 		Foreground:   lipgloss.Color("#ffffff"),
 		Accent:       lipgloss.Color("#00ff00"),
 		Border:       lipgloss.Color("#444444"),
@@ -167,7 +167,7 @@ func TestUpdate_EmptyState_DoesNotCrash(t *testing.T) {
 	)
 
 	// Simulate a keypress when there are no repos — should not panic.
-	keyMsg := tea.KeyMsg{Type: tea.KeyRunes, Runes: []rune{'j'}}
+	keyMsg := tea.KeyPressMsg{Text: "j"}
 	_, cmd := m.Update(keyMsg)
 	if cmd != nil {
 		t.Error("expected nil command for empty-state key update")

@@ -2,14 +2,15 @@ package repodetails
 
 import (
 	"fmt"
+	"image/color"
 	"testing"
 
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/lipgloss/v2"
 	"github.com/mabd-dev/reposcan/internal/theme"
 )
 
-func generateFakeLipGlossScheme() theme.LipglossScheme {
-	return theme.LipglossScheme{
+func generateFakeLipGlossScheme() theme.ColorScheme {
+	return theme.ColorScheme{
 		Background: lipgloss.Color("#000001"),
 		Foreground: lipgloss.Color("#000002"),
 		Accent:     lipgloss.Color("#000003"),
@@ -38,7 +39,7 @@ func TestGetFileStatusColor(t *testing.T) {
 
 	tests := []struct {
 		symbol        string
-		expectedColor lipgloss.Color
+		expectedColor color.Color
 	}{
 		{
 			symbol:        "??",

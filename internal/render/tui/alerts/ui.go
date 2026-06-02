@@ -1,9 +1,10 @@
 package alerts
 
 import (
+	"image/color"
 	"strings"
 
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/lipgloss/v2"
 )
 
 func (m *AlertModel) renderAlert(alert Alert) string {
@@ -31,7 +32,7 @@ func (m *AlertModel) renderAlert(alert Alert) string {
 		Render(sb.String())
 }
 
-func (m *AlertModel) getColors(alert Alert) (borderColor lipgloss.Color, iconColor lipgloss.Color) {
+func (m *AlertModel) getColors(alert Alert) (borderColor color.Color, iconColor color.Color) {
 	switch alert.Type {
 	case MsgTypeError:
 		borderColor = m.theme.Colors.Error
@@ -65,7 +66,7 @@ func (m *AlertModel) getIcon(tm Alert) (icon string) {
 func (m *AlertModel) renderTitle(
 	alert Alert,
 	icon string,
-	iconColor lipgloss.Color,
+	iconColor color.Color,
 ) string {
 	if alert.Title == "" {
 		return ""
