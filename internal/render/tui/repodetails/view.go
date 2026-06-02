@@ -36,6 +36,7 @@ func (m *Model) View() string {
 func (m *Model) buildTabs() string {
 	styles := m.theme.Styles
 	colors := m.theme.Colors
+	box := lipgloss.NewStyle().Border(lipgloss.Border{Bottom: "━"})
 
 	lines := []string{}
 
@@ -43,14 +44,15 @@ func (m *Model) buildTabs() string {
 		line := ""
 		styledName := ""
 		styledHighlightedText := ""
+
 		if tab.key == m.selectedTab().key {
 			styledHighlightedText = styles.Base.Foreground(colors.Accent).Render(tab.highlightedText)
 			styledName = styles.Base.Foreground(colors.Foreground).Render(tab.name)
-			line = styles.Box.Render(fmt.Sprintf("%v %v", styledName, styledHighlightedText))
+			line = box.BorderForeground(colors.BorderActive).Render(fmt.Sprintf("%v %v", styledName, styledHighlightedText))
 		} else {
 			styledHighlightedText = styles.Base.Foreground(colors.Muted).Render(tab.highlightedText)
 			styledName = styles.Base.Foreground(colors.Muted).Render(tab.name)
-			line = styles.BoxMuted.Render(fmt.Sprintf("%v %v", styledName, styledHighlightedText))
+			line = box.BorderForeground(colors.Border).Render(fmt.Sprintf("%v %v", styledName, styledHighlightedText))
 		}
 		lines = append(lines, line)
 	}
