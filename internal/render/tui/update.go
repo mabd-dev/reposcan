@@ -51,6 +51,10 @@ func (m Model) updateReposTable(msg tea.Msg) (tea.Model, tea.Cmd) {
 					},
 				}
 			}
+		case "right", "l", "left", "h":
+			var cmd tea.Cmd
+			m.repoDetails, cmd = m.repoDetails.Update(msg)
+			return m, cmd
 		case "r":
 			m.loading = true
 			request := generateReport{configs: m.configs}
