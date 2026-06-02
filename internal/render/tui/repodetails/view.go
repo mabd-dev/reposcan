@@ -23,7 +23,12 @@ func (m *Model) View() string {
 		m.buildTabs(),
 	}
 
-	lines = append(lines, m.buildUncommittedFiles()...)
+	switch m.selectedTab {
+	case tabChanges:
+		lines = append(lines, m.buildUncommittedFiles()...)
+	case tabStashes:
+		lines = append(lines, m.buildStashes()...)
+	}
 
 	return lipgloss.JoinVertical(lipgloss.Left, lines...)
 }
@@ -86,6 +91,14 @@ func (m *Model) buildUncommittedFiles() []string {
 		lines = append(lines, fileStyle.Render("  ... (+"+strconv.Itoa(more)+" more)"))
 	}
 
+	return lines
+}
+
+func (m *Model) buildStashes() []string {
+	lines := []string{}
+	for _, line := range m.repoState.Stashes {
+		lines = append(lines, m.theme.Styles.Base.Foreground(m.theme.Colors.Foreground).Render(line))
+	}
 	return lines
 }
 
