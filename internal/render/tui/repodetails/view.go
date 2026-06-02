@@ -62,7 +62,7 @@ func (m *Model) buildUncommittedFiles() []string {
 	files := m.repoState.UncommitedFiles
 	if len(files) == 0 {
 		return []string{
-			m.theme.Styles.Muted.Render("    no changes"),
+			m.theme.Styles.Muted.Render("no changes"),
 		}
 	}
 
@@ -83,7 +83,7 @@ func (m *Model) buildUncommittedFiles() []string {
 	for _, f := range files {
 		changeSymbol := f[:2]
 		color := getFileStatusColor(changeSymbol, m.theme.Colors)
-		lines = append(lines, "  "+fileStyle.Foreground(color).Render(f))
+		lines = append(lines, fileStyle.Foreground(color).Render(f))
 	}
 
 	if trimUncommitedFiles {
@@ -95,6 +95,12 @@ func (m *Model) buildUncommittedFiles() []string {
 }
 
 func (m *Model) buildStashes() []string {
+	if len(m.repoState.Stashes) == 0 {
+		return []string{
+			m.theme.Styles.Muted.Render("no stashes"),
+		}
+	}
+
 	lines := []string{}
 	for _, line := range m.repoState.Stashes {
 		lines = append(lines, m.theme.Styles.Base.Foreground(m.theme.Colors.Foreground).Render(line))
