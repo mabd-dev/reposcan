@@ -32,7 +32,7 @@ func (m *Model) selectedTab() tab {
 	if m.selectedTabIndex == -1 {
 		m.selectedTabIndex = 0
 	}
-	if m.selectedTabIndex > len(m.tabs) {
+	if m.selectedTabIndex > len(m.tabs)-1 {
 		m.selectedTabIndex = len(m.tabs) - 1
 	}
 
