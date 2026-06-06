@@ -56,6 +56,13 @@ func New(
 
 func (m Model) Init() tea.Cmd { return nil }
 
+func (m Model) WantsClose() bool           { return m.wantsClose }
+func (m Model) SelectedSchemeName() string { return m.selectedSchemeName }
+
+func (m *Model) Reset() {
+	m.wantsClose = false
+}
+
 func createTextInput() textinput.Model {
 	ti := textinput.New()
 	ti.Placeholder = "search schemes..."

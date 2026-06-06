@@ -38,17 +38,16 @@ func (m Model) updateSchemasTable(msg tea.Msg) (Model, tea.Cmd) {
 	case tea.KeyPressMsg:
 		switch msg.String() {
 		case "esc", "q":
-			return m, tea.Quit
+			m.wantsClose = true
+			return m, nil
 		case "/":
 			m.focusTextInput()
 			return m, nil
 		case "enter":
 			cursor := m.tbl.Cursor()
 			if cursor >= 0 && cursor < len(m.schemeNames) {
-				schemeName := m.schemeNames[cursor]
-				return m, func() tea.Msg {
-					return ThemeSelectedMsg{SchemeName: schemeName}
-				}
+				m.selectedSchemeName = m.schemeNames[cursor]
+				return m, nil
 			}
 		}
 	}

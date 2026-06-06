@@ -10,9 +10,11 @@ type Model struct {
 	theme       theme.Theme
 	schemeNames []string
 
-	tbl table.Model
-
+	tbl       table.Model
 	textInput textinput.Model
+
+	wantsClose        bool
+	selectedSchemeName string
 }
 
 type ThemeSelectedMsg struct {

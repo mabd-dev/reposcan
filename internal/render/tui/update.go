@@ -6,7 +6,6 @@ import (
 	tea "charm.land/bubbletea/v2"
 	"github.com/mabd-dev/reposcan/internal/logger"
 	"github.com/mabd-dev/reposcan/internal/render/tui/alerts"
-	"github.com/mabd-dev/reposcan/internal/render/tui/themeswitcher"
 	"github.com/mabd-dev/reposcan/internal/theme"
 	"golang.design/x/clipboard"
 )
@@ -115,15 +114,14 @@ func (m Model) updateReposFilter(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m Model) updateThemeSwitcher(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	m.themeSwitcher, cmd = m.themeSwitcher.Update(msg)
-	if cmd == nil {
+
+	if m.themeSwitcher.WantsClose() {
+		m.popFocus(true)
 		return m, nil
 	}
-	result := cmd()
-	switch r := result.(type) {
-	case tea.QuitMsg:
-		m.popFocus(true)
-	case themeswitcher.ThemeSelectedMsg:
-		newColors, err := theme.CreateColors(r.SchemeName)
+
+	if schemeName := m.themeSwitcher.SelectedSchemeName(); schemeName != "" && schemeName != m.theme.Colors.Name {
+		newColors, err := theme.CreateColors(schemeName)
 		if err == nil {
 			m.theme = theme.Theme{
 				Colors: newColors,
@@ -134,8 +132,10 @@ func (m Model) updateThemeSwitcher(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.alerts.UpdateTheme(m.theme)
 			m.themeSwitcher.UpdateTheme(m.theme)
 		}
+		return m, nil
 	}
-	return m, nil
+
+	return m, cmd
 }
 
 func (m Model) keybindingPopup(msg tea.Msg) (tea.Model, tea.Cmd) {

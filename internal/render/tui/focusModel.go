@@ -74,6 +74,8 @@ func (m *Model) resetCurrentModel() {
 		m.reposFilter.SetValue("")
 	case FocusHelpPopup:
 		break
+	case FocusThemeSwitcher:
+		m.themeSwitcher.Reset()
 	}
 }
 
