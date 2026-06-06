@@ -35,7 +35,7 @@ func New(
 	tbl := table.New(
 		table.WithColumns(cols),
 		table.WithRows(rows),
-		table.WithWidth(66),
+		table.WithWidth(totalWidth),
 		table.WithHeight(20),
 	)
 	tbl.Focus()
@@ -45,6 +45,7 @@ func New(
 		Cell:     model.theme.Styles.TableRow,
 	})
 	model.tbl = tbl
+	model.updateCursorInRows()
 
 	return model
 }

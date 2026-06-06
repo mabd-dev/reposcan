@@ -6,11 +6,24 @@ import (
 	"github.com/mabd-dev/reposcan/internal/theme"
 )
 
+const (
+	cursorChar   = "›"
+	selectedChar = "✓"
+	emptyChar    = " "
+)
+
+const (
+	indicatorWidth int = 2
+	nameWidth          = 40
+	colorsWidth        = 21
+	totalWidth         = indicatorWidth + nameWidth + colorsWidth
+)
+
 func createColumns() []table.Column {
 	return []table.Column{
-		{Title: "-", Width: 5},       // indicator
-		{Title: "Name", Width: 40},   // colorScheme name
-		{Title: "Colors", Width: 21}, // colors 7 colors each 3
+		{Title: " ", Width: indicatorWidth},
+		{Title: "Name", Width: nameWidth},
+		{Title: "Colors", Width: colorsWidth},
 	}
 }
 
@@ -24,7 +37,7 @@ func createRows(
 	for i, p := range palettes {
 		colors := createColors(p, theme)
 		rows = append(rows, table.Row{
-			"",
+			emptyChar,
 			colorSchemeNames[i],
 			colors,
 		})
