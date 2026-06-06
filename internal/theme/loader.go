@@ -41,6 +41,7 @@ func LoadBase24(path string) (ColorScheme, error) {
 	}
 
 	c := ColorScheme{
+		Name:            b.Name,
 		Background:      lipgloss.Color(b.Palette.Base00),
 		Foreground:      lipgloss.Color(b.Palette.Base05),
 		Accent:          lipgloss.Color(b.Palette.Base0D),
