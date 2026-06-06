@@ -22,7 +22,7 @@ func New(
 	schemesNames := theme.Schemes
 	colorSchemes := make([]theme.Base24ColorSchema, len(schemesNames))
 
-	for i, schemeName := range schemesNames {
+	for i, schemeName := range theme.Schemes {
 		path := fmt.Sprintf("%v%v", theme.SchemesDir, schemeName)
 		palette, err := theme.LoadBase24Schema(path)
 		if err == nil {
@@ -48,6 +48,7 @@ func New(
 		Cell:     model.theme.Styles.TableRow,
 	})
 	model.schemeNames = schemesNames
+	model.colorSchemes = colorSchemes
 	model.tbl = tbl
 	model.updateCursorInRows()
 

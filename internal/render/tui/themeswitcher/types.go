@@ -7,13 +7,14 @@ import (
 )
 
 type Model struct {
-	theme       theme.Theme
-	schemeNames []string
+	theme        theme.Theme
+	schemeNames  []string
+	colorSchemes []theme.Base24ColorSchema
 
 	tbl       table.Model
 	textInput textinput.Model
 
-	wantsClose        bool
+	wantsClose         bool
 	selectedSchemeName string
 }
 

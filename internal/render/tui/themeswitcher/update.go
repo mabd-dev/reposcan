@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
+	"github.com/mabd-dev/reposcan/internal/theme"
 )
 
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
@@ -15,9 +16,6 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 }
 
 func (m Model) updateTextInput(msg tea.Msg) (Model, tea.Cmd) {
-	var cmd tea.Cmd
-	m.textInput, cmd = m.textInput.Update(msg)
-
 	switch msg := msg.(type) {
 	case tea.KeyPressMsg:
 		switch msg.String() {
@@ -29,6 +27,17 @@ func (m Model) updateTextInput(msg tea.Msg) (Model, tea.Cmd) {
 			return m, nil
 		}
 	}
+
+	var cmd tea.Cmd
+	m.textInput, cmd = m.textInput.Update(msg)
+
+	filteredColorSchemes := make([]theme.Base24ColorSchema, 0, len(m.colorSchemes))
+	for _, colorScheme := range m.colorSchemes {
+		if strings.Contains(strings.ToLower(colorScheme.Name), strings.ToLower(m.textInput.Value())) {
+			filteredColorSchemes = append(filteredColorSchemes, colorScheme)
+		}
+	}
+	m.tbl.SetRows(createRows(filteredColorSchemes, m.theme))
 
 	return m, cmd
 }
