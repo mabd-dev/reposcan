@@ -13,11 +13,11 @@ const (
 )
 
 const (
-	indicatorWidth int = 2
-	nameWidth          = 40
-	variantWidth       = 6
-	colorsWidth        = 14
-	totalWidth         = indicatorWidth + nameWidth + variantWidth + colorsWidth
+	indicatorWidth  int = 2
+	nameWidth           = 40
+	variantWidth        = 6
+	colorsWidth         = 14
+	totalTableWidth     = indicatorWidth + nameWidth + variantWidth + colorsWidth
 )
 
 func createColumns() []table.Column {

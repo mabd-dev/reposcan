@@ -35,7 +35,7 @@ func New(
 	tbl := table.New(
 		table.WithColumns(cols),
 		table.WithRows(rows),
-		table.WithWidth(totalWidth),
+		table.WithWidth(totalTableWidth),
 		table.WithHeight(20),
 	)
 	tbl.Focus()
