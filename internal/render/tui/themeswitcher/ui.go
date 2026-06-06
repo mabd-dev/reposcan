@@ -15,15 +15,17 @@ const (
 const (
 	indicatorWidth int = 2
 	nameWidth          = 40
-	colorsWidth        = 21
-	totalWidth         = indicatorWidth + nameWidth + colorsWidth
+	variantWidth       = 6
+	colorsWidth        = 14
+	totalWidth         = indicatorWidth + nameWidth + variantWidth + colorsWidth
 )
 
 func createColumns() []table.Column {
 	return []table.Column{
 		{Title: " ", Width: indicatorWidth},
-		{Title: "Name", Width: nameWidth},
-		{Title: "Colors", Width: colorsWidth},
+		{Title: "", Width: nameWidth},
+		{Title: "", Width: variantWidth},
+		{Title: "", Width: colorsWidth},
 	}
 }
 
@@ -38,6 +40,7 @@ func createRows(
 		rows = append(rows, table.Row{
 			emptyChar,
 			p.Name,
+			p.Variant,
 			colors,
 		})
 	}
