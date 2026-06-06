@@ -10,5 +10,9 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 	}
-	return m, nil
+
+	var cmd tea.Cmd
+	m.tbl, cmd = m.tbl.Update(msg)
+
+	return m, cmd
 }

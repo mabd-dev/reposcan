@@ -10,25 +10,33 @@ import (
 )
 
 var (
-	schemesDir        string = "base24-schemas/"
+	SchemesDir        string = "base24-schemas/"
 	defaultSchemeName string = "catppuccin-mocha"
 )
 
 //go:embed base24-schemas/*.yaml
 var schemesFS embed.FS
 
-func LoadBase24(path string) (ColorScheme, error) {
+func LoadBase24Schema(path string) (Base24ColorSchema, error) {
 	if !strings.HasSuffix(path, ".yaml") {
 		path += ".yaml"
 	}
 
 	data, err := schemesFS.ReadFile(path)
 	if err != nil {
-		return ColorScheme{}, err
+		return Base24ColorSchema{}, err
 	}
 
 	var b Base24ColorSchema
 	if err := yaml.Unmarshal(data, &b); err != nil {
+		return Base24ColorSchema{}, err
+	}
+	return b, nil
+}
+
+func LoadBase24(path string) (ColorScheme, error) {
+	b, err := LoadBase24Schema(path)
+	if err != nil {
 		return ColorScheme{}, err
 	}
 
@@ -55,10 +63,10 @@ func LoadBase24(path string) (ColorScheme, error) {
 }
 
 func CreateColors(colorSchemeName string) (ColorScheme, error) {
-	colorScheme, err := LoadBase24(schemesDir + colorSchemeName)
+	colorScheme, err := LoadBase24(SchemesDir + colorSchemeName)
 	if err != nil {
 		logger.Debug("using default color scheme", logger.StringAttr("name", defaultSchemeName))
-		colorScheme, err := LoadBase24(schemesDir + defaultSchemeName)
+		colorScheme, err := LoadBase24(SchemesDir + defaultSchemeName)
 		if err != nil {
 			return ColorScheme{}, err
 		}
