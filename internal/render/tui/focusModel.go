@@ -10,6 +10,7 @@ const (
 	FocusReposTable FocusState = iota
 	FocusReposFilter
 	FocusHelpPopup
+	FocusThemeSwitcher
 )
 
 func (m Model) currentFocus() FocusState {

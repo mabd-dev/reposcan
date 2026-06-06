@@ -46,13 +46,24 @@ func (m Model) View() tea.View {
 
 	view = m.renderAlerts(view, m.alerts.AlertStates(m.width, m.height))
 
-	if m.currentFocus() == FocusHelpPopup {
+	switch m.currentFocus() {
+	case FocusHelpPopup:
 		helpView := generateHelpPopup(m.theme, reposTableKeybindings)
 
 		view = overlay.PlaceOverlayWithPosition(
 			overlay.OverlayPositionCenter,
 			m.width, m.height,
 			helpView, view,
+			true,
+			overlay.WithWhitespaceChars(" "), // fill empty space
+		)
+	case FocusThemeSwitcher:
+		themeSwitcherView := "testt"
+
+		view = overlay.PlaceOverlayWithPosition(
+			overlay.OverlayPositionCenter,
+			m.width, m.height,
+			themeSwitcherView, view,
 			true,
 			overlay.WithWhitespaceChars(" "), // fill empty space
 		)

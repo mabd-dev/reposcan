@@ -17,6 +17,8 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.updateReposFilter(msg)
 	case FocusHelpPopup:
 		return m.keybindingPopup(msg)
+	case FocusThemeSwitcher:
+		return m.updateThemeSwitcher(msg)
 	}
 	return m, nil
 }
@@ -59,6 +61,9 @@ func (m Model) updateReposTable(msg tea.Msg) (tea.Model, tea.Cmd) {
 			m.loading = true
 			request := generateReport{configs: m.configs}
 			return m, request.Cmd()
+		case "ctrl+t":
+			m.pushFocus(FocusThemeSwitcher)
+			return m, nil
 		case "/":
 			m.pushFocus(FocusReposFilter)
 			return m, nil
@@ -103,6 +108,18 @@ func (m Model) updateReposFilter(msg tea.Msg) (tea.Model, tea.Cmd) {
 	m.reposTable.Filter(m.reposFilter.Value())
 
 	return m, cmd
+}
+
+func (m Model) updateThemeSwitcher(msg tea.Msg) (tea.Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyPressMsg:
+		switch msg.String() {
+		case "q":
+			m.popFocus(true)
+			return m, nil
+		}
+	}
+	return m, nil
 }
 
 func (m Model) keybindingPopup(msg tea.Msg) (tea.Model, tea.Cmd) {
