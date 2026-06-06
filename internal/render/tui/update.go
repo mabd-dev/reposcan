@@ -111,13 +111,10 @@ func (m Model) updateReposFilter(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m Model) updateThemeSwitcher(msg tea.Msg) (tea.Model, tea.Cmd) {
-	switch msg := msg.(type) {
-	case tea.KeyPressMsg:
-		switch msg.String() {
-		case "q", "esc":
-			m.popFocus(true)
-			return m, nil
-		}
+	var cmd tea.Cmd
+	m.themeSwitcher, cmd = m.themeSwitcher.Update(msg)
+	if cmd() == tea.Quit() {
+		m.popFocus(true)
 	}
 	return m, nil
 }
