@@ -17,20 +17,20 @@ func New(
 	}
 
 	schemesNames := theme.Schemes
-	colorSchemes := make([]theme.Base24Palette, len(schemesNames))
+	colorSchemes := make([]theme.Base24ColorSchema, len(schemesNames))
 
 	for i, schemeName := range schemesNames {
 		path := fmt.Sprintf("%v%v", theme.SchemesDir, schemeName)
 		palette, err := theme.LoadBase24Schema(path)
 		if err == nil {
-			colorSchemes[i] = palette.Palette
+			colorSchemes[i] = palette
 		} else {
 			logger.Error(fmt.Sprintf("failed to parse color scheme %v, error=%v", schemeName, err.Error()))
 		}
 	}
 
 	cols := createColumns()
-	rows := createRows(schemesNames, colorSchemes, t)
+	rows := createRows(colorSchemes, t)
 
 	tbl := table.New(
 		table.WithColumns(cols),

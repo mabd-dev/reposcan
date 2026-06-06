@@ -10,8 +10,10 @@ import (
 
 type Base24ColorSchema struct {
 	Scheme  string        `yaml:"scheme"`
+	Name    string        `yaml:"name"`
 	Slug    string        `yaml:"slug"`
 	Author  string        `yaml:"author"`
+	Variant string        `yaml:"variant"`
 	Palette Base24Palette `yaml:"palette"`
 }
 

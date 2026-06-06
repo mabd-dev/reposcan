@@ -28,17 +28,16 @@ func createColumns() []table.Column {
 }
 
 func createRows(
-	colorSchemeNames []string,
-	palettes []theme.Base24Palette,
+	palettes []theme.Base24ColorSchema,
 	theme theme.Theme,
 ) []table.Row {
 	rows := make([]table.Row, 0, len(palettes))
 
-	for i, p := range palettes {
-		colors := createColors(p, theme)
+	for _, p := range palettes {
+		colors := createColors(p.Palette, theme)
 		rows = append(rows, table.Row{
 			emptyChar,
-			colorSchemeNames[i],
+			p.Name,
 			colors,
 		})
 	}
