@@ -113,7 +113,7 @@ func (m Model) updateReposFilter(msg tea.Msg) (tea.Model, tea.Cmd) {
 func (m Model) updateThemeSwitcher(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 	m.themeSwitcher, cmd = m.themeSwitcher.Update(msg)
-	if cmd() == tea.Quit() {
+	if cmd != nil && cmd() == tea.Quit() {
 		m.popFocus(true)
 	}
 	return m, nil
