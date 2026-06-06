@@ -48,7 +48,7 @@ func createRows(
 		rows = append(rows, table.Row{
 			emptyChar,
 			name,
-			p.Variant,
+			t.Styles.Base.Foreground(t.Colors.Muted).Render(p.Variant),
 			colors,
 		})
 	}

@@ -1,15 +1,35 @@
 package themeswitcher
 
-import "charm.land/lipgloss/v2"
+import (
+	"fmt"
+
+	"charm.land/lipgloss/v2"
+)
 
 func (m Model) View() string {
 	styles := m.theme.Styles
-	// colors := m.theme.Colors
+	colors := m.theme.Colors
 
+	// header
 	header := styles.Base.Italic(true).PaddingLeft(1).Width(totalTableWidth).Align(lipgloss.Center).Render("Themes")
 
-	textInputView := styles.BoxFor(m.textInput.Focused()).Render(m.textInput.View())
+	// text input + header
+	counter := styles.Base.Foreground(colors.Muted).Render(fmt.Sprintf("%v/%v", len(m.tbl.Rows()), len(m.colorSchemes)))
+	counterWidth := lipgloss.Width(counter)
 
+	textInputWidth := totalTableWidth - counterWidth
+	m.textInput.SetWidth(textInputWidth)
+	m.textInput.CharLimit = min(textInputWidth, 100)
+
+	textInputView := styles.BoxFor(m.textInput.Focused()).Render(
+		lipgloss.JoinHorizontal(
+			lipgloss.Top,
+			m.textInput.View(),
+			counter,
+		),
+	)
+
+	// putting everything together
 	return styles.Box.Render(lipgloss.JoinVertical(
 		lipgloss.Left,
 		header,

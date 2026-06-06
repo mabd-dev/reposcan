@@ -6,6 +6,7 @@ import (
 	"charm.land/bubbles/v2/table"
 	"charm.land/bubbles/v2/textinput"
 	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/mabd-dev/reposcan/internal/logger"
 	"github.com/mabd-dev/reposcan/internal/theme"
 )
@@ -42,11 +43,8 @@ func New(
 		table.WithHeight(20),
 	)
 	tbl.Focus()
-	tbl.SetStyles(table.Styles{
-		Header:   model.theme.Styles.TableHeader,
-		Selected: model.theme.Styles.TableSelectedRow,
-		Cell:     model.theme.Styles.TableRow,
-	})
+
+	tbl.SetStyles(getTableStyles(t))
 	model.schemeNames = schemesNames
 	model.colorSchemes = colorSchemes
 	model.tbl = tbl
@@ -75,10 +73,14 @@ func createTextInput() textinput.Model {
 func (m *Model) UpdateTheme(newTheme theme.Theme) {
 	m.theme = newTheme
 
-	m.tbl.SetStyles(table.Styles{
-		Header:   m.theme.Styles.TableHeader,
-		Selected: m.theme.Styles.TableSelectedRow,
-		Cell:     m.theme.Styles.TableRow,
-	})
+	m.tbl.SetStyles(getTableStyles(newTheme))
 	m.updateCursorInRows()
+}
+
+func getTableStyles(t theme.Theme) table.Styles {
+	return table.Styles{
+		Header:   t.Styles.TableHeader,
+		Selected: lipgloss.NewStyle().Foreground(t.Colors.Accent).Bold(true),
+		Cell:     t.Styles.TableRow,
+	}
 }
