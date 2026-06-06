@@ -31,6 +31,10 @@ func (m *Model) UpdateData(repoState *report.RepoState) {
 
 func (m Model) Init() tea.Cmd { return nil }
 
+func (m *Model) UpdateTheme(newTheme theme.Theme) {
+	m.theme = newTheme
+}
+
 func createTabsList(repoState report.RepoState) []tab {
 	return []tab{
 		{

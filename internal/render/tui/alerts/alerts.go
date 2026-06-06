@@ -26,6 +26,10 @@ func New(t theme.Theme) AlertModel {
 	}
 }
 
+func (m *AlertModel) UpdateTheme(newTheme theme.Theme) {
+	m.theme = newTheme
+}
+
 func (m AlertModel) Update(msg tea.Msg) (AlertModel, tea.Cmd) {
 	switch msg := msg.(type) {
 	case AddAlertMsg:

@@ -6,10 +6,15 @@ import (
 )
 
 type Model struct {
-	theme theme.Theme
+	theme       theme.Theme
+	schemeNames []string
 
 	tbl table.Model
 
 	filterFocused bool
 	filterQuery   string
+}
+
+type ThemeSelectedMsg struct {
+	SchemeName string
 }

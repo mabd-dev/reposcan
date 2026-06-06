@@ -44,6 +44,7 @@ func New(
 		Selected: model.theme.Styles.TableSelectedRow,
 		Cell:     model.theme.Styles.TableRow,
 	})
+	model.schemeNames = schemesNames
 	model.tbl = tbl
 	model.updateCursorInRows()
 
@@ -51,3 +52,14 @@ func New(
 }
 
 func (m Model) Init() tea.Cmd { return nil }
+
+func (m *Model) UpdateTheme(newTheme theme.Theme) {
+	m.theme = newTheme
+
+	m.tbl.SetStyles(table.Styles{
+		Header:   m.theme.Styles.TableHeader,
+		Selected: m.theme.Styles.TableSelectedRow,
+		Cell:     m.theme.Styles.TableRow,
+	})
+	m.updateCursorInRows()
+}

@@ -12,6 +12,14 @@ func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 		switch msg.String() {
 		case "esc", "q":
 			return m, tea.Quit
+		case "enter":
+			cursor := m.tbl.Cursor()
+			if cursor >= 0 && cursor < len(m.schemeNames) {
+				schemeName := m.schemeNames[cursor]
+				return m, func() tea.Msg {
+					return ThemeSelectedMsg{SchemeName: schemeName}
+				}
+			}
 		}
 	}
 
