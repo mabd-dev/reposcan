@@ -114,7 +114,7 @@ func (m Model) updateThemeSwitcher(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyPressMsg:
 		switch msg.String() {
-		case "q":
+		case "q", "esc":
 			m.popFocus(true)
 			return m, nil
 		}

@@ -31,6 +31,11 @@ var reposTableKeybindings = []common.Keybinding{
 		ShortDesc:   "Filter",
 	},
 	{
+		Key:         "ctrl+t",
+		Description: "Open theme switcher",
+		ShortDesc:   "Change Theme",
+	},
+	{
 		Key:         "q",
 		Description: "Quit",
 		ShortDesc:   "Quit",
