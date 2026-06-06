@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"charm.land/bubbles/v2/table"
+	"charm.land/bubbles/v2/textinput"
 	tea "charm.land/bubbletea/v2"
 	"github.com/mabd-dev/reposcan/internal/logger"
 	"github.com/mabd-dev/reposcan/internal/theme"
@@ -12,8 +13,10 @@ import (
 func New(
 	t theme.Theme,
 ) Model {
+	textInput := createTextInput()
 	model := Model{
-		theme: t,
+		theme:     t,
+		textInput: textInput,
 	}
 
 	schemesNames := theme.Schemes
@@ -52,6 +55,14 @@ func New(
 }
 
 func (m Model) Init() tea.Cmd { return nil }
+
+func createTextInput() textinput.Model {
+	ti := textinput.New()
+	ti.Placeholder = "search schemes..."
+	ti.CharLimit = min(totalTableWidth, 100)
+	ti.SetWidth(totalTableWidth)
+	return ti
+}
 
 func (m *Model) UpdateTheme(newTheme theme.Theme) {
 	m.theme = newTheme

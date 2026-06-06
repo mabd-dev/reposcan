@@ -2,6 +2,7 @@ package themeswitcher
 
 import (
 	"charm.land/bubbles/v2/table"
+	"charm.land/bubbles/v2/textinput"
 	"github.com/mabd-dev/reposcan/internal/theme"
 )
 
@@ -11,8 +12,7 @@ type Model struct {
 
 	tbl table.Model
 
-	filterFocused bool
-	filterQuery   string
+	textInput textinput.Model
 }
 
 type ThemeSelectedMsg struct {

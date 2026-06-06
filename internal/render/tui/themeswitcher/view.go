@@ -8,5 +8,12 @@ func (m Model) View() string {
 
 	header := styles.Base.Italic(true).PaddingLeft(1).Width(totalTableWidth).Align(lipgloss.Center).Render("Themes")
 
-	return styles.Box.Render(lipgloss.JoinVertical(lipgloss.Left, header, m.tbl.View()))
+	textInputView := styles.BoxFor(m.textInput.Focused()).Render(m.textInput.View())
+
+	return styles.Box.Render(lipgloss.JoinVertical(
+		lipgloss.Left,
+		header,
+		textInputView,
+		m.tbl.View(),
+	))
 }
