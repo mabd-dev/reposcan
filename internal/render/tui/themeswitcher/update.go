@@ -1,6 +1,10 @@
 package themeswitcher
 
-import tea "charm.land/bubbletea/v2"
+import (
+	"strings"
+
+	tea "charm.land/bubbletea/v2"
+)
 
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	switch msg := msg.(type) {
@@ -26,6 +30,9 @@ func (m *Model) updateCursorInRows() {
 			rows[i][0] = cursorChar
 		} else {
 			rows[i][0] = emptyChar
+		}
+		if strings.HasPrefix(rows[i][1], m.theme.Colors.Name) {
+			rows[i][0] = selectedChar
 		}
 	}
 	m.tbl.SetRows(rows)
