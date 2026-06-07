@@ -30,7 +30,7 @@ func New(
 	}
 
 	cols := createColumns()
-	rows := createRows(colorSchemes, t)
+	rows := createRows(0, colorSchemes, t)
 
 	tbl := table.New(
 		table.WithColumns(cols),
@@ -49,7 +49,6 @@ func New(
 		colorSchemes:         colorSchemes,
 		filteredColorSchemes: colorSchemes,
 	}
-	model.updateCursorInRows()
 	return model
 }
 
@@ -74,7 +73,7 @@ func (m *Model) UpdateTheme(newTheme theme.Theme) {
 	m.theme = newTheme
 
 	m.tbl.SetStyles(getTableStyles(newTheme))
-	m.updateCursorInRows()
+	m.tbl.SetRows(createRows(m.tbl.Cursor(), m.filteredColorSchemes, m.theme))
 }
 
 func getTableStyles(t theme.Theme) table.Styles {

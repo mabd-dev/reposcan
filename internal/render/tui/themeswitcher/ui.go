@@ -30,6 +30,7 @@ func createColumns() []table.Column {
 }
 
 func createRows(
+	selectedIndex int,
 	colorSchemes []colorSchemeData,
 	t theme.Theme,
 ) []table.Row {
@@ -39,14 +40,20 @@ func createRows(
 		Foreground(t.Colors.Success).
 		Render("[current]")
 
-	for _, s := range colorSchemes {
+	for i, s := range colorSchemes {
 		colors := createColors(s.scheme.Palette, t)
 		name := s.scheme.Name
 		if name == t.Colors.Name {
 			name = name + " " + currentLabel
 		}
+
+		cursorIndicator := emptyChar
+		if i == selectedIndex {
+			cursorIndicator = cursorChar
+		}
+
 		rows = append(rows, table.Row{
-			emptyChar,
+			cursorIndicator,
 			name,
 			t.Styles.Base.Foreground(t.Colors.Muted).Render(s.scheme.Variant),
 			colors,

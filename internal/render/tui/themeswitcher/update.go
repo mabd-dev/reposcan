@@ -39,7 +39,7 @@ func (m Model) updateTextInput(msg tea.Msg) (Model, tea.Cmd) {
 		}
 	}
 	m.filteredColorSchemes = filteredColorSchemes
-	m.tbl.SetRows(createRows(filteredColorSchemes, m.theme))
+	m.tbl.SetRows(createRows(m.tbl.Cursor(), filteredColorSchemes, m.theme))
 
 	return m, cmd
 }
