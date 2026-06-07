@@ -8,7 +8,7 @@ import (
 	"charm.land/lipgloss/v2"
 )
 
-type Base24ColorSchema struct {
+type Base24Scheme struct {
 	Scheme  string        `yaml:"scheme"`
 	Name    string        `yaml:"name"`
 	Slug    string        `yaml:"slug"`

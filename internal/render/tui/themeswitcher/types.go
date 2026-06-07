@@ -6,15 +6,15 @@ import (
 	"github.com/mabd-dev/reposcan/internal/theme"
 )
 
-type colorSchemaData struct {
+type colorSchemeData struct {
 	id     string
-	schema theme.Base24ColorSchema
+	scheme theme.Base24Scheme
 }
 
 type Model struct {
 	theme                theme.Theme
-	colorSchemes         []colorSchemaData
-	filteredColorSchemes []colorSchemaData
+	colorSchemes         []colorSchemeData
+	filteredColorSchemes []colorSchemeData
 
 	tbl       table.Model
 	textInput textinput.Model

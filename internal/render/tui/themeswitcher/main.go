@@ -17,13 +17,13 @@ func New(
 	textInput := createTextInput()
 
 	schemesNames := theme.Schemes
-	colorSchemes := make([]colorSchemaData, len(schemesNames))
+	colorSchemes := make([]colorSchemeData, len(schemesNames))
 
 	for i, schemeName := range theme.Schemes {
 		path := fmt.Sprintf("%v%v", theme.SchemesDir, schemeName)
 		schema, err := theme.LoadBase24Schema(path)
 		if err == nil {
-			colorSchemes[i] = colorSchemaData{schemeName, schema}
+			colorSchemes[i] = colorSchemeData{schemeName, schema}
 		} else {
 			logger.Error(fmt.Sprintf("failed to parse color scheme %v, error=%v", schemeName, err.Error()))
 		}

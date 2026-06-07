@@ -17,19 +17,19 @@ var (
 //go:embed base24-schemas/*.yaml
 var schemesFS embed.FS
 
-func LoadBase24Schema(path string) (Base24ColorSchema, error) {
+func LoadBase24Schema(path string) (Base24Scheme, error) {
 	if !strings.HasSuffix(path, ".yaml") {
 		path += ".yaml"
 	}
 
 	data, err := schemesFS.ReadFile(path)
 	if err != nil {
-		return Base24ColorSchema{}, err
+		return Base24Scheme{}, err
 	}
 
-	var b Base24ColorSchema
+	var b Base24Scheme
 	if err := yaml.Unmarshal(data, &b); err != nil {
-		return Base24ColorSchema{}, err
+		return Base24Scheme{}, err
 	}
 	return b, nil
 }

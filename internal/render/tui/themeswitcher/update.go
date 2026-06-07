@@ -22,9 +22,9 @@ func (m Model) updateTextInput(msg tea.Msg) (Model, tea.Cmd) {
 		switch msg.String() {
 		case "esc", "ctr+c":
 			m.textInput.SetValue("")
-			m.focusSchemasTable()
+			m.focusSchemesTable()
 		case "enter":
-			m.focusSchemasTable()
+			m.focusSchemesTable()
 			return m, nil
 		}
 	}
@@ -32,9 +32,9 @@ func (m Model) updateTextInput(msg tea.Msg) (Model, tea.Cmd) {
 	var cmd tea.Cmd
 	m.textInput, cmd = m.textInput.Update(msg)
 
-	filteredColorSchemes := make([]colorSchemaData, 0, len(m.colorSchemes))
+	filteredColorSchemes := make([]colorSchemeData, 0, len(m.colorSchemes))
 	for _, s := range m.colorSchemes {
-		if strings.Contains(strings.ToLower(s.schema.Name), strings.ToLower(m.textInput.Value())) {
+		if strings.Contains(strings.ToLower(s.scheme.Name), strings.ToLower(m.textInput.Value())) {
 			filteredColorSchemes = append(filteredColorSchemes, s)
 		}
 	}
@@ -71,7 +71,7 @@ func (m Model) updateSchemasTable(msg tea.Msg) (Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (m *Model) focusSchemasTable() {
+func (m *Model) focusSchemesTable() {
 	m.tbl.Focus()
 	m.textInput.Blur()
 }
