@@ -15,19 +15,15 @@ func New(
 	t theme.Theme,
 ) Model {
 	textInput := createTextInput()
-	model := Model{
-		theme:     t,
-		textInput: textInput,
-	}
 
 	schemesNames := theme.Schemes
-	colorSchemes := make([]theme.Base24ColorSchema, len(schemesNames))
+	colorSchemes := make([]colorSchemaData, len(schemesNames))
 
 	for i, schemeName := range theme.Schemes {
 		path := fmt.Sprintf("%v%v", theme.SchemesDir, schemeName)
-		palette, err := theme.LoadBase24Schema(path)
+		schema, err := theme.LoadBase24Schema(path)
 		if err == nil {
-			colorSchemes[i] = palette
+			colorSchemes[i] = colorSchemaData{schemeName, schema}
 		} else {
 			logger.Error(fmt.Sprintf("failed to parse color scheme %v, error=%v", schemeName, err.Error()))
 		}
@@ -45,11 +41,15 @@ func New(
 	tbl.Focus()
 
 	tbl.SetStyles(getTableStyles(t))
-	model.schemeNames = schemesNames
-	model.colorSchemes = colorSchemes
-	model.tbl = tbl
-	model.updateCursorInRows()
 
+	model := Model{
+		theme:                t,
+		textInput:            textInput,
+		tbl:                  tbl,
+		colorSchemes:         colorSchemes,
+		filteredColorSchemes: colorSchemes,
+	}
+	model.updateCursorInRows()
 	return model
 }
 

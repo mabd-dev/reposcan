@@ -30,25 +30,25 @@ func createColumns() []table.Column {
 }
 
 func createRows(
-	palettes []theme.Base24ColorSchema,
+	colorSchemas []colorSchemaData,
 	t theme.Theme,
 ) []table.Row {
-	rows := make([]table.Row, 0, len(palettes))
+	rows := make([]table.Row, 0, len(colorSchemas))
 
 	currentLabel := t.Styles.Base.
 		Foreground(t.Colors.Success).
 		Render("[current]")
 
-	for _, p := range palettes {
-		colors := createColors(p.Palette, t)
-		name := p.Name
+	for _, s := range colorSchemas {
+		colors := createColors(s.schema.Palette, t)
+		name := s.schema.Name
 		if name == t.Colors.Name {
 			name = name + " " + currentLabel
 		}
 		rows = append(rows, table.Row{
 			emptyChar,
 			name,
-			t.Styles.Base.Foreground(t.Colors.Muted).Render(p.Variant),
+			t.Styles.Base.Foreground(t.Colors.Muted).Render(s.schema.Variant),
 			colors,
 		})
 	}
