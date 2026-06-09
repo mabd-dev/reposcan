@@ -7,6 +7,7 @@ All notable changes to this project will be documented in this file.
 
 ### Changes
 
+- feat/jjSupport: add configurable VCS column by @frittlechasm in [#51](https://github.com/mabd-dev/reposcan/pull/51) 
 - feat/detect-stashes: Detect stashed changes as a repo state; adds `stash` filter and opt-in `countStashAsDirty` config by @nilp0inter in [#47](https://github.com/mabd-dev/reposcan/pull/47)
 - feat/supportWorktree: Detect git worktrees and submodules (`.git` file with `gitdir:` pointer) during repo scan by @mabd-dev in [#43](https://github.com/mabd-dev/reposcan/pull/43)
 
