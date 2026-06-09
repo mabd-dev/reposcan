@@ -16,4 +16,10 @@ type Model struct {
 	report        report.ScanReport
 	filteredRepos []report.RepoState
 	filterQuery   string
+
+	options Options
+}
+
+type Options struct {
+	ShowVCS bool
 }

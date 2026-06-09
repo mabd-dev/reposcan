@@ -52,6 +52,9 @@ func Render(
 		r,
 		totalWidth*sizeReposTableWidthPercent/100,
 		totalHeight*sizeReposTableHeightPercent/100,
+		repostable.Options{
+			ShowVCS: configs.ShowVCSColumn(),
+		},
 	)
 
 	reposTableHeader := rth.Header{

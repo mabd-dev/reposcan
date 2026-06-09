@@ -11,6 +11,8 @@ type Config struct {
 
 	Output Output `toml:"output"`
 
+	Tui Tui `toml:"tui"`
+
 	// CountStashAsDirty, when true, makes repos with only stashed work count as
 	// dirty for IsDirty-based filtering (--filter dirty) and the dirty total.
 	// The --filter stash value is unaffected by this setting.
@@ -24,6 +26,20 @@ type Config struct {
 	NoTelemetry bool `toml:"no-telemetry"`
 
 	Version int `toml:"version"`
+}
+
+// Tui holds display options for the interactive renderer.
+type Tui struct {
+	// ShowVCS controls whether the interactive table includes the VCS column.
+	// A nil value is treated as true so older config files continue to show it.
+	ShowVCS *bool `toml:"showVCS,omitempty"`
+}
+
+// ShowVCSColumn reports whether the interactive table should render the VCS
+// column. An unset value defaults to true for compatibility with existing
+// config files.
+func (c Config) ShowVCSColumn() bool {
+	return c.Tui.ShowVCS == nil || *c.Tui.ShowVCS
 }
 
 // Defaults returns a Config populated with sensible defaults suitable for
@@ -99,11 +115,14 @@ func Defaults() Config {
 		JSONPath: "",
 	}
 
+	showVCS := true
+
 	return Config{
 		Roots:      roots,
 		DirIgnore:  defaultDirIgnore,
 		Only:       OnlyDirty,
 		Output:     newOutput,
+		Tui:        Tui{ShowVCS: &showVCS},
 		MaxWorkers: 8,
 		Debug:      false,
 		Version:    1,
