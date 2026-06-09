@@ -30,6 +30,8 @@ type Config struct {
 
 // Tui holds display options for the interactive renderer.
 type Tui struct {
+	// ShowVCS controls whether the interactive table includes the VCS column.
+	// A nil value is treated as true so older config files continue to show it.
 	ShowVCS *bool `toml:"showVCS,omitempty"`
 }
 

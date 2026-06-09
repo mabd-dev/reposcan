@@ -21,9 +21,13 @@ const (
 type columnDef struct {
 	title        string
 	widthPercent int
-	show         func(Options) bool
-	cell         func(report.RepoState, theme.Theme) string
-	expand       bool
+	// show controls whether a column is included for the current options.
+	// A nil show function means the column is always visible.
+	show func(Options) bool
+	// cell renders the table cell for this column. It must not be nil because
+	// createRows calls it for every active column.
+	cell   func(report.RepoState, theme.Theme) string
+	expand bool
 }
 
 func createColumns(maxWidth int, options Options) []table.Column {

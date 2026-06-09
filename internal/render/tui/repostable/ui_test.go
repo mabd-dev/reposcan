@@ -34,6 +34,21 @@ func TestCreateColumnsOmitsVCSColumnWhenDisabled(t *testing.T) {
 	}
 }
 
+func TestActiveColumnDefsAllCellsDefined(t *testing.T) {
+	for _, options := range []Options{
+		{ShowVCS: true},
+		{ShowVCS: false},
+	} {
+		defs := activeColumnDefs(options)
+
+		for _, def := range defs {
+			if def.cell == nil {
+				t.Fatalf("expected %q column to define a cell renderer", def.title)
+			}
+		}
+	}
+}
+
 func TestCreateRowsIncludesVCSValue(t *testing.T) {
 	rows := createRows([]report.RepoState{
 		{
