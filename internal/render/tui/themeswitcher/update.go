@@ -20,7 +20,7 @@ func (m Model) updateTextInput(msg tea.Msg) (Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyPressMsg:
 		switch msg.String() {
-		case "esc", "ctr+c":
+		case "esc", "ctrl+c":
 			m.textInput.SetValue("")
 			m.focusSchemesTable()
 		case "enter":
@@ -48,7 +48,7 @@ func (m Model) updateSchemasTable(msg tea.Msg) (Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyPressMsg:
 		switch msg.String() {
-		case "esc", "q":
+		case "esc", "q", "ctrl+c":
 			m.wantsClose = true
 			return m, nil
 		case "/":
