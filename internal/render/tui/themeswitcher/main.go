@@ -11,32 +11,31 @@ import (
 	"github.com/mabd-dev/reposcan/internal/theme"
 )
 
-func New(
-	t theme.Theme,
-) Model {
-	textInput := createTextInput()
-
-	schemesNames := theme.Schemes
-	colorSchemes := make([]colorSchemeData, len(schemesNames))
-
-	for i, schemeName := range theme.Schemes {
+func New(t theme.Theme, height int) Model {
+	colorSchemes := make([]colorSchemeData, 0, len(theme.Schemes))
+	for _, schemeName := range theme.Schemes {
 		path := fmt.Sprintf("%v%v", theme.SchemesDir, schemeName)
 		schema, err := theme.LoadBase24Schema(path)
 		if err == nil {
-			colorSchemes[i] = colorSchemeData{schemeName, schema}
+			colorSchemes = append(colorSchemes, colorSchemeData{schemeName, schema})
 		} else {
 			logger.Error(fmt.Sprintf("failed to parse color scheme %v, error=%v", schemeName, err.Error()))
 		}
 	}
 
+	maxCounterWidth := len(fmt.Sprintf("%v/%v", len(colorSchemes), len(colorSchemes)))
+	tiWidth := totalTableWidth - maxCounterWidth
+	textInput := createTextInput(tiWidth)
+
 	cols := createColumns()
 	rows := createRows(0, colorSchemes, t)
 
+	tableHeight := max(5, height-10)
 	tbl := table.New(
 		table.WithColumns(cols),
 		table.WithRows(rows),
 		table.WithWidth(totalTableWidth),
-		table.WithHeight(20),
+		table.WithHeight(tableHeight),
 	)
 	tbl.Focus()
 
@@ -62,11 +61,11 @@ func (m *Model) Reset() {
 	m.wantsClose = false
 }
 
-func createTextInput() textinput.Model {
+func createTextInput(width int) textinput.Model {
 	ti := textinput.New()
 	ti.Placeholder = "search schemes..."
-	ti.CharLimit = min(totalTableWidth, 100)
-	ti.SetWidth(totalTableWidth)
+	ti.CharLimit = min(width, 100)
+	ti.SetWidth(width)
 	return ti
 }
 

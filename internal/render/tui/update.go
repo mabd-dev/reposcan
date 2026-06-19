@@ -124,14 +124,14 @@ func (m Model) updateThemeSwitcher(msg tea.Msg) (tea.Model, tea.Cmd) {
 	if schemeName := m.themeSwitcher.SelectedSchemeName(); schemeName != "" && schemeName != m.theme.Colors.Name {
 		newColors, err := theme.CreateColors(schemeName)
 		if err != nil {
-			logger.Error("Failed to create new theme from name '%v'", schemeName)
+			logger.Error("Failed to create new theme from name '%v': %v", schemeName, err)
 			return m, nil
 		}
 		paths := config.DefaultPaths()
 		m.configs.Output.ColorSchemeName = schemeName
 		err = config.UpdateConfigs(m.configs, paths.ConfigFilePath)
 		if err != nil {
-			logger.Error("failed to save new configs in config.toml")
+			logger.Error("failed to save new configs in config.toml: %v", err)
 			return m, nil
 		}
 

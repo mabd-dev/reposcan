@@ -41,6 +41,11 @@ func (m Model) updateTextInput(msg tea.Msg) (Model, tea.Cmd) {
 	m.filteredColorSchemes = filteredColorSchemes
 	m.tbl.SetRows(createRows(m.tbl.Cursor(), filteredColorSchemes, m.theme))
 
+	counterWidth := len(fmt.Sprintf("%v/%v", len(filteredColorSchemes), len(m.colorSchemes)))
+	tiWidth := totalTableWidth - counterWidth
+	m.textInput.SetWidth(tiWidth)
+	m.textInput.CharLimit = min(tiWidth, 100)
+
 	return m, cmd
 }
 

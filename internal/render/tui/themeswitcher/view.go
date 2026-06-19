@@ -13,13 +13,8 @@ func (m Model) View() string {
 	// header
 	header := styles.Base.Italic(true).PaddingLeft(1).Width(totalTableWidth).Align(lipgloss.Center).Render("Themes")
 
-	// text input + header
+	// text input + counter
 	counter := styles.Base.Foreground(colors.Muted).Render(fmt.Sprintf("%v/%v", len(m.tbl.Rows()), len(m.colorSchemes)))
-	counterWidth := lipgloss.Width(counter)
-
-	textInputWidth := totalTableWidth - counterWidth
-	m.textInput.SetWidth(textInputWidth)
-	m.textInput.CharLimit = min(textInputWidth, 100)
 
 	textInputView := styles.BoxFor(m.textInput.Focused()).Render(
 		lipgloss.JoinHorizontal(

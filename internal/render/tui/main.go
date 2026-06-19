@@ -66,7 +66,7 @@ func Render(
 		repoDetails = repodetails.New(&r.RepoStates[0], theme)
 	}
 
-	themeSwitcher := themeswitcher.New(theme)
+	themeSwitcher := themeswitcher.New(theme, totalHeight)
 
 	m := Model{
 		configs:       configs,

@@ -9,10 +9,9 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-var (
-	SchemesDir        string = "base24-schemas/"
-	defaultSchemeName string = "catppuccin-mocha"
-)
+const SchemesDir = "base24-schemas/"
+
+var defaultSchemeName string = "catppuccin-mocha"
 
 //go:embed base24-schemas/*.yaml
 var schemesFS embed.FS
