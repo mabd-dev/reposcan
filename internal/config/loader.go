@@ -2,10 +2,11 @@ package config
 
 import (
 	"fmt"
-	"github.com/mabd-dev/reposcan/internal/utils"
-	"github.com/pelletier/go-toml/v2"
 	"os"
 	"path/filepath"
+
+	"github.com/mabd-dev/reposcan/internal/utils"
+	"github.com/pelletier/go-toml/v2"
 )
 
 // WriteToFile serializes config to TOML and writes it to path.
@@ -18,6 +19,16 @@ func WriteToFile(config Config, path string) error {
 	}
 
 	return utils.WriteToFile(data, path)
+}
+
+func UpdateConfigs(configs Config, configFilePath string) error {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return err
+	}
+
+	filePath := filepath.Join(home, configFilePath)
+	return WriteToFile(configs, filePath)
 }
 
 // Load reads a TOML configuration file from path into conf.

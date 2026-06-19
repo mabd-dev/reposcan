@@ -48,6 +48,7 @@ func New(
 		tbl:                  tbl,
 		colorSchemes:         colorSchemes,
 		filteredColorSchemes: colorSchemes,
+		selectedSchemeName:   t.Colors.Name,
 	}
 	return model
 }

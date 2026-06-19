@@ -4,6 +4,7 @@ import (
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
+	"github.com/mabd-dev/reposcan/internal/config"
 	"github.com/mabd-dev/reposcan/internal/logger"
 	"github.com/mabd-dev/reposcan/internal/render/tui/alerts"
 	"github.com/mabd-dev/reposcan/internal/theme"
@@ -122,16 +123,26 @@ func (m Model) updateThemeSwitcher(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	if schemeName := m.themeSwitcher.SelectedSchemeName(); schemeName != "" && schemeName != m.theme.Colors.Name {
 		newColors, err := theme.CreateColors(schemeName)
-		if err == nil {
-			m.theme = theme.Theme{
-				Colors: newColors,
-				Styles: theme.CreateStyles(newColors),
-			}
-			m.reposTable.UpdateTheme(m.theme)
-			m.repoDetails.UpdateTheme(m.theme)
-			m.alerts.UpdateTheme(m.theme)
-			m.themeSwitcher.UpdateTheme(m.theme)
+		if err != nil {
+			logger.Error("Failed to create new theme from name '%v'", schemeName)
+			return m, nil
 		}
+		paths := config.DefaultPaths()
+		m.configs.Output.ColorSchemeName = schemeName
+		err = config.UpdateConfigs(m.configs, paths.ConfigFilePath)
+		if err != nil {
+			logger.Error("failed to save new configs in config.toml")
+			return m, nil
+		}
+
+		m.theme = theme.Theme{
+			Colors: newColors,
+			Styles: theme.CreateStyles(newColors),
+		}
+		m.reposTable.UpdateTheme(m.theme)
+		m.repoDetails.UpdateTheme(m.theme)
+		m.alerts.UpdateTheme(m.theme)
+		m.themeSwitcher.UpdateTheme(m.theme)
 		return m, nil
 	}
 
