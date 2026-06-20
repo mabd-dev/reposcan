@@ -127,10 +127,16 @@ func (m Model) updateColorSchemeSwitcher(msg tea.Msg) (tea.Model, tea.Cmd) {
 			logger.Error("Failed to create new theme from name '%v': %v", schemeName, err)
 			return m, nil
 		}
-		paths := config.DefaultPaths()
-		m.configs.Output.ColorSchemeName = schemeName
-		err = config.UpdateConfigs(m.configs, paths.ConfigFilePath)
+		cfgFullPath, err := config.DefaultPaths().GetConfigFullPath()
 		if err != nil {
+			logger.Error("Failed to get config full path : %v", err)
+			return m, nil
+		}
+		oldColorSchemeName := m.theme.Colors.Name
+		m.configs.Output.ColorSchemeName = schemeName
+		err = config.UpdateConfigs(m.configs, cfgFullPath)
+		if err != nil {
+			m.configs.Output.ColorSchemeName = oldColorSchemeName
 			logger.Error("failed to save new configs in config.toml: %v", err)
 			return m, nil
 		}
