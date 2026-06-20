@@ -172,6 +172,7 @@ Each step overrides the one before it
 - [x] Support dirignore
 - [x] Worker pool for speed
 - [x] Support git worktrees
+- [x] ColorSceheme switcher
 - [ ] Perform git push/pull/fetch on repos
 - [ ] Show branches with their states on each repo
 
