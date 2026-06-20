@@ -22,7 +22,3 @@ type Model struct {
 	wantsClose         bool
 	selectedSchemeName string
 }
-
-type ThemeSelectedMsg struct {
-	SchemeName string
-}
