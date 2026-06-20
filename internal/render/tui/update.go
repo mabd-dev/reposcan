@@ -20,7 +20,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case FocusHelpPopup:
 		return m.keybindingPopup(msg)
 	case FocusThemeSwitcher:
-		return m.updateThemeSwitcher(msg)
+		return m.updateColorSchemeSwitcher(msg)
 	}
 	return m, nil
 }
@@ -112,16 +112,16 @@ func (m Model) updateReposFilter(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
-func (m Model) updateThemeSwitcher(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m Model) updateColorSchemeSwitcher(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
-	m.themeSwitcher, cmd = m.themeSwitcher.Update(msg)
+	m.colorSchemeSwitcher, cmd = m.colorSchemeSwitcher.Update(msg)
 
-	if m.themeSwitcher.WantsClose() {
+	if m.colorSchemeSwitcher.WantsClose() {
 		m.popFocus(true)
 		return m, nil
 	}
 
-	if schemeName := m.themeSwitcher.SelectedSchemeName(); schemeName != "" && schemeName != m.theme.Colors.Name {
+	if schemeName := m.colorSchemeSwitcher.SelectedSchemeName(); schemeName != "" && schemeName != m.theme.Colors.Name {
 		newColors, err := theme.CreateColors(schemeName)
 		if err != nil {
 			logger.Error("Failed to create new theme from name '%v': %v", schemeName, err)
@@ -142,7 +142,7 @@ func (m Model) updateThemeSwitcher(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.reposTable.UpdateTheme(m.theme)
 		m.repoDetails.UpdateTheme(m.theme)
 		m.alerts.UpdateTheme(m.theme)
-		m.themeSwitcher.UpdateTheme(m.theme)
+		m.colorSchemeSwitcher.UpdateTheme(m.theme)
 		return m, nil
 	}
 

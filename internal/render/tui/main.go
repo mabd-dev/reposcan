@@ -9,10 +9,10 @@ import (
 	"github.com/mabd-dev/reposcan/internal/config"
 	"github.com/mabd-dev/reposcan/internal/logger"
 	"github.com/mabd-dev/reposcan/internal/render/tui/alerts"
+	"github.com/mabd-dev/reposcan/internal/render/tui/colorschemeswitcher"
 	"github.com/mabd-dev/reposcan/internal/render/tui/repodetails"
 	"github.com/mabd-dev/reposcan/internal/render/tui/repostable"
 	rth "github.com/mabd-dev/reposcan/internal/render/tui/repostableheader"
-	"github.com/mabd-dev/reposcan/internal/render/tui/themeswitcher"
 	"github.com/mabd-dev/reposcan/internal/theme"
 	"github.com/mabd-dev/reposcan/pkg/report"
 	"golang.design/x/clipboard"
@@ -66,20 +66,20 @@ func Render(
 		repoDetails = repodetails.New(&r.RepoStates[0], theme)
 	}
 
-	themeSwitcher := themeswitcher.New(theme, totalHeight)
+	themeSwitcher := colorschemeswitcher.New(theme, totalHeight)
 
 	m := Model{
-		configs:       configs,
-		reposTable:    reposTable,
-		repoDetails:   repoDetails,
-		rtHeader:      reposTableHeader,
-		themeSwitcher: themeSwitcher,
-		alerts:        alerts.New(theme),
-		width:         totalWidth,
-		height:        totalHeight,
-		reposFilter:   createRrepoFilter(),
-		theme:         theme,
-		focusStack:    []FocusState{FocusReposTable},
+		configs:             configs,
+		reposTable:          reposTable,
+		repoDetails:         repoDetails,
+		rtHeader:            reposTableHeader,
+		colorSchemeSwitcher: themeSwitcher,
+		alerts:              alerts.New(theme),
+		width:               totalWidth,
+		height:              totalHeight,
+		reposFilter:         createRrepoFilter(),
+		theme:               theme,
+		focusStack:          []FocusState{FocusReposTable},
 	}
 
 	err = clipboard.Init()

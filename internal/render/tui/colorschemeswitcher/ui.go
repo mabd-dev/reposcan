@@ -1,4 +1,4 @@
-package themeswitcher
+package colorschemeswitcher
 
 import (
 	"charm.land/bubbles/v2/table"

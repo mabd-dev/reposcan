@@ -1,4 +1,4 @@
-package themeswitcher
+package colorschemeswitcher
 
 import (
 	"fmt"

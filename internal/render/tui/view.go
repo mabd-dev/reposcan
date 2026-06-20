@@ -58,7 +58,7 @@ func (m Model) View() tea.View {
 			overlay.WithWhitespaceChars(" "), // fill empty space
 		)
 	case FocusThemeSwitcher:
-		themeSwitcherView := m.themeSwitcher.View()
+		themeSwitcherView := m.colorSchemeSwitcher.View()
 
 		view = overlay.PlaceOverlayWithPosition(
 			overlay.OverlayPositionCenter,

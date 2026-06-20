@@ -75,7 +75,7 @@ func (m *Model) resetCurrentModel() {
 	case FocusHelpPopup:
 		break
 	case FocusThemeSwitcher:
-		m.themeSwitcher.Reset()
+		m.colorSchemeSwitcher.Reset()
 	}
 }
 

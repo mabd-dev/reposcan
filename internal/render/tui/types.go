@@ -8,10 +8,10 @@ import (
 	"github.com/mabd-dev/reposcan/internal"
 	"github.com/mabd-dev/reposcan/internal/config"
 	"github.com/mabd-dev/reposcan/internal/render/tui/alerts"
+	"github.com/mabd-dev/reposcan/internal/render/tui/colorschemeswitcher"
 	"github.com/mabd-dev/reposcan/internal/render/tui/repodetails"
 	"github.com/mabd-dev/reposcan/internal/render/tui/repostable"
 	rth "github.com/mabd-dev/reposcan/internal/render/tui/repostableheader"
-	"github.com/mabd-dev/reposcan/internal/render/tui/themeswitcher"
 	"github.com/mabd-dev/reposcan/internal/theme"
 	"github.com/mabd-dev/reposcan/pkg/report"
 )
@@ -28,12 +28,12 @@ type Model struct {
 	reposBeingUpdated []string
 
 	// Models
-	reposTable    repostable.Model
-	repoDetails   repodetails.Model
-	rtHeader      rth.Header
-	themeSwitcher themeswitcher.Model
-	alerts        alerts.AlertModel
-	reposFilter   textinput.Model
+	reposTable          repostable.Model
+	repoDetails         repodetails.Model
+	rtHeader            rth.Header
+	colorSchemeSwitcher colorschemeswitcher.Model
+	alerts              alerts.AlertModel
+	reposFilter         textinput.Model
 
 	focusStack []FocusState
 }
