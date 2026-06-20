@@ -138,3 +138,12 @@ func (m *Model) GetRepoStateAt(index int) *report.RepoState {
 	}
 	return &m.filteredRepos[index]
 }
+
+func (m *Model) UpdateTheme(newTheme theme.Theme) {
+	m.theme = newTheme
+	m.tbl.SetStyles(table.Styles{
+		Header:   m.theme.Styles.TableHeader,
+		Selected: m.theme.Styles.TableSelectedRow,
+		Cell:     m.theme.Styles.TableRow,
+	})
+}

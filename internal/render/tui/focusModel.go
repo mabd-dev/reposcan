@@ -10,6 +10,7 @@ const (
 	FocusReposTable FocusState = iota
 	FocusReposFilter
 	FocusHelpPopup
+	FocusThemeSwitcher
 )
 
 func (m Model) currentFocus() FocusState {
@@ -73,6 +74,8 @@ func (m *Model) resetCurrentModel() {
 		m.reposFilter.SetValue("")
 	case FocusHelpPopup:
 		break
+	case FocusThemeSwitcher:
+		m.colorSchemeSwitcher.Reset()
 	}
 }
 

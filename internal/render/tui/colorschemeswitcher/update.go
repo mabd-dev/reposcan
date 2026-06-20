@@ -1,0 +1,98 @@
+package colorschemeswitcher
+
+import (
+	"fmt"
+	"strings"
+
+	tea "charm.land/bubbletea/v2"
+)
+
+func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
+	if m.textInput.Focused() {
+		return m.updateTextInput(msg)
+	}
+
+	return m.updateSchemasTable(msg)
+}
+
+func (m Model) updateTextInput(msg tea.Msg) (Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyPressMsg:
+		switch msg.String() {
+		case "esc", "ctrl+c":
+			m.textInput.SetValue("")
+			m.focusSchemesTable()
+		case "enter":
+			m.focusSchemesTable()
+			return m, nil
+		}
+	}
+
+	var cmd tea.Cmd
+	m.textInput, cmd = m.textInput.Update(msg)
+
+	filteredColorSchemes := make([]colorSchemeData, 0, len(m.colorSchemes))
+	for _, s := range m.colorSchemes {
+		if strings.Contains(strings.ToLower(s.scheme.Name), strings.ToLower(m.textInput.Value())) {
+			filteredColorSchemes = append(filteredColorSchemes, s)
+		}
+	}
+	m.filteredColorSchemes = filteredColorSchemes
+	m.tbl.SetRows(createRows(m.tbl.Cursor(), filteredColorSchemes, m.theme))
+
+	counterWidth := len(fmt.Sprintf("%v/%v", len(filteredColorSchemes), len(m.colorSchemes)))
+	tiWidth := totalTableWidth - counterWidth
+	m.textInput.SetWidth(tiWidth)
+	m.textInput.CharLimit = min(tiWidth, 100)
+
+	return m, cmd
+}
+
+func (m Model) updateSchemasTable(msg tea.Msg) (Model, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyPressMsg:
+		switch msg.String() {
+		case "esc", "q", "ctrl+c":
+			m.wantsClose = true
+			return m, nil
+		case "/":
+			m.focusTextInput()
+			return m, nil
+		case "enter":
+			cursor := m.tbl.Cursor()
+			if cursor >= 0 && cursor < len(m.filteredColorSchemes) {
+				m.selectedSchemeID = m.filteredColorSchemes[cursor].id
+				return m, nil
+			}
+		}
+	}
+
+	var cmd tea.Cmd
+	m.tbl, cmd = m.tbl.Update(msg)
+	m.updateCursorInRows()
+
+	return m, cmd
+}
+
+func (m *Model) focusSchemesTable() {
+	m.tbl.Focus()
+	m.textInput.Blur()
+}
+
+func (m *Model) focusTextInput() {
+	m.tbl.Blur()
+	m.textInput.Focus()
+}
+
+func (m *Model) updateCursorInRows() {
+	cursor := m.tbl.Cursor()
+	rows := m.tbl.Rows()
+	for i := range rows {
+		if i == cursor {
+			rows[i][0] = cursorChar
+		} else {
+			rows[i][0] = emptyChar
+		}
+	}
+	m.tbl.SetRows(rows)
+}

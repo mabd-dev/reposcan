@@ -9,30 +9,41 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-var (
-	schemesDir        string = "base24-schemas/"
-	defaultSchemeName string = "catppuccin-mocha"
-)
+const SchemesDir = "base24-schemas/"
+
+var defaultSchemeID string = "catppuccin-mocha"
 
 //go:embed base24-schemas/*.yaml
 var schemesFS embed.FS
 
-func LoadBase24(path string) (ColorScheme, error) {
+// LoadBase24Schema loads scheme based on path which should
+// looks like this: [SchemeDir] + colorSchemeID
+func LoadBase24Schema(path string) (Base24Scheme, error) {
 	if !strings.HasSuffix(path, ".yaml") {
 		path += ".yaml"
 	}
 
 	data, err := schemesFS.ReadFile(path)
 	if err != nil {
-		return ColorScheme{}, err
+		return Base24Scheme{}, err
 	}
 
-	var b Base24ColorSchema
+	var b Base24Scheme
 	if err := yaml.Unmarshal(data, &b); err != nil {
+		return Base24Scheme{}, err
+	}
+	return b, nil
+}
+
+func LoadBase24(colorSchemeID string) (ColorScheme, error) {
+	b, err := LoadBase24Schema(SchemesDir + colorSchemeID)
+	if err != nil {
 		return ColorScheme{}, err
 	}
 
 	c := ColorScheme{
+		ID:              colorSchemeID,
+		Name:            b.Name,
 		Background:      lipgloss.Color(b.Palette.Base00),
 		Foreground:      lipgloss.Color(b.Palette.Base05),
 		Accent:          lipgloss.Color(b.Palette.Base0D),
@@ -54,18 +65,18 @@ func LoadBase24(path string) (ColorScheme, error) {
 	return c, nil
 }
 
-func CreateColors(colorSchemeName string) (ColorScheme, error) {
-	colorScheme, err := LoadBase24(schemesDir + colorSchemeName)
+func CreateColors(colorSchemeID string) (ColorScheme, error) {
+	colorScheme, err := LoadBase24(colorSchemeID)
 	if err != nil {
-		logger.Debug("using default color scheme", logger.StringAttr("name", defaultSchemeName))
-		colorScheme, err := LoadBase24(schemesDir + defaultSchemeName)
+		logger.Debug("using default color scheme", logger.StringAttr("name", defaultSchemeID))
+		colorScheme, err := LoadBase24(defaultSchemeID)
 		if err != nil {
 			return ColorScheme{}, err
 		}
 		return colorScheme, nil
 	}
 
-	logger.Debug("used color scheme", logger.StringAttr("name", colorSchemeName))
+	logger.Debug("used color scheme", logger.StringAttr("name", colorSchemeID))
 	return colorScheme, nil
 }
 

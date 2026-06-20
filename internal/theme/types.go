@@ -8,10 +8,12 @@ import (
 	"charm.land/lipgloss/v2"
 )
 
-type Base24ColorSchema struct {
+type Base24Scheme struct {
 	Scheme  string        `yaml:"scheme"`
+	Name    string        `yaml:"name"`
 	Slug    string        `yaml:"slug"`
 	Author  string        `yaml:"author"`
+	Variant string        `yaml:"variant"`
 	Palette Base24Palette `yaml:"palette"`
 }
 
@@ -43,6 +45,8 @@ type Base24Palette struct {
 }
 
 type ColorScheme struct {
+	ID         string
+	Name       string
 	Background color.Color
 	Foreground color.Color
 	Accent     color.Color

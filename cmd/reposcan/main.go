@@ -18,8 +18,12 @@ func Execute() {
 }
 
 func init() {
-	paths := config.DefaultPaths()
-	configs, err := config.CreateOrReadConfigs(paths.ConfigFilePath)
+	configFullPath, err := config.DefaultPaths().GetConfigFullPath()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	configs, err := config.CreateOrReadConfigs(configFullPath)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)

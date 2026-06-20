@@ -1,5 +1,10 @@
 package config
 
+import (
+	"os"
+	"path/filepath"
+)
+
 // Default configuration locations under the user's home directory.
 const (
 	DefaultConfigDir  = "/.config/reposcan/"
@@ -22,4 +27,13 @@ func DefaultPaths() Paths {
 		ConfigFilePath: DefaultConfigDir + DefaultConfigToml,
 		LogFileDir:     DefaultLogFileDir,
 	}
+}
+
+func (p Paths) GetConfigFullPath() (string, error) {
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return "", err
+	}
+	fullPath := filepath.Join(home, p.ConfigFilePath)
+	return fullPath, nil
 }
