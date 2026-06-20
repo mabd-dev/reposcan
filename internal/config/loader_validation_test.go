@@ -2,7 +2,6 @@ package config
 
 import (
 	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -34,13 +33,16 @@ func withTempHome(t *testing.T) (restore func(), tempHome string) {
 }
 
 func TestCreateOrReadConfigs_CreatesWhenMissingAndWritesFile(t *testing.T) {
-	restore, home := withTempHome(t)
+	restore, _ := withTempHome(t)
 	defer restore()
 
 	// pick a nested config file path like ~/.config/reposcan/config.toml
-	cfgRel := ".config/reposcan/config.toml"
+	cfgPath, err := DefaultPaths().GetConfigFullPath()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
-	cfg, err := CreateOrReadConfigs(cfgRel)
+	cfg, err := CreateOrReadConfigs(cfgPath)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -50,29 +52,30 @@ func TestCreateOrReadConfigs_CreatesWhenMissingAndWritesFile(t *testing.T) {
 		t.Fatalf("expected defaults with at least one root if HOME is set")
 	}
 
-	cfgAbs := filepath.Join(home, cfgRel)
-	if _, err := os.Stat(cfgAbs); err != nil {
-		t.Fatalf("expected config file created at %s, got err: %v", cfgAbs, err)
+	if _, err := os.Stat(cfgPath); err != nil {
+		t.Fatalf("expected config file created at %s, got err: %v", cfgPath, err)
 	}
 }
 
 func TestCreateOrReadConfigs_ReadsExistingFile(t *testing.T) {
-	restore, home := withTempHome(t)
+	restore, _ := withTempHome(t)
 	defer restore()
 
-	cfgRel := ".config/reposcan/config.toml"
-	cfgAbs := filepath.Join(home, cfgRel)
+	cfgPath, err := DefaultPaths().GetConfigFullPath()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
 
 	// Seed a custom config
 	seeded := Defaults()
 	seeded.Roots = []string{"/tmp/foo", "/tmp/bar"}
 	seeded.Output.Type = OutputJson
-	if err := WriteToFile(seeded, cfgAbs); err != nil {
+	if err := writeToFile(seeded, cfgPath); err != nil {
 		t.Fatalf("seed write error: %v", err)
 	}
 
 	// loader should read without overwriting
-	got, err := CreateOrReadConfigs(cfgRel)
+	got, err := CreateOrReadConfigs(cfgPath)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
