@@ -95,9 +95,6 @@ func (m *Model) updateCursorInRows() {
 		} else {
 			rows[i][0] = emptyChar
 		}
-		if strings.HasPrefix(rows[i][1], m.theme.Colors.Name) {
-			rows[i][0] = selectedChar
-		}
 	}
 	m.tbl.SetRows(rows)
 }

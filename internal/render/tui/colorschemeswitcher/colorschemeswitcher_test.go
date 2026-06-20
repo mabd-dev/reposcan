@@ -337,46 +337,8 @@ func TestUpdateCursorInRows_NavigationMovesCursor(t *testing.T) {
 	if rows[0][0] == cursorChar {
 		t.Error("row 0 should not have cursorChar after moving down")
 	}
-	if rows[1][0] != cursorChar && rows[1][0] != selectedChar {
-		t.Errorf("row 1 should have cursorChar or selectedChar after moving down; got %q", rows[1][0])
-	}
-}
-
-func TestUpdateCursorInRows_SelectedCharOnCurrentThemeRow(t *testing.T) {
-	m := newTestModel()
-	if len(m.filteredColorSchemes) == 0 {
-		t.Skip("no schemes loaded")
-	}
-
-	// Make the first scheme match the theme name so selectedChar logic triggers
-	firstScheme := m.filteredColorSchemes[0]
-	m.theme.Colors.Name = firstScheme.scheme.Name
-	m.tbl.SetRows(createRows(1, m.filteredColorSchemes, m.theme)) // cursor at 1, not 0
-
-	m.updateCursorInRows()
-
-	rows := m.tbl.Rows()
-	if rows[0][0] != selectedChar {
-		t.Errorf("row matching current theme should have selectedChar; got %q", rows[0][0])
-	}
-}
-
-func TestUpdateCursorInRows_CursorAndSelectedSameRow_SelectedWins(t *testing.T) {
-	m := newTestModel()
-	if len(m.filteredColorSchemes) == 0 {
-		t.Skip("no schemes loaded")
-	}
-
-	// cursor at 0, theme name matches scheme[0] → selectedChar should win
-	firstScheme := m.filteredColorSchemes[0]
-	m.theme.Colors.Name = firstScheme.scheme.Name
-	m.tbl.SetRows(createRows(0, m.filteredColorSchemes, m.theme))
-
-	m.updateCursorInRows()
-
-	rows := m.tbl.Rows()
-	if rows[0][0] != selectedChar {
-		t.Errorf("when cursor and selected coincide, selectedChar should win; got %q", rows[0][0])
+	if rows[1][0] != cursorChar {
+		t.Errorf("row 1 should have cursorChar after moving down; got %q", rows[1][0])
 	}
 }
 

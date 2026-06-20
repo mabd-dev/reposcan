@@ -7,9 +7,8 @@ import (
 )
 
 const (
-	cursorChar   = "›"
-	selectedChar = "✓"
-	emptyChar    = " "
+	cursorChar = "›"
+	emptyChar  = " "
 )
 
 const (
