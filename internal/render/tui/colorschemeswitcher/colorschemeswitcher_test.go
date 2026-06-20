@@ -59,8 +59,8 @@ func TestNew_FilteredMatchesAll(t *testing.T) {
 
 func TestNew_SelectedSchemeNameIsCurrentTheme(t *testing.T) {
 	m := newTestModel()
-	if m.SelectedSchemeName() != m.theme.Colors.Name {
-		t.Errorf("expected selectedSchemeName=%q, got %q", m.theme.Colors.Name, m.SelectedSchemeName())
+	if m.SelectedSchemeID() != m.theme.Colors.ID {
+		t.Errorf("expected selectedSchemeID=%q, got %q", m.theme.Colors.ID, m.SelectedSchemeID())
 	}
 }
 
@@ -172,18 +172,18 @@ func TestUpdate_Table_Enter_SelectsSchemeAtCursor(t *testing.T) {
 	}
 	expectedID := m.filteredColorSchemes[0].id
 	m, _ = m.Update(keyCode(tea.KeyEnter))
-	if m.SelectedSchemeName() != expectedID {
-		t.Errorf("expected selectedSchemeName=%q, got %q", expectedID, m.SelectedSchemeName())
+	if m.SelectedSchemeID() != expectedID {
+		t.Errorf("expected selectedSchemeName=%q, got %q", expectedID, m.SelectedSchemeID())
 	}
 }
 
 func TestUpdate_Table_Enter_EmptyFilteredList_NoChange(t *testing.T) {
 	m := newTestModel()
-	original := m.SelectedSchemeName()
+	original := m.SelectedSchemeID()
 	m.filteredColorSchemes = nil
 	m, _ = m.Update(keyCode(tea.KeyEnter))
-	if m.SelectedSchemeName() != original {
-		t.Errorf("enter on empty filtered list should not change selected; got %q", m.SelectedSchemeName())
+	if m.SelectedSchemeID() != original {
+		t.Errorf("enter on empty filtered list should not change selected; got %q", m.SelectedSchemeID())
 	}
 }
 

@@ -45,6 +45,7 @@ type Base24Palette struct {
 }
 
 type ColorScheme struct {
+	ID         string
 	Name       string
 	Background color.Color
 	Foreground color.Color

@@ -11,11 +11,13 @@ import (
 
 const SchemesDir = "base24-schemas/"
 
-var defaultSchemeName string = "catppuccin-mocha"
+var defaultSchemeID string = "catppuccin-mocha"
 
 //go:embed base24-schemas/*.yaml
 var schemesFS embed.FS
 
+// LoadBase24Schema loads scheme based on path which should
+// looks like this: [SchemeDir] + colorSchemeID
 func LoadBase24Schema(path string) (Base24Scheme, error) {
 	if !strings.HasSuffix(path, ".yaml") {
 		path += ".yaml"
@@ -33,13 +35,14 @@ func LoadBase24Schema(path string) (Base24Scheme, error) {
 	return b, nil
 }
 
-func LoadBase24(path string) (ColorScheme, error) {
-	b, err := LoadBase24Schema(path)
+func LoadBase24(colorSchemeID string) (ColorScheme, error) {
+	b, err := LoadBase24Schema(SchemesDir + colorSchemeID)
 	if err != nil {
 		return ColorScheme{}, err
 	}
 
 	c := ColorScheme{
+		ID:              colorSchemeID,
 		Name:            b.Name,
 		Background:      lipgloss.Color(b.Palette.Base00),
 		Foreground:      lipgloss.Color(b.Palette.Base05),
@@ -62,18 +65,18 @@ func LoadBase24(path string) (ColorScheme, error) {
 	return c, nil
 }
 
-func CreateColors(colorSchemeName string) (ColorScheme, error) {
-	colorScheme, err := LoadBase24(SchemesDir + colorSchemeName)
+func CreateColors(colorSchemeID string) (ColorScheme, error) {
+	colorScheme, err := LoadBase24(colorSchemeID)
 	if err != nil {
-		logger.Debug("using default color scheme", logger.StringAttr("name", defaultSchemeName))
-		colorScheme, err := LoadBase24(SchemesDir + defaultSchemeName)
+		logger.Debug("using default color scheme", logger.StringAttr("name", defaultSchemeID))
+		colorScheme, err := LoadBase24(defaultSchemeID)
 		if err != nil {
 			return ColorScheme{}, err
 		}
 		return colorScheme, nil
 	}
 
-	logger.Debug("used color scheme", logger.StringAttr("name", colorSchemeName))
+	logger.Debug("used color scheme", logger.StringAttr("name", colorSchemeID))
 	return colorScheme, nil
 }
 

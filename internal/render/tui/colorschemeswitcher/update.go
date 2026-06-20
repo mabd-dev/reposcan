@@ -5,7 +5,6 @@ import (
 	"strings"
 
 	tea "charm.land/bubbletea/v2"
-	"github.com/mabd-dev/reposcan/internal/logger"
 )
 
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
@@ -62,8 +61,7 @@ func (m Model) updateSchemasTable(msg tea.Msg) (Model, tea.Cmd) {
 		case "enter":
 			cursor := m.tbl.Cursor()
 			if cursor >= 0 && cursor < len(m.filteredColorSchemes) {
-				m.selectedSchemeName = m.filteredColorSchemes[cursor].id
-				logger.Debug(fmt.Sprintf("selected scheme name=%v", m.selectedSchemeName))
+				m.selectedSchemeID = m.filteredColorSchemes[cursor].id
 				return m, nil
 			}
 		}

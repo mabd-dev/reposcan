@@ -13,13 +13,13 @@ import (
 
 func New(t theme.Theme, height int) Model {
 	colorSchemes := make([]colorSchemeData, 0, len(theme.Schemes))
-	for _, schemeName := range theme.Schemes {
-		path := fmt.Sprintf("%v%v", theme.SchemesDir, schemeName)
+	for _, schemeID := range theme.Schemes {
+		path := fmt.Sprintf("%v%v", theme.SchemesDir, schemeID)
 		schema, err := theme.LoadBase24Schema(path)
 		if err == nil {
-			colorSchemes = append(colorSchemes, colorSchemeData{schemeName, schema})
+			colorSchemes = append(colorSchemes, colorSchemeData{schemeID, schema})
 		} else {
-			logger.Error(fmt.Sprintf("failed to parse color scheme %v, error=%v", schemeName, err.Error()))
+			logger.Error(fmt.Sprintf("failed to parse color scheme %v, error=%v", schemeID, err.Error()))
 		}
 	}
 
@@ -47,15 +47,15 @@ func New(t theme.Theme, height int) Model {
 		tbl:                  tbl,
 		colorSchemes:         colorSchemes,
 		filteredColorSchemes: colorSchemes,
-		selectedSchemeName:   t.Colors.Name,
+		selectedSchemeID:     t.Colors.ID,
 	}
 	return model
 }
 
 func (m Model) Init() tea.Cmd { return nil }
 
-func (m Model) WantsClose() bool           { return m.wantsClose }
-func (m Model) SelectedSchemeName() string { return m.selectedSchemeName }
+func (m Model) WantsClose() bool         { return m.wantsClose }
+func (m Model) SelectedSchemeID() string { return m.selectedSchemeID }
 
 func (m *Model) Reset() {
 	m.wantsClose = false

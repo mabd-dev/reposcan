@@ -121,10 +121,10 @@ func (m Model) updateColorSchemeSwitcher(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	}
 
-	if schemeName := m.colorSchemeSwitcher.SelectedSchemeName(); schemeName != "" && schemeName != m.theme.Colors.Name {
-		newColors, err := theme.CreateColors(schemeName)
+	if schemeID := m.colorSchemeSwitcher.SelectedSchemeID(); schemeID != "" && schemeID != m.theme.Colors.ID {
+		newColors, err := theme.CreateColors(schemeID)
 		if err != nil {
-			logger.Error("Failed to create new theme from name '%v': %v", schemeName, err)
+			logger.Error("Failed to create new theme from name '%v': %v", schemeID, err)
 			return m, nil
 		}
 		cfgFullPath, err := config.DefaultPaths().GetConfigFullPath()
@@ -132,11 +132,11 @@ func (m Model) updateColorSchemeSwitcher(msg tea.Msg) (tea.Model, tea.Cmd) {
 			logger.Error("Failed to get config full path : %v", err)
 			return m, nil
 		}
-		oldColorSchemeName := m.theme.Colors.Name
-		m.configs.Output.ColorSchemeName = schemeName
+		oldColorSchemeID := m.theme.Colors.ID
+		m.configs.Output.ColorSchemeName = schemeID
 		err = config.UpdateConfigs(m.configs, cfgFullPath)
 		if err != nil {
-			m.configs.Output.ColorSchemeName = oldColorSchemeName
+			m.configs.Output.ColorSchemeName = oldColorSchemeID
 			logger.Error("failed to save new configs in config.toml: %v", err)
 			return m, nil
 		}

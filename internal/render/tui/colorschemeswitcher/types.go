@@ -19,6 +19,6 @@ type Model struct {
 	tbl       table.Model
 	textInput textinput.Model
 
-	wantsClose         bool
-	selectedSchemeName string
+	wantsClose       bool
+	selectedSchemeID string
 }
