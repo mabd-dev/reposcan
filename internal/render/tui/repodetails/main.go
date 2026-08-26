@@ -12,10 +12,15 @@ func New(
 	repoState *report.RepoState,
 	theme theme.Theme,
 ) Model {
+	tabs := []tab{}
+	if repoState != nil {
+		tabs = createTabsList(*repoState)
+	}
+
 	return Model{
 		theme:            theme,
 		repoState:        repoState,
-		tabs:             createTabsList(*repoState),
+		tabs:             tabs,
 		selectedTabIndex: 0,
 	}
 }
@@ -26,7 +31,12 @@ func (m *Model) UpdateSize(height int) {
 
 func (m *Model) UpdateData(repoState *report.RepoState) {
 	m.repoState = repoState
-	m.tabs = createTabsList(*repoState)
+
+	if repoState != nil {
+		m.tabs = createTabsList(*repoState)
+	} else {
+		m.tabs = []tab{}
+	}
 }
 
 func (m Model) Init() tea.Cmd { return nil }
