@@ -1,6 +1,8 @@
 package config
 
-import "os"
+import (
+	"os"
+)
 
 // Config holds all runtime options used by reposcan.
 // Values may come from a config file and/or be overridden by CLI flags.
