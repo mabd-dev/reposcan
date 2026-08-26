@@ -1,10 +1,15 @@
 package repostable
 
-import tea "github.com/charmbracelet/bubbletea"
+import tea "charm.land/bubbletea/v2"
 
 func (m Model) Update(msg tea.Msg) (Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
+		// Guard: skip keyboard navigation when there are no repos to display.
+		if m.ReposCount() == 0 {
+			return m, nil
+		}
+
 		switch msg.String() {
 		case "j":
 			if m.tbl.Cursor() == len(m.tbl.Rows())-1 {

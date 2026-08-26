@@ -26,7 +26,12 @@ var RootCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Reading config and create default file if not exists
 		paths := config.DefaultPaths()
-		configs, err := config.CreateOrReadConfigs(paths.ConfigFilePath)
+		configFullPath, err := paths.GetConfigFullPath()
+		if err != nil {
+			fmt.Println(err)
+			os.Exit(1)
+		}
+		configs, err := config.CreateOrReadConfigs(configFullPath)
 		if err != nil {
 			fmt.Println(err)
 			return err

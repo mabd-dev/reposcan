@@ -4,93 +4,83 @@ import (
 	"embed"
 	"strings"
 
-	"github.com/charmbracelet/lipgloss"
+	"charm.land/lipgloss/v2"
 	"github.com/mabd-dev/reposcan/internal/logger"
 	"gopkg.in/yaml.v3"
 )
 
-var (
-	schemesDir        string = "base24-schemas/"
-	defaultSchemeName string = "catppuccin-mocha"
-)
+const SchemesDir = "base24-schemas/"
+
+var defaultSchemeID string = "catppuccin-mocha"
 
 //go:embed base24-schemas/*.yaml
 var schemesFS embed.FS
 
-func LoadBase24(path string) (ColorScheme, error) {
+// LoadBase24Schema loads scheme based on path which should
+// looks like this: [SchemeDir] + colorSchemeID
+func LoadBase24Schema(path string) (Base24Scheme, error) {
 	if !strings.HasSuffix(path, ".yaml") {
 		path += ".yaml"
 	}
 
 	data, err := schemesFS.ReadFile(path)
 	if err != nil {
-		return ColorScheme{}, err
+		return Base24Scheme{}, err
 	}
 
-	var b Base24ColorSchema
+	var b Base24Scheme
 	if err := yaml.Unmarshal(data, &b); err != nil {
+		return Base24Scheme{}, err
+	}
+	return b, nil
+}
+
+func LoadBase24(colorSchemeID string) (ColorScheme, error) {
+	b, err := LoadBase24Schema(SchemesDir + colorSchemeID)
+	if err != nil {
 		return ColorScheme{}, err
 	}
 
 	c := ColorScheme{
-		Background:      b.Palette.Base00,
-		Foreground:      b.Palette.Base05,
-		Accent:          b.Palette.Base0D,
-		Muted:           b.Palette.Base03,
-		Error:           b.Palette.Base08,
-		Warning:         b.Palette.Base09,
-		Success:         b.Palette.Base0B,
-		Info:            b.Palette.Base0C,
-		Border:          b.Palette.Base02,
-		BorderActive:    b.Palette.Base0D,
-		TableHeader:     b.Palette.Base04,
-		TableRow:        b.Palette.Base05,
-		TableAltRow:     b.Palette.Base01,
-		PopupBackground: b.Palette.Base00,
-		PopupBorder:     b.Palette.Base0D,
-		PopupTitle:      b.Palette.Base0A,
+		ID:              colorSchemeID,
+		Name:            b.Name,
+		Background:      lipgloss.Color(b.Palette.Base00),
+		Foreground:      lipgloss.Color(b.Palette.Base05),
+		Accent:          lipgloss.Color(b.Palette.Base0D),
+		Muted:           lipgloss.Color(b.Palette.Base03),
+		Error:           lipgloss.Color(b.Palette.Base08),
+		Warning:         lipgloss.Color(b.Palette.Base09),
+		Success:         lipgloss.Color(b.Palette.Base0B),
+		Info:            lipgloss.Color(b.Palette.Base0C),
+		Border:          lipgloss.Color(b.Palette.Base02),
+		BorderActive:    lipgloss.Color(b.Palette.Base0D),
+		TableHeader:     lipgloss.Color(b.Palette.Base04),
+		TableRow:        lipgloss.Color(b.Palette.Base05),
+		TableAltRow:     lipgloss.Color(b.Palette.Base01),
+		PopupBackground: lipgloss.Color(b.Palette.Base00),
+		PopupBorder:     lipgloss.Color(b.Palette.Base0D),
+		PopupTitle:      lipgloss.Color(b.Palette.Base0A),
 	}
 
 	return c, nil
 }
 
-func CreateColors(colorSchemeName string) (LipglossScheme, error) {
-	colorScheme, err := LoadBase24(schemesDir + colorSchemeName)
+func CreateColors(colorSchemeID string) (ColorScheme, error) {
+	colorScheme, err := LoadBase24(colorSchemeID)
 	if err != nil {
-		logger.Debug("using default color scheme", logger.StringAttr("name", defaultSchemeName))
-		colorScheme, err := LoadBase24(schemesDir + defaultSchemeName)
+		logger.Debug("using default color scheme", logger.StringAttr("name", defaultSchemeID))
+		colorScheme, err := LoadBase24(defaultSchemeID)
 		if err != nil {
-			return LipglossScheme{}, err
+			return ColorScheme{}, err
 		}
-		return toLipglossTheme(colorScheme), nil
+		return colorScheme, nil
 	}
 
-	logger.Debug("used color scheme", logger.StringAttr("name", colorSchemeName))
-	return toLipglossTheme(colorScheme), nil
+	logger.Debug("used color scheme", logger.StringAttr("name", colorSchemeID))
+	return colorScheme, nil
 }
 
-func toLipglossTheme(cs ColorScheme) LipglossScheme {
-	return LipglossScheme{
-		Background:      lipgloss.Color(cs.Background),
-		Foreground:      lipgloss.Color(cs.Foreground),
-		Accent:          lipgloss.Color(cs.Accent),
-		Muted:           lipgloss.Color(cs.Muted),
-		Error:           lipgloss.Color(cs.Error),
-		Warning:         lipgloss.Color(cs.Warning),
-		Success:         lipgloss.Color(cs.Success),
-		Info:            lipgloss.Color(cs.Info),
-		Border:          lipgloss.Color(cs.Border),
-		BorderActive:    lipgloss.Color(cs.BorderActive),
-		TableHeader:     lipgloss.Color(cs.TableHeader),
-		TableRow:        lipgloss.Color(cs.TableRow),
-		TableAltRow:     lipgloss.Color(cs.TableAltRow),
-		PopupBackground: lipgloss.Color(cs.PopupBackground),
-		PopupBorder:     lipgloss.Color(cs.PopupBorder),
-		PopupTitle:      lipgloss.Color(cs.PopupTitle),
-	}
-}
-
-func CreateStyles(colors LipglossScheme) Styles {
+func CreateStyles(colors ColorScheme) Styles {
 	return Styles{
 		Base:  lipgloss.NewStyle(),
 		Muted: lipgloss.NewStyle().Foreground(colors.Muted), //.Faint(true) // TODO: do i need Faint as well?

@@ -3,9 +3,11 @@ package tui
 import (
 	"strings"
 
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
+	"github.com/mabd-dev/reposcan/internal/config"
 	"github.com/mabd-dev/reposcan/internal/logger"
 	"github.com/mabd-dev/reposcan/internal/render/tui/alerts"
+	"github.com/mabd-dev/reposcan/internal/theme"
 	"golang.design/x/clipboard"
 )
 
@@ -17,13 +19,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m.updateReposFilter(msg)
 	case FocusHelpPopup:
 		return m.keybindingPopup(msg)
+	case FocusThemeSwitcher:
+		return m.updateColorSchemeSwitcher(msg)
 	}
 	return m, nil
 }
 
 func (m Model) updateReposTable(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		switch msg.String() {
 		// case "p":
 		// 	return m.runVCSAction(vcsActionPull)
@@ -51,10 +55,17 @@ func (m Model) updateReposTable(msg tea.Msg) (tea.Model, tea.Cmd) {
 					},
 				}
 			}
+		case "right", "l", "left", "h":
+			var cmd tea.Cmd
+			m.repoDetails, cmd = m.repoDetails.Update(msg)
+			return m, cmd
 		case "r":
 			m.loading = true
 			request := generateReport{configs: m.configs}
 			return m, request.Cmd()
+		case "ctrl+t":
+			m.pushFocus(FocusThemeSwitcher)
+			return m, nil
 		case "/":
 			m.pushFocus(FocusReposFilter)
 			return m, nil
@@ -77,7 +88,7 @@ func (m Model) updateReposTable(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 func (m Model) updateReposFilter(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		switch msg.String() {
 		case "esc", "ctrl+c":
 			m.popFocus(true)
@@ -101,9 +112,52 @@ func (m Model) updateReposFilter(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, cmd
 }
 
+func (m Model) updateColorSchemeSwitcher(msg tea.Msg) (tea.Model, tea.Cmd) {
+	var cmd tea.Cmd
+	m.colorSchemeSwitcher, cmd = m.colorSchemeSwitcher.Update(msg)
+
+	if m.colorSchemeSwitcher.WantsClose() {
+		m.popFocus(true)
+		return m, nil
+	}
+
+	if schemeID := m.colorSchemeSwitcher.SelectedSchemeID(); schemeID != "" && schemeID != m.theme.Colors.ID {
+		newColors, err := theme.CreateColors(schemeID)
+		if err != nil {
+			logger.Error("Failed to create new theme from name '%v': %v", schemeID, err)
+			return m, nil
+		}
+		cfgFullPath, err := config.DefaultPaths().GetConfigFullPath()
+		if err != nil {
+			logger.Error("Failed to get config full path : %v", err)
+			return m, nil
+		}
+		oldColorSchemeID := m.theme.Colors.ID
+		m.configs.Output.ColorSchemeName = schemeID
+		err = config.UpdateConfigs(m.configs, cfgFullPath)
+		if err != nil {
+			m.configs.Output.ColorSchemeName = oldColorSchemeID
+			logger.Error("failed to save new configs in config.toml: %v", err)
+			return m, nil
+		}
+
+		m.theme = theme.Theme{
+			Colors: newColors,
+			Styles: theme.CreateStyles(newColors),
+		}
+		m.reposTable.UpdateTheme(m.theme)
+		m.repoDetails.UpdateTheme(m.theme)
+		m.alerts.UpdateTheme(m.theme)
+		m.colorSchemeSwitcher.UpdateTheme(m.theme)
+		return m, nil
+	}
+
+	return m, cmd
+}
+
 func (m Model) keybindingPopup(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
-	case tea.KeyMsg:
+	case tea.KeyPressMsg:
 		switch msg.String() {
 		case "q", "esc":
 			m.popFocus(true)

@@ -4,8 +4,8 @@ package repostable
 import (
 	"strings"
 
-	"github.com/charmbracelet/bubbles/table"
-	tea "github.com/charmbracelet/bubbletea"
+	"charm.land/bubbles/v2/table"
+	tea "charm.land/bubbletea/v2"
 	"github.com/mabd-dev/reposcan/internal/theme"
 	"github.com/mabd-dev/reposcan/pkg/report"
 )
@@ -33,17 +33,18 @@ func New(
 	t := table.New(
 		table.WithColumns(cols),
 		table.WithRows(rows),
+		table.WithWidth(width),
 		table.WithHeight(height),
 	)
 	t.Focus()
 
-	km := table.DefaultKeyMap()
-	setKeymaps(km)
+	// km := table.DefaultKeyMap()
+	// setKeymaps(km)
 
-	// if no repos, show an empty placeholder row so the table renders nicely
-	if len(rows) == 0 {
-		t.SetRows([]table.Row{make(table.Row, len(cols))})
-	}
+	// // if no repos, show an empty placeholder row so the table renders nicely
+	// if len(rows) == 0 {
+	// 	t.SetRows([]table.Row{make(table.Row, len(cols))})
+	// }
 
 	t.SetStyles(table.Styles{
 		Header:   model.theme.Styles.TableHeader,
@@ -66,6 +67,7 @@ func (m *Model) UpdateWindowSize(width int, height int) Model {
 	m.width = width - 2   // border corners
 	m.height = height - 2 // border corners
 
+	m.tbl.SetWidth(m.width)
 	m.tbl.SetHeight(m.height)
 	cols := createColumns(m.width, m.options)
 	m.tbl.SetColumns(cols)
@@ -145,4 +147,13 @@ func (m *Model) GetRepoStateAt(index int) *report.RepoState {
 		return nil
 	}
 	return &m.filteredRepos[index]
+}
+
+func (m *Model) UpdateTheme(newTheme theme.Theme) {
+	m.theme = newTheme
+	m.tbl.SetStyles(table.Styles{
+		Header:   m.theme.Styles.TableHeader,
+		Selected: m.theme.Styles.TableSelectedRow,
+		Cell:     m.theme.Styles.TableRow,
+	})
 }

@@ -7,9 +7,25 @@ All notable changes to this project will be documented in this file.
 
 ### Changes
 
+- fix/crashInRepoDetails: repo details package crashes if repo state is nil - happens if scan result has no repos by @mabd-dev in [#61](https://github.com/mabd-dev/reposcan/pull/61)
+- feat/colorSchemeSwitcher: change app color scheme from bunch of predefined schemes by @mabd-dev in [#60](https://github.com/mabd-dev/reposcan/pull/60)
+- feat/showStashes: change repodetails view to show repo changes and stashes in tabbed view by @mabd-dev in [#57](https://github.com/mabd-dev/reposcan/pull/57)
+- feat/migrateBubbleTeaToV2: migrate bubble tea and its related packages to v2 by @mabd-dev in [#56](https://github.com/mabd-dev/reposcan/pull/56)
+- feat/updateCmd: added new `reposcan update` command that updates binary to the latest version by @mabd-dev in [#55](https://github.com/mabd-dev/reposcan/pull/55)
 - feat/jjSupport: add configurable VCS column by @frittlechasm in [#51](https://github.com/mabd-dev/reposcan/pull/51) 
+
+---
+
+## [1.4.0] - 2026-05-31
+
+### Changes
+
+- feat/handleEmptyRepoTable: Display empty message when repos table is empty @kings9527 in [#42](https://github.com/mabd-dev/reposcan/pull/42)
+- feat/colorUncommitedFiles: Get color based on file git status by @mabd-dev in [#50](https://github.com/mabd-dev/reposcan/pull/50)
 - feat/detect-stashes: Detect stashed changes as a repo state; adds `stash` filter and opt-in `countStashAsDirty` config by @nilp0inter in [#47](https://github.com/mabd-dev/reposcan/pull/47)
 - feat/supportWorktree: Detect git worktrees and submodules (`.git` file with `gitdir:` pointer) during repo scan by @mabd-dev in [#43](https://github.com/mabd-dev/reposcan/pull/43)
+
+---
 
 ## [1.3.8] - 2026-05-21
 

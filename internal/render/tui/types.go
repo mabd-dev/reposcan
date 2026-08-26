@@ -3,11 +3,12 @@ package tui
 import (
 	"strings"
 
-	"github.com/charmbracelet/bubbles/textinput"
-	tea "github.com/charmbracelet/bubbletea"
+	"charm.land/bubbles/v2/textinput"
+	tea "charm.land/bubbletea/v2"
 	"github.com/mabd-dev/reposcan/internal"
 	"github.com/mabd-dev/reposcan/internal/config"
 	"github.com/mabd-dev/reposcan/internal/render/tui/alerts"
+	"github.com/mabd-dev/reposcan/internal/render/tui/colorschemeswitcher"
 	"github.com/mabd-dev/reposcan/internal/render/tui/repodetails"
 	"github.com/mabd-dev/reposcan/internal/render/tui/repostable"
 	rth "github.com/mabd-dev/reposcan/internal/render/tui/repostableheader"
@@ -29,11 +30,12 @@ type Model struct {
 	reposBeingUpdated []string
 
 	// Models
-	reposTable  repostable.Model
-	repoDetails repodetails.Model
-	rtHeader    rth.Header
-	alerts      alerts.AlertModel
-	reposFilter textinput.Model
+	reposTable          repostable.Model
+	repoDetails         repodetails.Model
+	rtHeader            rth.Header
+	colorSchemeSwitcher colorschemeswitcher.Model
+	alerts              alerts.AlertModel
+	reposFilter         textinput.Model
 
 	focusStack []FocusState
 }

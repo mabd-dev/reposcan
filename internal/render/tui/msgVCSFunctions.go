@@ -3,7 +3,7 @@ package tui
 import (
 	"fmt"
 
-	tea "github.com/charmbracelet/bubbletea"
+	tea "charm.land/bubbletea/v2"
 	"github.com/mabd-dev/reposcan/internal/render/tui/alerts"
 	"github.com/mabd-dev/reposcan/internal/vcs"
 	"github.com/mabd-dev/reposcan/pkg/report"

@@ -18,8 +18,12 @@ func Execute() {
 }
 
 func init() {
-	paths := config.DefaultPaths()
-	configs, err := config.CreateOrReadConfigs(paths.ConfigFilePath)
+	configFullPath, err := config.DefaultPaths().GetConfigFullPath()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	configs, err := config.CreateOrReadConfigs(configFullPath)
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
@@ -43,4 +47,7 @@ func init() {
 	// RootCmd.PersistentFlags().StringP("colorscheme", "", configs.Output.ColorSchemeName, "Used only if 'output' is 'interactive'")
 
 	RootCmd.AddCommand(versionCmd)
+
+	updateCmd.PersistentFlags().StringP("alias", "a", "reposcan", "reposcan binary name")
+	RootCmd.AddCommand(updateCmd)
 }

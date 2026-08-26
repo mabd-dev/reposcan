@@ -4,8 +4,8 @@ package alerts
 import (
 	"time"
 
-	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/mabd-dev/reposcan/internal/theme"
 )
 
@@ -24,6 +24,10 @@ func New(t theme.Theme) AlertModel {
 	return AlertModel{
 		theme: t,
 	}
+}
+
+func (m *AlertModel) UpdateTheme(newTheme theme.Theme) {
+	m.theme = newTheme
 }
 
 func (m AlertModel) Update(msg tea.Msg) (AlertModel, tea.Cmd) {

@@ -3,15 +3,18 @@ package tui
 import (
 	"strings"
 
-	"github.com/charmbracelet/lipgloss"
+	tea "charm.land/bubbletea/v2"
+	"charm.land/lipgloss/v2"
 	"github.com/mabd-dev/reposcan/internal/render/tui/alerts"
 	"github.com/mabd-dev/reposcan/internal/render/tui/common"
 	"github.com/mabd-dev/reposcan/internal/render/tui/overlay"
 )
 
-func (m Model) View() string {
+func (m Model) View() tea.View {
 	if m.loading {
-		return "Loading..."
+		view := tea.NewView("Loading...")
+		view.AltScreen = true
+		return view
 	}
 
 	footer := m.getFooterView()
@@ -43,7 +46,8 @@ func (m Model) View() string {
 
 	view = m.renderAlerts(view, m.alerts.AlertStates(m.width, m.height))
 
-	if m.currentFocus() == FocusHelpPopup {
+	switch m.currentFocus() {
+	case FocusHelpPopup:
 		helpView := generateHelpPopup(m.theme, reposTableKeybindings)
 
 		view = overlay.PlaceOverlayWithPosition(
@@ -53,9 +57,21 @@ func (m Model) View() string {
 			true,
 			overlay.WithWhitespaceChars(" "), // fill empty space
 		)
+	case FocusThemeSwitcher:
+		themeSwitcherView := m.colorSchemeSwitcher.View()
+
+		view = overlay.PlaceOverlayWithPosition(
+			overlay.OverlayPositionCenter,
+			m.width, m.height,
+			themeSwitcherView, view,
+			true,
+			overlay.WithWhitespaceChars(" "), // fill empty space
+		)
 	}
 
-	return view
+	v := tea.NewView(view)
+	v.AltScreen = true
+	return v
 }
 
 func (m *Model) getFooterView() string {

@@ -3,13 +3,17 @@
 package theme
 
 import (
-	"github.com/charmbracelet/lipgloss"
+	"image/color"
+
+	"charm.land/lipgloss/v2"
 )
 
-type Base24ColorSchema struct {
+type Base24Scheme struct {
 	Scheme  string        `yaml:"scheme"`
+	Name    string        `yaml:"name"`
 	Slug    string        `yaml:"slug"`
 	Author  string        `yaml:"author"`
+	Variant string        `yaml:"variant"`
 	Palette Base24Palette `yaml:"palette"`
 }
 
@@ -41,47 +45,27 @@ type Base24Palette struct {
 }
 
 type ColorScheme struct {
-	Background string
-	Foreground string
-	Accent     string
-	Muted      string
-	Error      string
-	Warning    string
-	Success    string
-	Info       string
+	ID         string
+	Name       string
+	Background color.Color
+	Foreground color.Color
+	Accent     color.Color
+	Muted      color.Color
+	Error      color.Color
+	Warning    color.Color
+	Success    color.Color
+	Info       color.Color
 
-	Border       string
-	BorderActive string
+	Border       color.Color
+	BorderActive color.Color
 
-	TableHeader string
-	TableRow    string
-	TableAltRow string
+	TableHeader color.Color
+	TableRow    color.Color
+	TableAltRow color.Color
 
-	PopupBackground string
-	PopupBorder     string
-	PopupTitle      string
-}
-
-type LipglossScheme struct {
-	Background lipgloss.Color
-	Foreground lipgloss.Color
-	Accent     lipgloss.Color
-	Muted      lipgloss.Color
-	Error      lipgloss.Color
-	Warning    lipgloss.Color
-	Success    lipgloss.Color
-	Info       lipgloss.Color
-
-	Border       lipgloss.Color
-	BorderActive lipgloss.Color
-
-	TableHeader lipgloss.Color
-	TableRow    lipgloss.Color
-	TableAltRow lipgloss.Color
-
-	PopupBackground lipgloss.Color
-	PopupBorder     lipgloss.Color
-	PopupTitle      lipgloss.Color
+	PopupBackground color.Color
+	PopupBorder     color.Color
+	PopupTitle      color.Color
 }
 
 type Styles struct {
@@ -112,6 +96,6 @@ func (s Styles) BoxFor(isActive bool) lipgloss.Style {
 }
 
 type Theme struct {
-	Colors LipglossScheme
+	Colors ColorScheme
 	Styles Styles
 }

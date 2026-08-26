@@ -1,7 +1,9 @@
 package repodetails
 
 import (
-	tea "github.com/charmbracelet/bubbletea"
+	"fmt"
+
+	tea "charm.land/bubbletea/v2"
 	"github.com/mabd-dev/reposcan/internal/theme"
 	"github.com/mabd-dev/reposcan/pkg/report"
 )
@@ -10,9 +12,16 @@ func New(
 	repoState *report.RepoState,
 	theme theme.Theme,
 ) Model {
+	tabs := []tab{}
+	if repoState != nil {
+		tabs = createTabsList(*repoState)
+	}
+
 	return Model{
-		theme:     theme,
-		repoState: repoState,
+		theme:            theme,
+		repoState:        repoState,
+		tabs:             tabs,
+		selectedTabIndex: 0,
 	}
 }
 
@@ -22,6 +31,31 @@ func (m *Model) UpdateSize(height int) {
 
 func (m *Model) UpdateData(repoState *report.RepoState) {
 	m.repoState = repoState
+
+	if repoState != nil {
+		m.tabs = createTabsList(*repoState)
+	} else {
+		m.tabs = []tab{}
+	}
 }
 
 func (m Model) Init() tea.Cmd { return nil }
+
+func (m *Model) UpdateTheme(newTheme theme.Theme) {
+	m.theme = newTheme
+}
+
+func createTabsList(repoState report.RepoState) []tab {
+	return []tab{
+		{
+			key:             tabChanges,
+			name:            "Changes",
+			highlightedText: fmt.Sprintf("(%v)", len(repoState.UncommitedFiles)),
+		},
+		{
+			key:             tabStashes,
+			name:            "Stashes",
+			highlightedText: fmt.Sprintf("(%v)", len(repoState.Stashes)),
+		},
+	}
+}
