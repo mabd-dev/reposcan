@@ -226,3 +226,10 @@ Add `--no-telemetry` when running the command. Or in `~/.config/reposcan/config.
 
 ## 🤝 Contributing
 PRs, bug reports, and feature requests are welcome.
+
+Before cutting a release, run the end-to-end smoke test and work through the
+checklist in [docs/release-testing.md](docs/release-testing.md):
+
+```sh
+./scripts/smoke-test.sh
+```

@@ -37,6 +37,23 @@ go test -v ./...
 go test -v -run TestName ./path/to/package
 ```
 
+### End-to-end smoke test
+```bash
+# Builds the binary, creates throwaway git/jj fixture repos in a temp dir,
+# runs reposcan against them and asserts on the JSON output. Exit 0 = all pass.
+./scripts/smoke-test.sh
+
+# Test a downloaded release binary instead of building from source
+REPOSCAN_BIN=/path/to/reposcan ./scripts/smoke-test.sh
+
+# Keep the fixtures for manual TUI checks
+KEEP_FIXTURES=1 ./scripts/smoke-test.sh
+```
+
+Full pre-release checklist (including the manual TUI steps the script cannot
+cover, and the current list of known issues) lives in
+[docs/release-testing.md](docs/release-testing.md).
+
 ### Running
 ```bash
 # Run with default settings (scans $HOME)
