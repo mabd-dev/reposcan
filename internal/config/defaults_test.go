@@ -14,3 +14,40 @@ func TestDefaults_SensibleValues(t *testing.T) {
 		t.Fatalf("expected at least one default root when HOME is set")
 	}
 }
+
+func TestConfigShowVCSColumn(t *testing.T) {
+	tests := []struct {
+		name    string
+		showVCS *bool
+		want    bool
+	}{
+		{
+			name: "unset defaults to shown",
+			want: true,
+		},
+		{
+			name:    "explicit true is shown",
+			showVCS: boolPtr(true),
+			want:    true,
+		},
+		{
+			name:    "explicit false is hidden",
+			showVCS: boolPtr(false),
+			want:    false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := Config{Tui: Tui{ShowVCS: tt.showVCS}}
+
+			if got := cfg.ShowVCSColumn(); got != tt.want {
+				t.Fatalf("expected ShowVCSColumn() = %v, got %v", tt.want, got)
+			}
+		})
+	}
+}
+
+func boolPtr(v bool) *bool {
+	return &v
+}

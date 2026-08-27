@@ -46,6 +46,7 @@ func TestView_EmptyState_FilterNoMatches(t *testing.T) {
 		},
 		80,
 		20,
+		Options{},
 	)
 
 	// Apply a text filter that matches nothing.
@@ -74,8 +75,9 @@ func TestView_EmptyState_NoReposFound(t *testing.T) {
 			RepoStates:        []report.RepoState{},
 			TotalScannedRepos: 0,
 		},
-		80, // width
-		20, // height
+		80,
+		20,
+		Options{},
 	)
 
 	view := m.View()
@@ -98,6 +100,7 @@ func TestView_EmptyState_AllClean(t *testing.T) {
 		},
 		80,
 		20,
+		Options{},
 	)
 
 	view := m.View()
@@ -120,6 +123,7 @@ func TestView_EmptyState_NoTablePlaceholder(t *testing.T) {
 		},
 		80,
 		20,
+		Options{},
 	)
 
 	view := m.View()
@@ -142,6 +146,7 @@ func TestView_WithRepos_RendersTable(t *testing.T) {
 		},
 		80,
 		20,
+		Options{},
 	)
 
 	view := m.View()
@@ -164,6 +169,7 @@ func TestUpdate_EmptyState_DoesNotCrash(t *testing.T) {
 		},
 		80,
 		20,
+		Options{},
 	)
 
 	// Simulate a keypress when there are no repos — should not panic.
@@ -183,6 +189,7 @@ func TestUpdate_EmptyState_WindowSize_PassesThrough(t *testing.T) {
 		},
 		80,
 		20,
+		Options{},
 	)
 
 	// Window-size messages should still reach the underlying table.
@@ -202,6 +209,7 @@ func TestReposCount_Empty_ReturnsZero(t *testing.T) {
 		},
 		80,
 		20,
+		Options{},
 	)
 
 	if m.ReposCount() != 0 {
@@ -221,6 +229,7 @@ func TestReposCount_NonEmpty_ReturnsCount(t *testing.T) {
 		},
 		80,
 		20,
+		Options{},
 	)
 
 	if m.ReposCount() != 2 {
@@ -237,6 +246,7 @@ func TestSetReport_UpdatesTotalRepos(t *testing.T) {
 		},
 		80,
 		20,
+		Options{},
 	)
 
 	m.SetReport(report.ScanReport{

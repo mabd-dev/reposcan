@@ -1,4 +1,4 @@
-package gitx
+package git
 
 import (
 	"bytes"
@@ -15,31 +15,6 @@ import (
 type remoteStatus struct {
 	Ahead  int
 	Behind int
-}
-
-// GitPush pushed git repo at given path using `git push` command and returns stdout of the command + error if any
-func GitPush(path string) (string, error) {
-	str, err := RunGitCommand(path, "push", "--porcelain")
-	if err != nil {
-		return "", err
-	}
-	return str, nil
-}
-
-func GitPull(path string) (string, error) {
-	str, err := RunGitCommand(path, "pull")
-	if err != nil {
-		return "", err
-	}
-	return str, nil
-}
-
-func GitFetch(path string) (string, error) {
-	str, err := RunGitCommand(path, "fetch", "--porcelain")
-	if err != nil {
-		return "", err
-	}
-	return str, nil
 }
 
 func GetGitRemotes(path string) (remotes []string, err error) {
@@ -146,6 +121,20 @@ func GetUpstreamStatusForAllRemotes(
 		Ahead:  ahead,
 		Behind: behind,
 	}, nil
+}
+
+func GetOutgoingCommitsForRemote(path string, remote string, currentBranch string) ([]string, error) {
+	remoteBranchRef := remote + "/" + currentBranch
+
+	str, err := RunGitCommand(path, "log", "--format=%h %s", remoteBranchRef+"..HEAD")
+	if err != nil {
+		return []string{}, err
+	}
+
+	commits := strings.Split(strings.TrimRight(str, "\n"), "\n")
+	commits = removeEmptyStrings(commits)
+
+	return commits, nil
 }
 
 // GetRepoName tries to extract the repository name from its remote URL,

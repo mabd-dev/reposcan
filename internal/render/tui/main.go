@@ -6,6 +6,7 @@ import (
 
 	"charm.land/bubbles/v2/textinput"
 	tea "charm.land/bubbletea/v2"
+	"github.com/mabd-dev/reposcan/internal"
 	"github.com/mabd-dev/reposcan/internal/config"
 	"github.com/mabd-dev/reposcan/internal/logger"
 	"github.com/mabd-dev/reposcan/internal/render/tui/alerts"
@@ -52,6 +53,9 @@ func Render(
 		r,
 		totalWidth*sizeReposTableWidthPercent/100,
 		totalHeight*sizeReposTableHeightPercent/100,
+		repostable.Options{
+			ShowVCS: configs.ShowVCSColumn(),
+		},
 	)
 
 	reposTableHeader := rth.Header{
@@ -70,6 +74,7 @@ func Render(
 
 	m := Model{
 		configs:             configs,
+		vcsRegistry:         internal.NewVCSRegistry(),
 		reposTable:          reposTable,
 		repoDetails:         repoDetails,
 		rtHeader:            reposTableHeader,

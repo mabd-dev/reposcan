@@ -22,7 +22,7 @@ below are all available flags
 
 - `-r, --root PATH` (repeatable)
   - Config: `roots = ["/path1", "/path2"]`
-  - Description: Directories to scan for Git repositories. Repeats to add multiple roots. Defaults to `$HOME` if unset.
+  - Description: Directories to scan for Git and jj repositories. Repeats to add multiple roots. Defaults to `$HOME` if unset.
   - Example:
     - CLI: `reposcan -r ~/Code -r ~/work`
     - TOML:
@@ -49,6 +49,7 @@ below are all available flags
     - `unpulled`: only repos with commits behind upstream.
     - `stash`: only repos with stash entries (independent of `countStashAsDirty`).
     - `all`: all repos discovered.
+  - jj note: `unpushed` uses outgoing commits for tracked bookmarks. `unpulled` uses incoming commits inferred from already-fetched remote bookmark state.
   - Examples:
     - `reposcan --filter dirty`
     - `reposcan --filter uncommitted`
@@ -63,6 +64,7 @@ below are all available flags
     - `json`: machine-readable JSON object.
     - `none`: print nothing to stdout.
   - Example: `reposcan -o json`
+  - JSON note: repository entries include `vcsType`. jj entries currently expose outgoing commits in `remoteStatus[].outgoingCommits`; incoming commit details are used for the behind count but are not exposed directly.
 
 - `--json-output-path DIR`
   - Config: `output.jsonPath = "/path/to/reports"`
@@ -71,7 +73,7 @@ below are all available flags
 
 - `-w, --max-workers N`
   - Config: `maxWorkers = 16`
-  - Description: Concurrency for git state checks when scanning many repos.
+  - Description: Concurrency for VCS state checks when scanning many repos.
   - Example: `reposcan -w 16`
 
 - `--debug true/false`

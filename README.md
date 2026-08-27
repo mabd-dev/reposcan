@@ -1,6 +1,6 @@
 # RepoScan
 
-`reposcan` is a simple command-line tool written in Go that scans your filesystem for Git repositories and reports their status.  
+`reposcan` is a simple command-line tool written in Go that scans your filesystem for Git and jj repositories and reports their status.  
 It helps you quickly find:
 
 - Repositories with **uncommitted files**  
@@ -116,6 +116,25 @@ reposcan --help
 
 More details on flags and config mapping can be found in [docs/cli-flags-and-configs.md](docs/cli-flags-and-configs.md).
 
+## VCS support
+
+RepoScan currently discovers and reports on:
+
+- Git repositories with a `.git` directory or worktree-style `.git` file.
+- jj repositories with a `.jj` directory.
+
+Reports include a `vcsType` field so JSON consumers and table users can distinguish Git and jj repositories. For jj repositories, RepoScan collects read-only state: repository name, current bookmark/change display, uncommitted file summaries, outgoing commits for tracked bookmarks, and incoming/unpulled counts based on already-fetched remote bookmark state.
+
+Current jj limitations:
+
+- TUI fetch, push, and pull keybindings are not active.
+- jj fetch has a command wrapper but is not exposed through TUI actions yet.
+- jj push and pull behavior is not enabled until per-operation semantics are defined.
+- jj incoming/unpulled detection depends on tracked bookmarks and fetched remote bookmark state.
+- jj remote status is simplified into a single synthetic status entry.
+- JSON reports do not expose incoming commit details directly.
+- TUI details show shared repository status fields, with limited jj-specific metadata.
+
 ## ⚙️ Configuration
 By default, `reposcan` looks for a config file in: 
 ```sh
@@ -148,6 +167,11 @@ dirIgnore = [
 type = "interactive"
 jsonPath = "/somewhere/nice"
 
+[tui]
+# Show the "VCS" column in the interactive table (default true).
+# Set to false to hide it, e.g. if you only use git.
+showVCS = true
+
 
 ```
 > You can still override everything via CLI flags.
@@ -165,6 +189,7 @@ Each step overrides the one before it
 ## 🛣 Roadmap
 - [x] Scan filesystem for repos
 - [x] Detect uncommitted files, unpushed commits and unpulled commits
+- [x] Detect Git and jj repositories
 - [x] Detect stashed changes
 - [x] Stdout Ouput in 3 formats: json, interactive, none
 - [x] Read user customizable `config.toml` file

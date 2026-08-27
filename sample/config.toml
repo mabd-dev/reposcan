@@ -84,3 +84,10 @@ type = "interactive"
 # output scan reports to this folder. All nested folders will be created
 # if they don't exist
 jsonPath = "somewhere/nice/"
+
+
+[tui]
+
+# Show the "VCS" column in the interactive table. Defaults to true.
+# Set to false to hide it. Only affects the `interactive` output.
+showVCS = true

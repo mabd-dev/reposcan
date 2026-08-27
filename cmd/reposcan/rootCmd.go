@@ -1,7 +1,6 @@
 package reposcan
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -181,12 +180,6 @@ func run(configs config.Config) error {
 		err := file.WriteScanReport(report, trimmedJsonOutputPath)
 		if err != nil {
 			return err
-		}
-	}
-
-	for _, repoState := range report.RepoStates {
-		if len(repoState.UncommitedFiles) > 0 {
-			return errors.New("")
 		}
 	}
 

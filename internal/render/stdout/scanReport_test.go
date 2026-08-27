@@ -29,8 +29,8 @@ func sampleReport() report.ScanReport {
 		Version:     1,
 		GeneratedAt: time.Date(2025, 8, 31, 22, 0, 0, 0, time.UTC),
 		RepoStates: []report.RepoState{
-			{Repo: "clean", Branch: "main", Path: "/tmp/clean"},
-			{Repo: "dirty", Branch: "dev", Path: "/tmp/dirty", UncommitedFiles: []string{"a.txt"}},
+			{Repo: "clean", VCSType: "git", Branch: "main", Path: "/tmp/clean"},
+			{Repo: "dirty", VCSType: "git", Branch: "dev", Path: "/tmp/dirty", UncommitedFiles: []string{"a.txt"}},
 		},
 		Warnings: []string{"test warning"},
 	}
