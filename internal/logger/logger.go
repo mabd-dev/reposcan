@@ -12,12 +12,18 @@ import (
 var (
 	enabled bool = false
 	logger  *slog.Logger
+	logFile *os.File
 )
 
 func Init(
 	isEnabled bool,
 	logFilePath string,
 ) {
+	if logFile != nil {
+		_ = logFile.Close()
+		logFile = nil
+	}
+
 	enabled = isEnabled
 	if !enabled {
 		return
@@ -28,6 +34,7 @@ func Init(
 		panic(err)
 	}
 
+	logFile = file
 	opts := &slog.HandlerOptions{
 		Level: slog.LevelDebug,
 	}

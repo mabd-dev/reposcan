@@ -35,14 +35,21 @@ func TestCreateLogFile(t *testing.T) {
 func TestInitEnabledWritesInitializationLog(t *testing.T) {
 	previousEnabled := enabled
 	previousLogger := logger
-	t.Cleanup(func() {
-		enabled = previousEnabled
-		logger = previousLogger
-	})
+	previousLogFile := logFile
 
 	homeDir := t.TempDir()
 	t.Setenv("HOME", homeDir)
 	t.Setenv("USERPROFILE", homeDir)
+	t.Cleanup(func() {
+		if logFile != nil && logFile != previousLogFile {
+			if err := logFile.Close(); err != nil {
+				t.Errorf("Close() error = %v", err)
+			}
+		}
+		enabled = previousEnabled
+		logger = previousLogger
+		logFile = previousLogFile
+	})
 	Init(true, "logs")
 
 	if !enabled {
