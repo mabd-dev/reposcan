@@ -52,7 +52,15 @@ func TestInitEnabledWritesInitializationLog(t *testing.T) {
 		t.Fatal("Init(true) did not initialize a logger")
 	}
 
-	logFile := filepath.Join(homeDir, "logs", time.Now().Format("2006-01-02")+".log")
+	logDir := filepath.Join(homeDir, "logs")
+	entries, err := os.ReadDir(logDir)
+	if err != nil {
+		t.Fatalf("ReadDir(%q) error = %v", logDir, err)
+	}
+	if len(entries) != 1 {
+		t.Fatalf("log files = %d, want 1", len(entries))
+	}
+	logFile := filepath.Join(logDir, entries[0].Name())
 	contents, err := os.ReadFile(logFile)
 	if err != nil {
 		t.Fatalf("ReadFile(%q) error = %v", logFile, err)
