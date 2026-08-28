@@ -94,3 +94,37 @@ func TestGetRepoStatesConcurrent_WarnsWhenProviderIsMissing(t *testing.T) {
 		t.Fatalf("unexpected warning: %v", warnings)
 	}
 }
+
+func TestGetRepoStatesConcurrent_DefaultsMaxWorkersWhenNonPositive(t *testing.T) {
+	repos := []RepoInfo{
+		{Path: "/tmp/repo-a", Type: TypeGit},
+		{Path: "/tmp/repo-b", Type: TypeJJ},
+	}
+
+	registry := NewRegistry(
+		stubProvider{
+			repoType: TypeGit,
+			states:   map[string]report.RepoState{"/tmp/repo-a": {Repo: "a"}},
+		},
+		stubProvider{
+			repoType: TypeJJ,
+			states:   map[string]report.RepoState{"/tmp/repo-b": {Repo: "b"}},
+		},
+	)
+
+	states, warnings := GetRepoStatesConcurrent(repos, registry, 0)
+
+	if len(warnings) != 0 {
+		t.Fatalf("expected no warnings, got %v", warnings)
+	}
+
+	gotPaths := []string{}
+	for _, state := range states {
+		gotPaths = append(gotPaths, state.Path)
+	}
+
+	wantPaths := []string{"/tmp/repo-a", "/tmp/repo-b"}
+	if !reflect.DeepEqual(gotPaths, wantPaths) {
+		t.Fatalf("expected sorted paths %v, got %v", wantPaths, gotPaths)
+	}
+}

@@ -54,3 +54,43 @@ func TestRegistryGetActionProvider(t *testing.T) {
 		t.Fatalf("expected fetch output to be repo path, got %q", output)
 	}
 }
+
+func TestNewRegistry_SkipsNilProviders(t *testing.T) {
+	registry := NewRegistry(nil, stubProvider{repoType: TypeGit})
+
+	if _, ok := registry.Get(TypeGit); !ok {
+		t.Fatal("expected git provider to be registered")
+	}
+
+	if len(registry.providers) != 1 {
+		t.Fatalf("expected 1 registered provider, got %d", len(registry.providers))
+	}
+}
+
+func TestRegister_InitializesNilProviderMap(t *testing.T) {
+	var registry Registry
+
+	registry.Register(stubProvider{repoType: TypeGit})
+
+	if _, ok := registry.Get(TypeGit); !ok {
+		t.Fatal("expected provider to be registered on zero-value Registry")
+	}
+}
+
+func TestGet_NilReceiverReturnsNotFound(t *testing.T) {
+	var registry *Registry
+
+	provider, ok := registry.Get(TypeGit)
+	if ok || provider != nil {
+		t.Fatalf("expected no provider for nil receiver, got (%v, %v)", provider, ok)
+	}
+}
+
+func TestGetActionProvider_UnregisteredTypeReturnsNotFound(t *testing.T) {
+	registry := NewRegistry(stubActionProvider{repoType: TypeGit})
+
+	actionProvider, ok := registry.GetActionProvider(TypeJJ)
+	if ok || actionProvider != nil {
+		t.Fatalf("expected no action provider for unregistered type, got (%v, %v)", actionProvider, ok)
+	}
+}
