@@ -4,7 +4,6 @@ import (
 	"errors"
 	"path/filepath"
 	"reflect"
-	"strings"
 	"testing"
 )
 
@@ -29,8 +28,8 @@ func TestCommandError(t *testing.T) {
 	}
 }
 
-// TestPublicCommandWrappers verifies that every exported command wrapper uses
-// the default jj binary and returns the result parsed by its internal helper.
+// TestPublicCommandWrappers verifies the package's current exported command
+// surface. These entry points hardcode "jj", so the fake must be on PATH.
 func TestPublicCommandWrappers(t *testing.T) {
 	repoPath := filepath.Join(t.TempDir(), "checkout")
 	responses := map[string]fakeJJResponse{
@@ -178,14 +177,6 @@ func TestGetBranchDisplay(t *testing.T) {
 	}
 }
 
-// TestCleanBookmarkName verifies whitespace and jj conflict markers are removed
-// before bookmark names are displayed or matched.
-func TestCleanBookmarkName(t *testing.T) {
-	if got := cleanBookmarkName("  main*?  "); got != "main" {
-		t.Fatalf("cleanBookmarkName() = %q, want main", got)
-	}
-}
-
 // TestGetUncommittedFiles verifies diff failures are propagated and successful
 // summaries are trimmed without retaining blank lines.
 func TestGetUncommittedFiles(t *testing.T) {
@@ -223,8 +214,12 @@ func TestRunJJCommandError(t *testing.T) {
 	if err == nil {
 		t.Fatal("runJJCommand() error = nil, want error")
 	}
-	if !strings.Contains(err.Error(), "authentication failed") {
-		t.Fatalf("runJJCommand() error = %q, want stderr", err)
+	var commandErr commandError
+	if !errors.As(err, &commandErr) {
+		t.Fatalf("runJJCommand() error = %T, want commandError", err)
+	}
+	if commandErr.Stderr != "authentication failed" {
+		t.Fatalf("runJJCommand() stderr = %q, want trimmed stderr", commandErr.Stderr)
 	}
 }
 

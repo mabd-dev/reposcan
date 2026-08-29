@@ -377,9 +377,12 @@ func TestProviderCheckRepoStateWarningsIncludeCommandFailureDetails(t *testing.T
 				fakeJJCommandKey("diff", "--summary"):     {},
 				trackedBookmarksCommandKey():              {},
 				untrackedRemotesCommandKey("main"):        {},
-				untrackedRemotesCommandKey("-"):           {},
 			}
 			responses[tt.failedCommand] = fakeJJResponse{Stderr: "inspection failed", ExitCode: 1}
+			if tt.failedCommand == branchCommandKey() {
+				// A failed branch lookup uses "-" for the follow-up remote lookup.
+				responses[untrackedRemotesCommandKey("-")] = fakeJJResponse{}
+			}
 			binary := useFakeJJ(t, responses)
 
 			_, warnings := (&Provider{binary: binary}).CheckRepoState(repoPath)

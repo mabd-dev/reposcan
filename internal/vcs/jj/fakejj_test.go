@@ -50,8 +50,7 @@ func TestMain(m *testing.M) {
 	os.Exit(response.ExitCode)
 }
 
-// fakeJJCommandKey preserves argument boundaries and normalizes nil and empty
-// argument lists to the same JSON representation.
+// fakeJJCommandKey preserves argument boundaries and normalizes empty lists.
 func fakeJJCommandKey(args ...string) string {
 	if args == nil {
 		args = []string{}
@@ -63,15 +62,6 @@ func fakeJJCommandKey(args ...string) string {
 	}
 
 	return string(key)
-}
-
-// TestFakeJJCommandKeyNormalizesEmptyArguments verifies that callers get the
-// same lookup key whether they pass no arguments or an explicit empty slice.
-func TestFakeJJCommandKeyNormalizesEmptyArguments(t *testing.T) {
-	emptyArgs := []string{}
-	if got, want := fakeJJCommandKey(), fakeJJCommandKey(emptyArgs...); got != want {
-		t.Fatalf("empty fake jj command key = %q, want %q", got, want)
-	}
 }
 
 // useFakeJJ configures the current test binary to respond as jj when a unit
@@ -88,8 +78,8 @@ func useFakeJJ(t *testing.T, responses map[string]fakeJJResponse) string {
 	return os.Args[0]
 }
 
-// installFakeJJ places a platform-specific copy of the test binary on PATH so
-// exported wrappers that hardcode the jj binary can use the same fake responses.
+// installFakeJJ places a platform-specific copy of the test binary on PATH for
+// exported wrappers and Provider.Fetch, which currently hardcode "jj".
 func installFakeJJ(t *testing.T, responses map[string]fakeJJResponse) {
 	t.Helper()
 

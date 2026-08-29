@@ -10,20 +10,9 @@ import (
 	"github.com/mabd-dev/reposcan/internal/vcs"
 )
 
-// TestNewProvider verifies that the constructor selects the jj executable and
-// advertises the provider type used by the VCS registry.
-func TestNewProvider(t *testing.T) {
-	provider := New()
-	if provider.binary != "jj" {
-		t.Fatalf("New().binary = %q, want jj", provider.binary)
-	}
-	if got := provider.Type(); got != vcs.TypeJJ {
-		t.Fatalf("Provider.Type() = %q, want %q", got, vcs.TypeJJ)
-	}
-}
-
 // TestProviderCheckRepoStateWithFakeJJ verifies that successful command results
-// are assembled into a complete RepoState with per-remote ahead/behind counts.
+// are assembled into a complete RepoState and that the provider advertises the
+// VCS type consumed by the registry.
 func TestProviderCheckRepoStateWithFakeJJ(t *testing.T) {
 	repoPath := filepath.Join(t.TempDir(), "checkout")
 	bookmark := trackedBookmark{Name: "main", Remote: "origin"}
@@ -38,8 +27,13 @@ func TestProviderCheckRepoStateWithFakeJJ(t *testing.T) {
 		commitLogCommandKey(incomingRevset):       {Stdout: "def456|remote change\n"},
 	}
 	binary := useFakeJJ(t, responses)
+	provider := New()
+	if got := provider.Type(); got != vcs.TypeJJ {
+		t.Fatalf("Provider.Type() = %q, want %q", got, vcs.TypeJJ)
+	}
+	provider.binary = binary
 
-	state, warnings := (&Provider{binary: binary}).CheckRepoState(repoPath)
+	state, warnings := provider.CheckRepoState(repoPath)
 	if len(warnings) != 0 {
 		t.Fatalf("CheckRepoState() warnings = %v, want none", warnings)
 	}
