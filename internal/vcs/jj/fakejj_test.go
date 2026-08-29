@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"testing"
 )
 
@@ -74,6 +75,12 @@ func useFakeJJ(t *testing.T, responses map[string]fakeJJResponse) string {
 		t.Fatalf("encode fake jj responses: %v", err)
 	}
 	t.Setenv(fakeJJResponsesEnv, string(responsesJSON))
+
+	// Race-enabled child processes wait one second before exiting by default.
+	// Remove that wait so every fake jj command does not add a second to the test.
+	if gorace := os.Getenv("GORACE"); !strings.Contains(gorace, "atexit_sleep_ms=") {
+		t.Setenv("GORACE", strings.TrimSpace(gorace+" atexit_sleep_ms=0"))
+	}
 
 	return os.Args[0]
 }
