@@ -45,20 +45,27 @@ func CheckRepoState(path string) (repoState report.RepoState, warnings []string)
 				Ahead:  -1,
 				Behind: -1,
 			})
-		} else {
-			outgoingCommits, err := GetOutgoingCommitsForRemote(path, remote, branch)
-			if err != nil {
-				msg := fmt.Sprintf("Failed to get outgoing commits for remote=%s, path=%s", remote, path)
-				warnings = append(warnings, msg)
-			}
-
-			remoteStatuses = append(remoteStatuses, report.RemoteStatus{
-				Remote:          remote,
-				Ahead:           remoteStatus.Ahead,
-				Behind:          remoteStatus.Behind,
-				OutgoingCommits: outgoingCommits,
-			})
+			continue
 		}
+
+		// GetOutgoingCommitsForRemote cannot error at this point: the upstream
+		// status check above just succeeded, which means git rev-list
+		// <remote>/<branch>...HEAD walked these objects (origin/branch exists
+		// and rev-list exited 0). git log <remote>/<branch>..HEAD runs the
+		// same subset walk, so its failure is impossible. This branch is
+		// defensive only.
+		outgoingCommits, err := GetOutgoingCommitsForRemote(path, remote, branch)
+		if err != nil {
+			msg := fmt.Sprintf("Failed to get outgoing commits for remote=%s, path=%s", remote, path)
+			warnings = append(warnings, msg)
+		}
+
+		remoteStatuses = append(remoteStatuses, report.RemoteStatus{
+			Remote:          remote,
+			Ahead:           remoteStatus.Ahead,
+			Behind:          remoteStatus.Behind,
+			OutgoingCommits: outgoingCommits,
+		})
 	}
 
 	repoName, err := GetRepoName(path)
