@@ -23,7 +23,10 @@ func (p *Provider) CheckRepoState(path string) (report.RepoState, []string) {
 }
 
 func (p *Provider) Fetch(path string) (string, error) {
-	str, err := RunGitCommand(path, "fetch", "--porcelain")
+	// Avoid --porcelain: git fetch --porcelain only exists as of git 2.41.0,
+	// and older git versions reject it with exit 129. Plain fetch still updates
+	// the remote-tracking refs that CheckRepoState reads.
+	str, err := RunGitCommand(path, "fetch")
 	if err != nil {
 		return "", err
 	}
