@@ -48,12 +48,12 @@ func CheckRepoState(path string) (repoState report.RepoState, warnings []string)
 			continue
 		}
 
-		// GetOutgoingCommitsForRemote cannot error at this point: the upstream
-		// status check above just succeeded, which means git rev-list
-		// <remote>/<branch>...HEAD walked these objects (origin/branch exists
-		// and rev-list exited 0). git log <remote>/<branch>..HEAD runs the
-		// same subset walk, so its failure is impossible. This branch is
-		// defensive only.
+		// GetUpstreamStatusForRemote and GetOutgoingCommitsForRemote invoke
+		// separate git processes, so the remote-tracking ref can change
+		// between them. A concurrent fetch, prune, or ref update can remove
+		// refs/remotes/<remote>/<branch>, causing git log
+		// <remote>/<branch>..HEAD to exit 128 and fail here. Keep this
+		// non-fatal so one raced repo does not fail the whole scan.
 		outgoingCommits, err := GetOutgoingCommitsForRemote(path, remote, branch)
 		if err != nil {
 			msg := fmt.Sprintf("Failed to get outgoing commits for remote=%s, path=%s", remote, path)

@@ -155,6 +155,50 @@ func TestGetOutgoingCommitsForRemote_NonGitDir(t *testing.T) {
 	}
 }
 
+// GetUpstreamStatusForRemote and GetOutgoingCommitsForRemote run separate git
+// processes. If the remote-tracking ref is deleted between the two calls (a
+// concurrent fetch --prune, remote prune, or ref update), git log
+// origin/main..HEAD exits 128. This test replays that precondition: the ref
+// is present for the status check, deleted for the log lookup.
+func TestGetOutgoingCommitsForRemote_TrackingRefDeleted(t *testing.T) {
+	gitOrSkip(t)
+	root := t.TempDir()
+	bare := filepath.Join(root, "remote.git")
+	runGit(t, root, "init", "--bare", bare)
+
+	seed := filepath.Join(root, "seed")
+	runGit(t, root, "init", "seed")
+	runGit(t, seed, "commit", "--allow-empty", "-m", "base")
+	runGit(t, seed, "branch", "-M", "main")
+	runGit(t, seed, "remote", "add", "origin", bare)
+	runGit(t, seed, "push", "-u", "origin", "main")
+
+	local := filepath.Join(root, "local")
+	runGit(t, root, "clone", bare, local)
+	if err := os.WriteFile(filepath.Join(local, "extra.txt"), []byte("x\n"), 0o644); err != nil {
+		t.Fatalf("write: %v", err)
+	}
+	runGit(t, local, "add", "extra.txt")
+	runGit(t, local, "commit", "-m", "extra")
+
+	// Ref still present: status check succeeds and log lookup succeeds.
+	if commits, err := GetOutgoingCommitsForRemote(local, "origin", "main"); err != nil || len(commits) != 1 {
+		t.Fatalf("expected 1 outgoing commit before deleting tracking ref, got %v, %v", commits, err)
+	}
+
+	// Simulate a concurrent prune removing refs/remotes/origin/main between
+	// the status check and the log lookup.
+	runGit(t, local, "update-ref", "-d", "refs/remotes/origin/main")
+
+	commits, err := GetOutgoingCommitsForRemote(local, "origin", "main")
+	if err == nil {
+		t.Fatal("expected error when remote-tracking ref was deleted concurrently")
+	}
+	if len(commits) != 0 {
+		t.Fatalf("expected no commits on error, got %v", commits)
+	}
+}
+
 func TestGetRepoName_NonGitDir(t *testing.T) {
 	gitOrSkip(t)
 	dir := t.TempDir()
