@@ -86,9 +86,9 @@ func GetUpstreamStatus(path string) (ahead int, behind int, err error) {
 	return ahead, behind, nil
 }
 
-// GetUpstreamStatusForAllRemotes returns the ahead/behind counts for the current branch
-// against the same branch on each remote. Returns a slice of RemoteStatus.
-func GetUpstreamStatusForAllRemotes(
+// GetUpstreamStatusForRemote returns the ahead/behind counts for the current
+// branch against the same branch on the given remote.
+func GetUpstreamStatusForRemote(
 	path string,
 	remote string,
 	currentBranch string,

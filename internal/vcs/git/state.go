@@ -36,7 +36,7 @@ func CheckRepoState(path string) (repoState report.RepoState, warnings []string)
 	}
 
 	for _, remote := range remotes {
-		remoteStatus, err := GetUpstreamStatusForAllRemotes(path, remote, branch)
+		remoteStatus, err := GetUpstreamStatusForRemote(path, remote, branch)
 		if err != nil {
 			msg := fmt.Sprintf("Failed to get upstream status for remote=%s, path=%s", remote, path)
 			warnings = append(warnings, msg)

@@ -123,7 +123,7 @@ func TestGetUpstreamStatus_NoUpstream(t *testing.T) {
 	}
 }
 
-func TestGetUpstreamStatusForAllRemotes_RevListError(t *testing.T) {
+func TestGetUpstreamStatusForRemote_RevListError(t *testing.T) {
 	gitOrSkip(t)
 	repo := t.TempDir()
 	runGit(t, repo, "init")
@@ -137,7 +137,7 @@ func TestGetUpstreamStatusForAllRemotes_RevListError(t *testing.T) {
 	}
 	runGit(t, repo, "update-ref", "refs/remotes/origin/main", strings.TrimSpace(string(treeOut)))
 
-	if _, err := GetUpstreamStatusForAllRemotes(repo, "origin", "main"); err == nil {
+	if _, err := GetUpstreamStatusForRemote(repo, "origin", "main"); err == nil {
 		t.Fatal("expected error when remote branch ref is not a commit")
 	}
 }
