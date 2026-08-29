@@ -86,9 +86,9 @@ func GetUpstreamStatus(path string) (ahead int, behind int, err error) {
 	return ahead, behind, nil
 }
 
-// GetUpstreamStatusForAllRemotes returns the ahead/behind counts for the current branch
-// against the same branch on each remote. Returns a slice of RemoteStatus.
-func GetUpstreamStatusForAllRemotes(
+// GetUpstreamStatusForRemote returns the ahead/behind counts for the current
+// branch against the same branch on the given remote.
+func GetUpstreamStatusForRemote(
 	path string,
 	remote string,
 	currentBranch string,
@@ -143,17 +143,7 @@ func GetRepoName(repoPath string) (string, error) {
 	// 1. Try "origin" first
 	remote, err := RunGitCommand(repoPath, "remote", "get-url", "origin")
 	if err != nil {
-		// 2. If "origin" not found, list remotes
-		remotes, rErr := RunGitCommand(repoPath, "remote")
-		if rErr == nil {
-			names := strings.Fields(remotes)
-			if len(names) > 0 {
-				remote, err = RunGitCommand(repoPath, "remote", "get-url", names[0])
-				if err != nil {
-					remote = ""
-				}
-			}
-		}
+		remote, _ = firstRemoteURL(repoPath)
 	}
 
 	remote = strings.TrimSpace(remote)
@@ -170,6 +160,20 @@ func GetRepoName(repoPath string) (string, error) {
 	}
 
 	return "", errors.New("could not determine repo name")
+}
+
+func firstRemoteURL(repoPath string) (string, error) {
+	remotes, err := RunGitCommand(repoPath, "remote")
+	if err != nil {
+		return "", err
+	}
+	remoteNames := strings.Fields(remotes)
+	if len(remoteNames) == 0 {
+		return "", errors.New("no remotes")
+	}
+
+	remote, err := RunGitCommand(repoPath, "remote", "get-url", remoteNames[0])
+	return remote, err
 }
 
 // parseRepoName extracts the repo name from a remote URL or path.

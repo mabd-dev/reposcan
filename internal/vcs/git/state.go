@@ -36,7 +36,7 @@ func CheckRepoState(path string) (repoState report.RepoState, warnings []string)
 	}
 
 	for _, remote := range remotes {
-		remoteStatus, err := GetUpstreamStatusForAllRemotes(path, remote, branch)
+		remoteStatus, err := GetUpstreamStatusForRemote(path, remote, branch)
 		if err != nil {
 			msg := fmt.Sprintf("Failed to get upstream status for remote=%s, path=%s", remote, path)
 			warnings = append(warnings, msg)
@@ -45,20 +45,27 @@ func CheckRepoState(path string) (repoState report.RepoState, warnings []string)
 				Ahead:  -1,
 				Behind: -1,
 			})
-		} else {
-			outgoingCommits, err := GetOutgoingCommitsForRemote(path, remote, branch)
-			if err != nil {
-				msg := fmt.Sprintf("Failed to get outgoing commits for remote=%s, path=%s", remote, path)
-				warnings = append(warnings, msg)
-			}
-
-			remoteStatuses = append(remoteStatuses, report.RemoteStatus{
-				Remote:          remote,
-				Ahead:           remoteStatus.Ahead,
-				Behind:          remoteStatus.Behind,
-				OutgoingCommits: outgoingCommits,
-			})
+			continue
 		}
+
+		// GetUpstreamStatusForRemote and GetOutgoingCommitsForRemote invoke
+		// separate git processes, so the remote-tracking ref can change
+		// between them. A concurrent fetch, prune, or ref update can remove
+		// refs/remotes/<remote>/<branch>, causing git log
+		// <remote>/<branch>..HEAD to exit 128 and fail here. Keep this
+		// non-fatal so one raced repo does not fail the whole scan.
+		outgoingCommits, err := GetOutgoingCommitsForRemote(path, remote, branch)
+		if err != nil {
+			msg := fmt.Sprintf("Failed to get outgoing commits for remote=%s, path=%s", remote, path)
+			warnings = append(warnings, msg)
+		}
+
+		remoteStatuses = append(remoteStatuses, report.RemoteStatus{
+			Remote:          remote,
+			Ahead:           remoteStatus.Ahead,
+			Behind:          remoteStatus.Behind,
+			OutgoingCommits: outgoingCommits,
+		})
 	}
 
 	repoName, err := GetRepoName(path)
