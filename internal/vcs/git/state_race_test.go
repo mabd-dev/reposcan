@@ -59,8 +59,7 @@ func TestCheckRepoState_OutgoingCommitsRace(t *testing.T) {
 	}
 
 	root := t.TempDir()
-	bare := filepath.Join(root, "remote.git")
-	runGit(t, root, "init", "--bare", bare)
+	bare := initBareMain(t, "remote.git")
 
 	seed := filepath.Join(root, "seed")
 	runGit(t, root, "init", "seed")

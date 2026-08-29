@@ -135,8 +135,7 @@ func TestProviderType(t *testing.T) {
 func TestProviderFetchPushPull(t *testing.T) {
 	gitOrSkip(t)
 	root := t.TempDir()
-	bare := filepath.Join(root, "remote.git")
-	runGit(t, root, "init", "--bare", bare)
+	bare := initBareMain(t, "remote.git")
 
 	// Seed the bare remote so clones get branch tracking for origin.
 	seed := filepath.Join(root, "seed")

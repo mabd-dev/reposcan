@@ -28,6 +28,23 @@ func runGit(t *testing.T, dir string, args ...string) {
 	}
 }
 
+// initBareMain creates a bare repository whose HEAD points at main.
+// git init --bare leaves HEAD on the configured default branch, which may be
+// master when the environment has no init.defaultBranch=main. If only main is
+// ever pushed to such a bare repo, git clone falls back to a master checkout
+// with no upstream, making @{u} unresolvable and reversely affecting
+// ahead/behind. Pinning HEAD makes clones check out main deterministically.
+func initBareMain(t *testing.T, name string) string {
+	t.Helper()
+	dir := filepath.Join(t.TempDir(), name)
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatalf("mkdir %s: %v", dir, err)
+	}
+	runGit(t, dir, "init", "--bare")
+	runGit(t, dir, "symbolic-ref", "HEAD", "refs/heads/main")
+	return dir
+}
+
 func TestGetStashes_NoStashes(t *testing.T) {
 	gitOrSkip(t)
 	repo := t.TempDir()
@@ -81,8 +98,7 @@ func TestGetStashes_SharedAcrossWorktrees(t *testing.T) {
 func TestGetUpstreamStatus_AheadBehind(t *testing.T) {
 	gitOrSkip(t)
 	root := t.TempDir()
-	bare := filepath.Join(root, "remote.git")
-	runGit(t, root, "init", "--bare", bare)
+	bare := initBareMain(t, "remote.git")
 
 	seed := filepath.Join(root, "seed")
 	runGit(t, root, "init", "seed")
@@ -163,8 +179,7 @@ func TestGetOutgoingCommitsForRemote_NonGitDir(t *testing.T) {
 func TestGetOutgoingCommitsForRemote_TrackingRefDeleted(t *testing.T) {
 	gitOrSkip(t)
 	root := t.TempDir()
-	bare := filepath.Join(root, "remote.git")
-	runGit(t, root, "init", "--bare", bare)
+	bare := initBareMain(t, "remote.git")
 
 	seed := filepath.Join(root, "seed")
 	runGit(t, root, "init", "seed")
