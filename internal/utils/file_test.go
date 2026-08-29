@@ -4,8 +4,34 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
+
+func isWindows() bool {
+	return runtime.GOOS == "windows"
+}
+
+// setHome points the OS home-directory lookup at dir. os.UserHomeDir()
+// reads different env vars per platform: HOME on unix, USERPROFILE on
+// Windows. Setting both keeps the tilde tests reproducible on every runner.
+func setHome(t *testing.T, dir string) {
+	t.Helper()
+	t.Setenv("HOME", dir)
+	t.Setenv("USERPROFILE", dir)
+	t.Setenv("HOMEDRIVE", "")
+	t.Setenv("HOMEPATH", "")
+}
+
+// unsetHome removes the env vars os.UserHomeDir() relies on so the lookup
+// fails on every platform.
+func unsetHome(t *testing.T) {
+	t.Helper()
+	t.Setenv("HOME", "")
+	t.Setenv("USERPROFILE", "")
+	t.Setenv("HOMEDRIVE", "")
+	t.Setenv("HOMEPATH", "")
+}
 
 func TestFileExists(t *testing.T) {
 	t.Run("existing file", func(t *testing.T) {
@@ -30,6 +56,14 @@ func TestFileExists(t *testing.T) {
 	})
 
 	t.Run("stat error other than not-exist", func(t *testing.T) {
+		if isWindows() {
+			// On Windows, stat of "<file>\child" returns ERROR_PATH_NOT_FOUND,
+			// which os.Stat surfaces as os.ErrNotExist rather than ENOTDIR.
+			// The not-exist branch returns (false, nil), so the unix-only
+			// premise of this test does not hold.
+			t.Skip("ENOTDIR semantics are not exercised on Windows")
+		}
+
 		root := t.TempDir()
 		file := filepath.Join(root, "f.txt")
 		if err := os.WriteFile(file, []byte("x"), 0o644); err != nil {
@@ -79,6 +113,10 @@ func TestDirExists(t *testing.T) {
 	})
 
 	t.Run("stat error other than not-exist", func(t *testing.T) {
+		if isWindows() {
+			t.Skip("ENOTDIR semantics are not exercised on Windows")
+		}
+
 		root := t.TempDir()
 		file := filepath.Join(root, "f.txt")
 		if err := os.WriteFile(file, []byte("x"), 0o644); err != nil {
@@ -116,7 +154,7 @@ func TestWriteToFile(t *testing.T) {
 
 	t.Run("expands leading tilde using HOME", func(t *testing.T) {
 		root := t.TempDir()
-		t.Setenv("HOME", root)
+		setHome(t, root)
 
 		relRel := filepath.Join("proj", "out.txt")
 		if err := WriteToFile([]byte("x"), filepath.Join("~", relRel)); err != nil {
@@ -134,7 +172,7 @@ func TestWriteToFile(t *testing.T) {
 	})
 
 	t.Run("error when home cannot be determined", func(t *testing.T) {
-		t.Setenv("HOME", "")
+		unsetHome(t)
 
 		if err := WriteToFile([]byte("x"), "~/out.txt"); err == nil {
 			t.Fatal("expected error when $HOME is not defined")
