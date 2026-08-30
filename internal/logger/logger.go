@@ -1,4 +1,12 @@
 // Package logger is a logger package :)
+//
+// Coverage TODO:
+//   - Verify Init closes and replaces an existing log file.
+//   - Exercise createLogFile failures when the log directory cannot be created
+//     and when the dated log file cannot be opened.
+//   - Verify Init propagates a createLogFile failure as a panic.
+//   - Assert the Debug, Info, Warn, and Error helpers write the expected level,
+//     message, and attributes when logging is enabled.
 package logger
 
 import (
@@ -12,12 +20,18 @@ import (
 var (
 	enabled bool = false
 	logger  *slog.Logger
+	logFile *os.File
 )
 
 func Init(
 	isEnabled bool,
 	logFilePath string,
 ) {
+	if logFile != nil {
+		_ = logFile.Close()
+		logFile = nil
+	}
+
 	enabled = isEnabled
 	if !enabled {
 		return
@@ -28,6 +42,7 @@ func Init(
 		panic(err)
 	}
 
+	logFile = file
 	opts := &slog.HandlerOptions{
 		Level: slog.LevelDebug,
 	}
