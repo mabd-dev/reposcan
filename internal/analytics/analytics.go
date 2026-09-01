@@ -64,8 +64,20 @@ type MixpanelAnalytics struct {
 // NewMixpanelAnalytics constructs a live client against the Mixpanel API.
 // The token is required; passing an empty token is a caller bug.
 func NewMixpanelAnalytics(token string) *MixpanelAnalytics {
+	return newMixpanelAnalytics(token)
+}
+
+// NewMixpanelAnalyticsWithClient constructs a client with explicit Mixpanel
+// SDK options, enabling tests to inject a custom HTTP endpoint and client via
+// mixpanel.ProxyApiLocation / mixpanel.HttpClient instead of hitting the real
+// Mixpanel API.
+func NewMixpanelAnalyticsWithClient(token string, options ...mixpanel.Options) *MixpanelAnalytics {
+	return newMixpanelAnalytics(token, options...)
+}
+
+func newMixpanelAnalytics(token string, options ...mixpanel.Options) *MixpanelAnalytics {
 	return &MixpanelAnalytics{
-		client:     mixpanel.NewApiClient(token),
+		client:     mixpanel.NewApiClient(token, options...),
 		distinctID: "anonymous",
 	}
 }
