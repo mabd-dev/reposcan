@@ -2,6 +2,7 @@ package file
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"path/filepath"
 
@@ -15,7 +16,11 @@ func WriteScanReport(
 	report report.ScanReport,
 	dirPath string,
 ) error {
-	jsonReport, _ := json.MarshalIndent(report, "", "    ")
+	jsonReport, err := json.MarshalIndent(report, "", "    ")
+	if err != nil {
+		msg := "Error convert report to json, message=" + err.Error()
+		return errors.New(msg)
+	}
 
 	reportFileName := fmt.Sprintf("ScanReport %s.json", report.GeneratedAt.Format("2006-01-02 15-04-05"))
 	fullReportPath := filepath.Join(dirPath, reportFileName)
