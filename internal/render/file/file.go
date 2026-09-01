@@ -16,7 +16,6 @@ func WriteScanReport(
 	report report.ScanReport,
 	dirPath string,
 ) error {
-	// create folder if it does not exist
 	jsonReport, err := json.MarshalIndent(report, "", "    ")
 	if err != nil {
 		msg := "Error convert report to json, message=" + err.Error()
