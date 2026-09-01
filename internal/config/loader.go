@@ -8,11 +8,14 @@ import (
 	"github.com/pelletier/go-toml/v2"
 )
 
+// tomlMarshal is a test seam for forcing marshal failures from writeToFile.
+var tomlMarshal = toml.Marshal
+
 // writeToFile serializes config to TOML and writes it to path.
 // Parent directories are created if necessary.
 func writeToFile(config Config, path string) error {
 
-	data, err := toml.Marshal(config)
+	data, err := tomlMarshal(config)
 	if err != nil {
 		return err
 	}
