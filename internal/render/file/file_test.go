@@ -49,3 +49,21 @@ func TestWriteScanReport_WritesFileWithTimestampedName(t *testing.T) {
 		t.Fatalf("unexpected version in JSON: %v", obj["Version"])
 	}
 }
+
+// TestWriteScanReport_WriteErrorCoverage exercises the utils.WriteToFile
+// error path by pointing dirPath at a location that cannot be created
+// (a regular file used as a parent directory yields ENOTDIR).
+func TestWriteScanReport_WriteErrorCoverage(t *testing.T) {
+	root := t.TempDir()
+	blocker := filepath.Join(root, "blocker.txt")
+	if err := os.WriteFile(blocker, []byte("x"), 0o644); err != nil {
+		t.Fatalf("write blocker: %v", err)
+	}
+
+	r := report.ScanReport{GeneratedAt: time.Now()}
+	// dirPath has a regular-file component, so creating the report dir fails.
+	err := WriteScanReport(r, filepath.Join(blocker, "child"))
+	if err == nil {
+		t.Fatal("expected error when target directory cannot be created")
+	}
+}
