@@ -1,7 +1,6 @@
 package jj
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -338,28 +337,70 @@ func TestProviderCheckRepoStateWarnsWhenBinaryMissing(t *testing.T) {
 	}
 }
 
+// TestProviderCheckRepoStateWarningsIncludeCommandFailureDetails verifies that
+// each inspection failure produces one contextual warning and does not prevent
+// the remaining repository checks from completing.
 func TestProviderCheckRepoStateWarningsIncludeCommandFailureDetails(t *testing.T) {
-	repoPath := filepath.Join(t.TempDir(), "repo")
-	failingBinary := os.Args[0]
-
-	_, warnings := (&Provider{binary: failingBinary}).CheckRepoState(repoPath)
-
-	if len(warnings) == 0 {
-		t.Fatal("expected warnings")
+	tests := []struct {
+		name          string
+		failedCommand string
+		wantOperation string
+	}{
+		{
+			name:          "repo name",
+			failedCommand: fakeJJCommandKey("git", "remote", "list"),
+			wantOperation: "get repo name",
+		},
+		{
+			name:          "branch display",
+			failedCommand: branchCommandKey(),
+			wantOperation: "get branch display",
+		},
+		{
+			name:          "uncommitted files",
+			failedCommand: fakeJJCommandKey("diff", "--summary"),
+			wantOperation: "get uncommitted files",
+		},
+		{
+			name:          "remote status",
+			failedCommand: trackedBookmarksCommandKey(),
+			wantOperation: "get remote status",
+		},
 	}
 
-	warning := warnings[0]
-	command := strings.Join([]string{failingBinary, "-R", repoPath, "git", "remote", "list"}, " ")
-	wantParts := []string{
-		"Failed to get repo name for jj repo",
-		"path=" + repoPath,
-		fmt.Sprintf("command=%q", command),
-		"failed:",
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repoPath := filepath.Join(t.TempDir(), "repo")
+			responses := map[string]fakeJJResponse{
+				fakeJJCommandKey("git", "remote", "list"): {},
+				branchCommandKey():                        {Stdout: "main*?|abc123\n"},
+				fakeJJCommandKey("diff", "--summary"):     {},
+				trackedBookmarksCommandKey():              {},
+				untrackedRemotesCommandKey("main"):        {},
+			}
+			responses[tt.failedCommand] = fakeJJResponse{Stderr: "inspection failed", ExitCode: 1}
+			if tt.failedCommand == branchCommandKey() {
+				// A failed branch lookup uses "-" for the follow-up remote lookup.
+				responses[untrackedRemotesCommandKey("-")] = fakeJJResponse{}
+			}
+			binary := useFakeJJ(t, responses)
 
-	for _, want := range wantParts {
-		if !strings.Contains(warning, want) {
-			t.Fatalf("expected warning to contain %q, got %q", want, warning)
-		}
+			_, warnings := (&Provider{binary: binary}).CheckRepoState(repoPath)
+			if len(warnings) != 1 {
+				t.Fatalf("CheckRepoState() warnings = %v, want exactly one", warnings)
+			}
+
+			wantParts := []string{
+				"Failed to " + tt.wantOperation + " for jj repo",
+				"path=" + repoPath,
+				"command=",
+				"inspection failed",
+			}
+			for _, want := range wantParts {
+				if !strings.Contains(warnings[0], want) {
+					t.Fatalf("warning = %q, want it to contain %q", warnings[0], want)
+				}
+			}
+		})
 	}
 }
