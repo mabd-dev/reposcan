@@ -2,9 +2,9 @@ package overlay
 
 import (
 	"io"
-	"strings"
 	"testing"
 
+	"github.com/charmbracelet/x/ansi"
 	"github.com/muesli/termenv"
 )
 
@@ -124,17 +124,11 @@ func TestPlaceOverlay(t *testing.T) {
 }
 
 func TestPlaceOverlayWithShadow(t *testing.T) {
-	got := PlaceOverlay(0, 0, "X", "....\n....\n....", true)
-	lines := strings.Split(got, "\n")
+	got := ansi.Strip(PlaceOverlay(0, 0, "X", "....\n....\n....", true))
+	want := "X ..\n ░..\n...."
 
-	if len(lines) != 3 {
-		t.Fatalf("PlaceOverlay() returned %d lines, want 3: %q", len(lines), got)
-	}
-	if lines[0] != "X .." {
-		t.Errorf("first line = %q, want %q", lines[0], "X ..")
-	}
-	if !strings.Contains(lines[1], "░") {
-		t.Errorf("second line does not contain shadow character: %q", lines[1])
+	if got != want {
+		t.Fatalf("PlaceOverlay() = %q, want %q", got, want)
 	}
 }
 
