@@ -54,6 +54,16 @@ func TestAlertLifecycle(t *testing.T) {
 	assert.Nil(t, cmd)
 }
 
+func TestUpdateIgnoresUnknownMessages(t *testing.T) {
+	model := New(testTheme())
+	model, _ = model.Update(AddAlertMsg{Msg: Alert{Title: "Keep me"}})
+
+	updated, cmd := model.Update(struct{}{})
+
+	assert.Equal(t, model, updated)
+	assert.Nil(t, cmd)
+}
+
 func TestAlertStatesPositionsAndHidesOverflow(t *testing.T) {
 	model := New(testTheme())
 	model, _ = model.Update(AddAlertMsg{Msg: Alert{Message: "First"}})
@@ -75,18 +85,25 @@ func TestAlertStatesPositionsAndHidesOverflow(t *testing.T) {
 	assert.False(t, states[1].IsVisible)
 }
 
+func TestAlertStatesReturnsEmptyWithoutAlerts(t *testing.T) {
+	states := New(testTheme()).AlertStates(80, 24)
+
+	assert.Empty(t, states)
+}
+
 func TestAlertColorsByType(t *testing.T) {
-	model := New(testTheme())
+	th := testTheme()
+	model := New(th)
 	tests := []struct {
 		name          string
 		alertType     AlertType
 		wantBorder    color.Color
 		wantIconColor color.Color
 	}{
-		{name: "error", alertType: MsgTypeError, wantBorder: model.theme.Colors.Error, wantIconColor: model.theme.Colors.Error},
-		{name: "warning", alertType: AlertTypeWarning, wantBorder: model.theme.Colors.Warning, wantIconColor: model.theme.Colors.Warning},
-		{name: "info", alertType: AlertTypeInfo, wantBorder: model.theme.Colors.Info, wantIconColor: model.theme.Colors.Info},
-		{name: "default", alertType: AlertType("custom"), wantBorder: model.theme.Colors.Border, wantIconColor: model.theme.Colors.Foreground},
+		{name: "error", alertType: MsgTypeError, wantBorder: th.Colors.Error, wantIconColor: th.Colors.Error},
+		{name: "warning", alertType: AlertTypeWarning, wantBorder: th.Colors.Warning, wantIconColor: th.Colors.Warning},
+		{name: "info", alertType: AlertTypeInfo, wantBorder: th.Colors.Info, wantIconColor: th.Colors.Info},
+		{name: "default", alertType: AlertType("custom"), wantBorder: th.Colors.Border, wantIconColor: th.Colors.Foreground},
 	}
 
 	for _, tt := range tests {
@@ -97,6 +114,29 @@ func TestAlertColorsByType(t *testing.T) {
 			assert.Equal(t, tt.wantIconColor, iconColor)
 		})
 	}
+}
+
+func TestUpdateThemeChangesAlertColors(t *testing.T) {
+	originalTheme := testTheme()
+	model := New(originalTheme)
+	updatedTheme := testTheme()
+	updatedTheme.Colors.Info = lipgloss.Color("#00ffff")
+	updatedTheme.Colors.Border = lipgloss.Color("#123456")
+	updatedTheme.Colors.Foreground = lipgloss.Color("#654321")
+	require.NotEqual(t, originalTheme.Colors.Info, updatedTheme.Colors.Info)
+
+	_, originalIconColor := model.getColors(Alert{Type: AlertTypeInfo})
+	require.Equal(t, originalTheme.Colors.Info, originalIconColor)
+
+	model.UpdateTheme(updatedTheme)
+
+	border, iconColor := model.getColors(Alert{Type: AlertTypeInfo})
+	assert.Equal(t, updatedTheme.Colors.Info, border)
+	assert.Equal(t, updatedTheme.Colors.Info, iconColor)
+
+	border, iconColor = model.getColors(Alert{Type: AlertType("custom")})
+	assert.Equal(t, updatedTheme.Colors.Border, border)
+	assert.Equal(t, updatedTheme.Colors.Foreground, iconColor)
 }
 
 func TestRenderAlertContent(t *testing.T) {
@@ -149,33 +189,4 @@ func TestStartTimerReturnsTickMessage(t *testing.T) {
 	require.NotNil(t, cmd)
 
 	assert.IsType(t, TickMsg{}, cmd())
-}
-
-// These tests cover a few simple cases so this package stays at 100% test coverage.
-// The tests above check the alert behavior that users rely on.
-func TestCoverageOnlyPaths(t *testing.T) {
-	t.Run("updates the theme", func(t *testing.T) {
-		model := New(testTheme())
-		updatedTheme := testTheme()
-		updatedTheme.Colors.Info = lipgloss.Color("#00ffff")
-
-		model.UpdateTheme(updatedTheme)
-
-		assert.Equal(t, updatedTheme, model.theme)
-	})
-
-	t.Run("ignores unknown messages", func(t *testing.T) {
-		model := New(testTheme())
-
-		updated, cmd := model.Update(struct{}{})
-
-		assert.Equal(t, model, updated)
-		assert.Nil(t, cmd)
-	})
-
-	t.Run("returns no states when empty", func(t *testing.T) {
-		states := New(testTheme()).AlertStates(80, 24)
-
-		assert.Empty(t, states)
-	})
 }
