@@ -51,7 +51,7 @@ func PlaceOverlayWithPositionAndPadding(
 		y = 0
 	case OverlayPositionBottomRight:
 		x = fullWidth - fgWidth - horizontalPadding
-		y = (fullHeight)
+		y = fullHeight - fgHeight - verticalPadding
 	default:
 		panic("Unknown overlay position")
 	}
@@ -164,8 +164,9 @@ func cutLeft(s string, cutWidth int) string {
 		b      bytes.Buffer
 	)
 	for _, c := range s {
-		var w int
-		if c == ansi.Marker || isAnsi {
+		inAnsiSequence := c == ansi.Marker || isAnsi
+		var runeWidth int
+		if inAnsiSequence {
 			isAnsi = true
 			ab.WriteRune(c)
 			if ansi.IsTerminator(c) {
@@ -175,22 +176,24 @@ func cutLeft(s string, cutWidth int) string {
 				}
 			}
 		} else {
-			w = runewidth.RuneWidth(c)
+			runeWidth = runewidth.RuneWidth(c)
 		}
 
 		if pos >= cutWidth {
-			if b.Len() == 0 {
+			initializingOutput := b.Len() == 0
+			if initializingOutput {
+				if pos-cutWidth > 0 {
+					b.WriteByte(' ')
+				}
 				if ab.Len() > 0 {
 					b.Write(ab.Bytes())
 				}
-				if pos-cutWidth > 1 {
-					b.WriteByte(' ')
-					continue
-				}
 			}
-			b.WriteRune(c)
+			if !initializingOutput || !inAnsiSequence {
+				b.WriteRune(c)
+			}
 		}
-		pos += w
+		pos += runeWidth
 	}
 	return b.String()
 }
@@ -206,27 +209,44 @@ type whitespace struct {
 
 // Render whitespaces.
 func (w whitespace) render(width int) string {
+	if width <= 0 {
+		return ""
+	}
+
 	if w.chars == "" {
 		w.chars = " "
 	}
 
 	r := []rune(w.chars)
+	if ansi.PrintableRuneWidth(w.chars) == 0 {
+		return w.style.Styled(strings.Repeat(" ", width))
+	}
+
 	j := 0
 	b := strings.Builder{}
+	printedWidth := 0
 
-	// Cycle through runes and print them into the whitespace.
-	for i := 0; i < width; {
+	// Keep combining marks after the last visible character.
+	for {
+		runeWidth := runewidth.RuneWidth(r[j])
+		if runeWidth > 0 && printedWidth+runeWidth > width {
+			break
+		}
+
 		b.WriteRune(r[j])
+		printedWidth += runeWidth
 		j++
 		if j >= len(r) {
 			j = 0
+			if printedWidth >= width {
+				break
+			}
 		}
-		i += ansi.PrintableRuneWidth(string(r[j]))
 	}
 
 	// Fill any extra gaps white spaces. This might be necessary if any runes
 	// are more than one cell wide, which could leave a one-rune gap.
-	short := width - ansi.PrintableRuneWidth(b.String())
+	short := width - printedWidth
 	if short > 0 {
 		b.WriteString(strings.Repeat(" ", short))
 	}
