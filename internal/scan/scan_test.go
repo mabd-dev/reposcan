@@ -137,3 +137,52 @@ func TestFindRepos_GitWorktree(t *testing.T) {
 		t.Fatalf("expected only %s, got %v", worktree, reposInfo)
 	}
 }
+
+func TestFindRepos_AddsWalkWarningForNonexistentRoot(t *testing.T) {
+	root := t.TempDir()
+	// Root that does not exist -> WalkDir returns an lstat error.
+	missing := filepath.Join(root, "does-not-exist")
+
+	_, warnings := FindRepos([]string{missing}, nil)
+	if len(warnings) != 1 {
+		t.Fatalf("expected 1 warning for nonexistent root, got %v", warnings)
+	}
+	if len(warnings[0]) == 0 {
+		t.Fatalf("expected non-empty warning, got %q", warnings[0])
+	}
+}
+
+func TestFindRepos_SkipsNonDirectoryEntries(t *testing.T) {
+	root := t.TempDir()
+
+	// A loose, non-.git file directly under the root is visited by WalkDir
+	// with IsDir()==false and must be skipped without being treated as a repo.
+	writeFile(t, filepath.Join(root, "notes.txt"), "hello")
+
+	gitRepo := filepath.Join(root, "git-repo")
+	makeDir(t, filepath.Join(gitRepo, ".git"))
+
+	repos, warnings := FindRepos([]string{root}, nil)
+	if len(warnings) != 0 {
+		t.Fatalf("unexpected warnings: %v", warnings)
+	}
+	if len(repos) != 1 || repos[0].Path != gitRepo {
+		t.Fatalf("expected only %s, got %v", gitRepo, repos)
+	}
+}
+
+func TestFindRepos_OverlappingRootsAreDeduplicated(t *testing.T) {
+	root := t.TempDir()
+	gitRepo := filepath.Join(root, "git-repo")
+	makeDir(t, filepath.Join(gitRepo, ".git"))
+
+	// Passing the same dir twice reaches the same path on the second walk,
+	// which must be skipped via the visited set and collapsed in the output.
+	repos, warnings := FindRepos([]string{root, root}, nil)
+	if len(warnings) != 0 {
+		t.Fatalf("unexpected warnings: %v", warnings)
+	}
+	if len(repos) != 1 || repos[0].Path != gitRepo {
+		t.Fatalf("expected single deduplicated repo %s, got %v", gitRepo, repos)
+	}
+}
