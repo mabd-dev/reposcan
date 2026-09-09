@@ -177,7 +177,7 @@ func (m Model) keybindingPopup(msg tea.Msg) (tea.Model, tea.Cmd) {
 func defaultUpdate(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.WindowSizeMsg:
-		m.width, m.height = msg.Width, msg.Height
+		m.width, m.height = max(0, msg.Width), max(0, msg.Height)
 		return m, nil
 
 	case vcsActionResultMsg:

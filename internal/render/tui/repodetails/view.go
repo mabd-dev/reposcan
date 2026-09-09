@@ -75,12 +75,12 @@ func (m *Model) buildUncommittedFiles() []string {
 		return lines
 	}
 
-	fileStyle := m.theme.Styles.Base.Foreground(m.theme.Colors.Foreground)
-
-	trimUncommitedFiles := len(files) > m.height-3
+	trimUncommitedFiles := len(files) > maxUncommitedFilesToShow
 	if trimUncommitedFiles {
 		files = files[:maxUncommitedFilesToShow]
 	}
+
+	fileStyle := m.theme.Styles.Base.Foreground(m.theme.Colors.Foreground)
 
 	for _, f := range files {
 		changeSymbol := f[:2]

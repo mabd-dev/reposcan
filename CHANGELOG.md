@@ -5,7 +5,11 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-### Changes
+
+## [1.4.1] - 2026-09-09
+
+### Fix
+- fix/repoDetailsRuntimeError: uncommited files view panic when `maxUncommitedFilesToShow` is negative  by @mabd-dev in [#75](https://github.com/mabd-dev/reposcan/pull/75)
 
 - feat/jjSupport: add Jujutsu (jj) repo support alongisde git repos by @frittlechasm in [#62](https://github.com/mabd-dev/reposcan/pull/62)
 - fix/crashInRepoDetails: repo details package crashes if repo state is nil - happens if scan result has no repos by @mabd-dev in [#61](https://github.com/mabd-dev/reposcan/pull/61)

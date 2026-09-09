@@ -26,7 +26,7 @@ func New(
 }
 
 func (m *Model) UpdateSize(height int) {
-	m.height = height
+	m.height = max(0, height)
 }
 
 func (m *Model) UpdateData(repoState *report.RepoState) {

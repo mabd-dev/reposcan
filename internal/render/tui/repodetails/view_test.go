@@ -8,6 +8,7 @@ import (
 
 	"charm.land/lipgloss/v2"
 	"github.com/mabd-dev/reposcan/internal/theme"
+	"github.com/mabd-dev/reposcan/pkg/report"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -33,6 +34,27 @@ func generateFakeLipGlossScheme() theme.ColorScheme {
 		PopupBackground: lipgloss.Color("#000014"),
 		PopupBorder:     lipgloss.Color("#000015"),
 		PopupTitle:      lipgloss.Color("#000010"),
+	}
+}
+
+// TestBuildUncommittedFilesDoesNotPanicWithNegativeHeight guards against a
+// regression where a negative maxUncommitedFilesToShow caused a slice-bounds
+// panic in buildUncommittedFiles.
+func TestBuildUncommittedFilesDoesNotPanicWithNegativeHeight(t *testing.T) {
+	m := Model{
+		height: -1,
+		repoState: &report.RepoState{
+			UncommitedFiles: []string{"M  file.go"},
+		},
+		theme: theme.Theme{
+			Colors: generateFakeLipGlossScheme(),
+		},
+	}
+
+	lines := m.buildUncommittedFiles()
+
+	if len(lines) != 0 {
+		t.Fatalf("expected no lines, got %v", lines)
 	}
 }
 
