@@ -1,3 +1,3 @@
 package internal
 
-var VERSION string = "v1.4.0"
+var VERSION string = "v1.4.1"
