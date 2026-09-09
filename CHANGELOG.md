@@ -5,7 +5,11 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-### Changes
+
+## [1.4.1] - 2026-09-09
+
+### Fix
+- fix/repoDetailsRuntimeError: uncommited files view panic when `maxUncommitedFilesToShow` is negative  by @mabd-dev in [#75](https://github.com/mabd-dev/reposcan/pull/75)
 
 ---
 

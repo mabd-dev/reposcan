@@ -41,6 +41,10 @@ func (m *Model) buildUncommittedFiles() []string {
 	fileStyle := m.theme.Styles.Base.Foreground(m.theme.Colors.Foreground)
 
 	maxUncommitedFilesToShow := m.height - len(files) - 1
+	if maxUncommitedFilesToShow <= 0 {
+		return []string{}
+	}
+
 	trimUncommitedFiles := len(files) > maxUncommitedFilesToShow
 
 	if trimUncommitedFiles {
