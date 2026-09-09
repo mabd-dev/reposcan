@@ -5,12 +5,6 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
-
-## [1.4.1] - 2026-09-09
-
-### Fix
-- fix/repoDetailsRuntimeError: uncommited files view panic when `maxUncommitedFilesToShow` is negative  by @mabd-dev in [#75](https://github.com/mabd-dev/reposcan/pull/75)
-
 - feat/jjSupport: add Jujutsu (jj) repo support alongisde git repos by @frittlechasm in [#62](https://github.com/mabd-dev/reposcan/pull/62)
 - fix/crashInRepoDetails: repo details package crashes if repo state is nil - happens if scan result has no repos by @mabd-dev in [#61](https://github.com/mabd-dev/reposcan/pull/61)
 - feat/colorSchemeSwitcher: change app color scheme from bunch of predefined schemes by @mabd-dev in [#60](https://github.com/mabd-dev/reposcan/pull/60)
@@ -18,6 +12,12 @@ All notable changes to this project will be documented in this file.
 - feat/migrateBubbleTeaToV2: migrate bubble tea and its related packages to v2 by @mabd-dev in [#56](https://github.com/mabd-dev/reposcan/pull/56)
 - feat/updateCmd: added new `reposcan update` command that updates binary to the latest version by @mabd-dev in [#55](https://github.com/mabd-dev/reposcan/pull/55)
 - feat/jjSupport: add configurable VCS column by @frittlechasm in [#51](https://github.com/mabd-dev/reposcan/pull/51) 
+
+
+## [1.4.1] - 2026-09-09
+
+### Fix
+- fix/repoDetailsRuntimeError: uncommited files view panic when `maxUncommitedFilesToShow` is negative  by @mabd-dev in [#75](https://github.com/mabd-dev/reposcan/pull/75)
 
 ---
 
