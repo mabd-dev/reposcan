@@ -136,11 +136,19 @@ func TestUpdateRepoStateLeavesOriginalReportWhenIDIsUnknown(t *testing.T) {
 	m := New(stubTheme(), testReport(), 80, 20, Options{})
 	m.Filter("Alpha")
 	wantReport := append([]report.RepoState(nil), m.report.RepoStates...)
+	wantFilteredRepos := append([]report.RepoState(nil), m.filteredRepos...)
+	wantRows := m.tbl.Rows()
 
 	m.UpdateRepoState(0, report.RepoState{ID: "unknown", Repo: "Unknown"})
 
 	if !reflect.DeepEqual(m.report.RepoStates, wantReport) {
 		t.Fatalf("report states changed for unknown ID: %#v", m.report.RepoStates)
+	}
+	if !reflect.DeepEqual(m.filteredRepos, wantFilteredRepos) {
+		t.Fatalf("filtered states changed for unknown ID: %#v", m.filteredRepos)
+	}
+	if !reflect.DeepEqual(m.tbl.Rows(), wantRows) {
+		t.Fatalf("table rows changed for unknown ID: %#v", m.tbl.Rows())
 	}
 }
 
@@ -180,10 +188,14 @@ func TestGetRepoState(t *testing.T) {
 }
 
 func TestUpdateThemeChangesThemeAndTableStyles(t *testing.T) {
-	m := New(stubTheme(), testReport(), 80, 20, Options{})
+	reportWithRemote := testReport()
+	reportWithRemote.RepoStates[0].RemoteStatus = []report.RemoteStatus{{Remote: "upstream"}}
+	m := New(stubTheme(), reportWithRemote, 80, 20, Options{})
 	before := m.tbl.View()
+	beforeStateCell := m.tbl.Rows()[0][3]
 	updated := stubTheme()
 	updated.Colors.Accent = lipgloss.Color("#123456")
+	updated.Styles.Base = lipgloss.NewStyle().PaddingLeft(2)
 	updated.Styles.TableHeader = lipgloss.NewStyle().PaddingLeft(3)
 	updated.Styles.TableRow = lipgloss.NewStyle().PaddingLeft(2)
 	updated.Styles.TableSelectedRow = lipgloss.NewStyle().PaddingLeft(1)
@@ -195,5 +207,10 @@ func TestUpdateThemeChangesThemeAndTableStyles(t *testing.T) {
 	}
 	if after := m.tbl.View(); after == before {
 		t.Fatal("rendered table did not change after table styles were updated")
+	}
+	if got := m.tbl.Rows()[0][3]; got == beforeStateCell {
+		t.Fatalf("state cell retained old theme styling: %q", got)
+	} else if want := getStateColumnStr(reportWithRemote.RepoStates[0], updated); got != want {
+		t.Fatalf("state cell = %q, want %q", got, want)
 	}
 }
