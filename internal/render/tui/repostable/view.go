@@ -56,12 +56,7 @@ func (m Model) renderEmptyState() string {
 }
 
 func (m Model) addIndicator(body string) string {
-	var repoIndicator string
-	if m.ReposCount() == 0 {
-		repoIndicator = "0/0"
-	} else {
-		repoIndicator = strconv.Itoa(m.Cursor()+1) + "/" + strconv.Itoa(m.ReposCount())
-	}
+	repoIndicator := strconv.Itoa(m.Cursor()+1) + "/" + strconv.Itoa(m.ReposCount())
 
 	return overlay.PlaceOverlayWithPositionAndPadding(
 		overlay.OverlayPositionBottomRight,

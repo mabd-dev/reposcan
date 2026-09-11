@@ -1,11 +1,10 @@
-// Package repostable is a Model that renders git repo states in a table. Providing functionality like filterning
+// Package repostable renders repository states in an interactive table.
 package repostable
 
 import (
 	"strings"
 
 	"charm.land/bubbles/v2/table"
-	tea "charm.land/bubbletea/v2"
 	"github.com/mabd-dev/reposcan/internal/theme"
 	"github.com/mabd-dev/reposcan/pkg/report"
 )
@@ -48,8 +47,6 @@ func New(
 	return model
 }
 
-func (rt Model) Init() tea.Cmd { return nil }
-
 func (m *Model) SetReport(report report.ScanReport) {
 	m.report = report
 	m.Filter(m.filterQuery)
@@ -67,7 +64,7 @@ func (m *Model) UpdateWindowSize(width int, height int) Model {
 	return *m
 }
 
-// Filter filters repo states based on repo name. Then update table based on filtered repos
+// Filter limits repository states by repository or branch name and refreshes the table.
 func (m *Model) Filter(query string) {
 	m.filterQuery = query
 	q := strings.ToLower(strings.TrimSpace(query))
@@ -93,7 +90,6 @@ func (m *Model) Filter(query string) {
 	} else {
 		m.tbl.SetCursor(0)
 	}
-
 }
 
 func (m *Model) UpdateRepoState(index int, newState report.RepoState) {
@@ -108,12 +104,12 @@ func (m *Model) UpdateRepoState(index int, newState report.RepoState) {
 	m.tbl.SetRows(rows)
 }
 
-// Blur removes focus from table
+// Blur removes focus from the table.
 func (m *Model) Blur() {
 	m.tbl.Blur()
 }
 
-// Focus bring focus to table
+// Focus gives focus to the table.
 func (m *Model) Focus() {
 	m.tbl.Focus()
 }
@@ -123,8 +119,8 @@ func (m *Model) Cursor() int {
 	return m.tbl.Cursor()
 }
 
-func (rt *Model) ReposCount() int {
-	return len(rt.filteredRepos)
+func (m *Model) ReposCount() int {
+	return len(m.filteredRepos)
 }
 
 func (m *Model) GetCurrentRepoState() *report.RepoState {
