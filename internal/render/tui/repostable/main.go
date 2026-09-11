@@ -71,7 +71,7 @@ func (m *Model) Filter(query string) {
 	if len(q) == 0 {
 		m.filteredRepos = m.report.RepoStates
 	} else {
-		m.filteredRepos = []report.RepoState{}
+		m.filteredRepos = make([]report.RepoState, 0, len(m.report.RepoStates))
 		for _, rs := range m.report.RepoStates {
 			if strings.Contains(strings.ToLower(rs.Repo), q) ||
 				strings.Contains(strings.ToLower(rs.Branch), q) {
@@ -100,7 +100,8 @@ func (m *Model) UpdateRepoState(index int, newState report.RepoState) {
 		m.report.RepoStates[originalIndex] = newState
 	}
 
-	rows := createRows(m.filteredRepos, m.theme, m.options)
+	rows := m.tbl.Rows()
+	rows[index] = createRow(newState, m.theme, activeColumnDefs(m.options))
 	m.tbl.SetRows(rows)
 }
 

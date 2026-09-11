@@ -1,7 +1,7 @@
 package repostable
 
 import (
-	"fmt"
+	"strconv"
 	"strings"
 
 	"charm.land/bubbles/v2/table"
@@ -45,13 +45,17 @@ func createRows(repoStates []report.RepoState, theme theme.Theme, options Option
 	defs := activeColumnDefs(options)
 	rows := make([]table.Row, 0, len(repoStates))
 	for _, rs := range repoStates {
-		row := make(table.Row, 0, len(defs))
-		for _, def := range defs {
-			row = append(row, def.cell(rs, theme))
-		}
-		rows = append(rows, row)
+		rows = append(rows, createRow(rs, theme, defs))
 	}
 	return rows
+}
+
+func createRow(rs report.RepoState, theme theme.Theme, defs []columnDef) table.Row {
+	row := make(table.Row, 0, len(defs))
+	for _, def := range defs {
+		row = append(row, def.cell(rs, theme))
+	}
+	return row
 }
 
 func activeColumnDefs(options Options) []columnDef {
@@ -129,47 +133,43 @@ func stashColumnStr(rs report.RepoState) string {
 	if n == 0 {
 		return ""
 	}
-	return fmt.Sprintf("%d", n)
+	return strconv.Itoa(n)
 }
 
 func getStateColumnStr(rs report.RepoState, theme theme.Theme) string {
-	parts := []string{}
+	parts := make([]string, 0, len(rs.RemoteStatus))
 
 	uc := len(rs.UncommitedFiles)
-	ucStr := fmt.Sprintf("⏳%-d ", uc)
+	ucStr := "⏳" + strconv.Itoa(uc) + " "
 
 	for _, remoteStatus := range rs.RemoteStatus {
-		var statusParts []string
+		statusParts := make([]string, 0, 3)
 
 		if remoteStatus.Ahead > 0 {
-			statusParts = append(statusParts, fmt.Sprintf("↑%-d", remoteStatus.Ahead))
+			statusParts = append(statusParts, "↑"+strconv.Itoa(remoteStatus.Ahead))
 		} else if remoteStatus.Ahead < 0 {
 			statusParts = append(statusParts, "x")
 		} else {
-			statusParts = append(statusParts, fmt.Sprintf("↑%-d", 0))
+			statusParts = append(statusParts, "↑0")
 		}
 
 		if remoteStatus.Behind > 0 {
-			statusParts = append(statusParts, fmt.Sprintf("↓%-d", remoteStatus.Behind))
+			statusParts = append(statusParts, "↓"+strconv.Itoa(remoteStatus.Behind))
 		} else if remoteStatus.Behind < 0 {
 			statusParts = append(statusParts, "x")
 		} else {
-			statusParts = append(statusParts, fmt.Sprintf("↓%-d", 0))
+			statusParts = append(statusParts, "↓0")
 		}
 
 		if remoteStatus.Remote != "" && !(len(rs.RemoteStatus) == 1 && remoteStatus.Remote == "origin") {
-			remoteName := theme.Styles.Base.Render(fmt.Sprintf("(%s)", remoteStatus.Remote))
+			remoteName := theme.Styles.Base.Render("(" + remoteStatus.Remote + ")")
 			statusParts = append(statusParts, remoteName)
 		}
 
 		parts = append(parts, strings.Join(statusParts, " "))
 	}
 
-	// Combine uncommitted count with all remote statuses, separated by " | "
-	s := ucStr
-	s += strings.Join(parts, " | ")
-
-	return s
+	return ucStr + strings.Join(parts, " | ")
 }
 
 func getRepoIndex(repos []report.RepoState, id string) int {
