@@ -178,3 +178,28 @@ func TestRenderingStashedFiles(t *testing.T) {
 		assert.Equal(line, strings.TrimSpace(lines[4+i]))
 	}
 }
+
+func TestUncommittedFilesAreHiddenWhenHeightHasNoContentSpace(t *testing.T) {
+	repoState := createRepoState([]string{"M file1"}, []string{})
+	model := createModel(0, repoState)
+	model.UpdateSize(3)
+
+	assert.Empty(t, model.buildUncommittedFiles())
+}
+
+func TestUncommittedFilesTruncationIncludesRemainingCount(t *testing.T) {
+	repoState := createRepoState(
+		[]string{"M file1", "A file2", "D file3"},
+		[]string{},
+	)
+	model := createModel(0, repoState)
+	model.UpdateSize(5)
+
+	lines := model.buildUncommittedFiles()
+
+	assert.Equal(t, []string{
+		"M file1",
+		"A file2",
+		"  ... (+1 more)",
+	}, lines)
+}

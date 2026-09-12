@@ -3,6 +3,7 @@ package repodetails
 import (
 	"testing"
 
+	"charm.land/lipgloss/v2"
 	"github.com/mabd-dev/reposcan/internal/theme"
 	"github.com/stretchr/testify/assert"
 )
@@ -69,4 +70,24 @@ func TestUpdatingRepoStateChangesTabsContent(t *testing.T) {
 	assert.Equal("(1)", model.tabs[0].highlightedText)
 	assert.Equal("(1)", model.tabs[1].highlightedText)
 
+}
+
+func TestInitReturnsNoCommand(t *testing.T) {
+	model := New(nil, theme.Theme{})
+
+	assert.Nil(t, model.Init())
+}
+
+func TestUpdateThemeChangesModelTheme(t *testing.T) {
+	model := New(nil, theme.Theme{})
+	newTheme := theme.Theme{
+		Colors: theme.ColorScheme{
+			Name:   "test theme",
+			Accent: lipgloss.Color("#123456"),
+		},
+	}
+
+	model.UpdateTheme(newTheme)
+
+	assert.Equal(t, newTheme, model.theme)
 }
