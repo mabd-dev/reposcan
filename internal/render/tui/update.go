@@ -8,7 +8,6 @@ import (
 	"github.com/mabd-dev/reposcan/internal/logger"
 	"github.com/mabd-dev/reposcan/internal/render/tui/alerts"
 	"github.com/mabd-dev/reposcan/internal/theme"
-	"golang.design/x/clipboard"
 )
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -44,16 +43,17 @@ func (m Model) updateReposTable(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 			path := shellEscapePath(rs.Path)
-			clipboard.Write(clipboard.FmtText, []byte(path))
+			alert := alerts.Alert{
+				Type:    alerts.AlertTypeInfo,
+				Message: "Path copied to clipboard",
+			}
+			if !copyTextToClipboard(path) {
+				alert.Type = alerts.AlertTypeWarning
+				alert.Message = "Clipboard is unavailable"
+			}
 
 			return m, func() tea.Msg {
-				return alerts.AddAlertMsg{
-					Msg: alerts.Alert{
-						Type:    alerts.AlertTypeInfo,
-						Title:   "",
-						Message: "Path copied to clipboard",
-					},
-				}
+				return alerts.AddAlertMsg{Msg: alert}
 			}
 		case "right", "l", "left", "h":
 			var cmd tea.Cmd
