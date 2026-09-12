@@ -403,6 +403,17 @@ func TestUpdateQuitAndFocusChanges(t *testing.T) {
 }
 
 func TestUpdateReposTableCopyPath(t *testing.T) {
+	originalCopyTextToClipboard := copyTextToClipboard
+	t.Cleanup(func() {
+		copyTextToClipboard = originalCopyTextToClipboard
+	})
+
+	var copiedText string
+	copyTextToClipboard = func(text string) bool {
+		copiedText = text
+		return true
+	}
+
 	m := newTestModel(t)
 	nm, cmd := m.updateReposTable(tea.KeyPressMsg{Text: "c"})
 	res := nm.(Model)
@@ -412,10 +423,43 @@ func TestUpdateReposTableCopyPath(t *testing.T) {
 	if cmd == nil {
 		t.Fatal("expected alert command")
 	}
+	if copiedText != "'/tmp/alpha'" {
+		t.Fatalf("copied text = %q, want %q", copiedText, "'/tmp/alpha'")
+	}
 	// execute the command to cover the alert-closure body
 	msg := cmd()
-	if _, ok := msg.(alerts.AddAlertMsg); !ok {
+	addAlertMsg, ok := msg.(alerts.AddAlertMsg)
+	if !ok {
 		t.Fatalf("expected AddAlertMsg, got %T", msg)
+	}
+	if addAlertMsg.Msg.Type != alerts.AlertTypeInfo {
+		t.Fatalf("alert type = %q, want %q", addAlertMsg.Msg.Type, alerts.AlertTypeInfo)
+	}
+}
+
+func TestUpdateReposTableWarnsWhenClipboardIsUnavailable(t *testing.T) {
+	originalCopyTextToClipboard := copyTextToClipboard
+	t.Cleanup(func() {
+		copyTextToClipboard = originalCopyTextToClipboard
+	})
+	copyTextToClipboard = func(string) bool { return false }
+
+	m := newTestModel(t)
+	_, cmd := m.updateReposTable(tea.KeyPressMsg{Text: "c"})
+	if cmd == nil {
+		t.Fatal("expected alert command")
+	}
+
+	msg := cmd()
+	addAlertMsg, ok := msg.(alerts.AddAlertMsg)
+	if !ok {
+		t.Fatalf("expected AddAlertMsg, got %T", msg)
+	}
+	if addAlertMsg.Msg.Type != alerts.AlertTypeWarning {
+		t.Fatalf("alert type = %q, want %q", addAlertMsg.Msg.Type, alerts.AlertTypeWarning)
+	}
+	if addAlertMsg.Msg.Message != "Clipboard is unavailable" {
+		t.Fatalf("alert message = %q, want %q", addAlertMsg.Msg.Message, "Clipboard is unavailable")
 	}
 }
 
