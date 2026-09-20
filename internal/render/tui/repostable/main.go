@@ -71,7 +71,7 @@ func (m *Model) Filter(query string) {
 	if len(q) == 0 {
 		m.filteredRepos = m.report.RepoStates
 	} else {
-		m.filteredRepos = make([]report.RepoState, 0, len(m.report.RepoStates))
+		m.filteredRepos = []report.RepoState{}
 		for _, rs := range m.report.RepoStates {
 			if strings.Contains(strings.ToLower(rs.Repo), q) ||
 				strings.Contains(strings.ToLower(rs.Branch), q) {

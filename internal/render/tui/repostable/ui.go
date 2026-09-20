@@ -1,7 +1,7 @@
 package repostable
 
 import (
-	"strconv"
+	"fmt"
 	"strings"
 
 	"charm.land/bubbles/v2/table"
@@ -133,43 +133,47 @@ func stashColumnStr(rs report.RepoState) string {
 	if n == 0 {
 		return ""
 	}
-	return strconv.Itoa(n)
+	return fmt.Sprintf("%d", n)
 }
 
 func getStateColumnStr(rs report.RepoState, theme theme.Theme) string {
-	parts := make([]string, 0, len(rs.RemoteStatus))
+	parts := []string{}
 
 	uc := len(rs.UncommitedFiles)
-	ucStr := "⏳" + strconv.Itoa(uc) + " "
+	ucStr := fmt.Sprintf("⏳%-d ", uc)
 
 	for _, remoteStatus := range rs.RemoteStatus {
-		statusParts := make([]string, 0, 3)
+		var statusParts []string
 
 		if remoteStatus.Ahead > 0 {
-			statusParts = append(statusParts, "↑"+strconv.Itoa(remoteStatus.Ahead))
+			statusParts = append(statusParts, fmt.Sprintf("↑%-d", remoteStatus.Ahead))
 		} else if remoteStatus.Ahead < 0 {
 			statusParts = append(statusParts, "x")
 		} else {
-			statusParts = append(statusParts, "↑0")
+			statusParts = append(statusParts, fmt.Sprintf("↑%-d", 0))
 		}
 
 		if remoteStatus.Behind > 0 {
-			statusParts = append(statusParts, "↓"+strconv.Itoa(remoteStatus.Behind))
+			statusParts = append(statusParts, fmt.Sprintf("↓%-d", remoteStatus.Behind))
 		} else if remoteStatus.Behind < 0 {
 			statusParts = append(statusParts, "x")
 		} else {
-			statusParts = append(statusParts, "↓0")
+			statusParts = append(statusParts, fmt.Sprintf("↓%-d", 0))
 		}
 
 		if remoteStatus.Remote != "" && !(len(rs.RemoteStatus) == 1 && remoteStatus.Remote == "origin") {
-			remoteName := theme.Styles.Base.Render("(" + remoteStatus.Remote + ")")
+			remoteName := theme.Styles.Base.Render(fmt.Sprintf("(%s)", remoteStatus.Remote))
 			statusParts = append(statusParts, remoteName)
 		}
 
 		parts = append(parts, strings.Join(statusParts, " "))
 	}
 
-	return ucStr + strings.Join(parts, " | ")
+	// Combine uncommitted count with all remote statuses, separated by " | "
+	s := ucStr
+	s += strings.Join(parts, " | ")
+
+	return s
 }
 
 func getRepoIndex(repos []report.RepoState, id string) int {
