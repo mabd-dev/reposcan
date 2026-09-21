@@ -3,6 +3,7 @@ package repostable
 import (
 	"testing"
 
+	"charm.land/lipgloss/v2"
 	"github.com/mabd-dev/reposcan/internal/theme"
 	"github.com/mabd-dev/reposcan/pkg/report"
 )
@@ -128,5 +129,58 @@ func TestRedistributeHiddenWidthPrefersExpandableColumn(t *testing.T) {
 	}
 	if active[2].widthPercent != BranchW {
 		t.Fatalf("expected last column width to stay %d, got %d", BranchW, active[2].widthPercent)
+	}
+}
+
+func TestStashColumnStr(t *testing.T) {
+	tests := []struct {
+		name string
+		rs   report.RepoState
+		want string
+	}{
+		{name: "empty", rs: report.RepoState{}, want: ""},
+		{name: "two stashes", rs: report.RepoState{Stashes: []string{"one", "two"}}, want: "2"},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := stashColumnStr(tc.rs); got != tc.want {
+				t.Fatalf("stashColumnStr() = %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestGetStateColumnStr(t *testing.T) {
+	tests := []struct {
+		name string
+		rs   report.RepoState
+		want string
+	}{
+		{name: "no remote", rs: report.RepoState{UncommitedFiles: []string{"one"}}, want: "⏳1 "},
+		{name: "clean origin", rs: report.RepoState{RemoteStatus: []report.RemoteStatus{{Remote: "origin"}}}, want: "⏳0 ↑0 ↓0"},
+		{name: "ahead and behind", rs: report.RepoState{RemoteStatus: []report.RemoteStatus{{Remote: "origin", Ahead: 2, Behind: 3}}}, want: "⏳0 ↑2 ↓3"},
+		{name: "unknown counts", rs: report.RepoState{RemoteStatus: []report.RemoteStatus{{Remote: "origin", Ahead: -1, Behind: -1}}}, want: "⏳0 x x"},
+		{name: "named remote", rs: report.RepoState{RemoteStatus: []report.RemoteStatus{{Remote: "upstream"}}}, want: "⏳0 ↑0 ↓0 (upstream)"},
+		{name: "multiple remotes", rs: report.RepoState{RemoteStatus: []report.RemoteStatus{{Remote: "origin", Ahead: 1}, {Remote: "", Behind: 1}}}, want: "⏳0 ↑1 ↓0 (origin) | ↑0 ↓1"},
+	}
+
+	testTheme := theme.Theme{Styles: theme.Styles{Base: lipgloss.NewStyle()}}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			if got := getStateColumnStr(tc.rs, testTheme); got != tc.want {
+				t.Fatalf("getStateColumnStr() = %q, want %q", got, tc.want)
+			}
+		})
+	}
+}
+
+func TestGetRepoIndex(t *testing.T) {
+	repos := []report.RepoState{{ID: "alpha"}, {ID: "beta"}}
+	if got := getRepoIndex(repos, "beta"); got != 1 {
+		t.Fatalf("getRepoIndex(beta) = %d, want 1", got)
+	}
+	if got := getRepoIndex(repos, "missing"); got != -1 {
+		t.Fatalf("getRepoIndex(missing) = %d, want -1", got)
 	}
 }

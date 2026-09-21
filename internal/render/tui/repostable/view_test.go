@@ -260,3 +260,32 @@ func TestSetReport_UpdatesTotalRepos(t *testing.T) {
 		t.Errorf("expected totalRepos=5 after SetReport, got %d", m.report.TotalScannedRepos)
 	}
 }
+
+func TestUpdate_WrapsAtTableBoundaries(t *testing.T) {
+	m := New(stubTheme(), testReport(), 80, 20, Options{})
+	m.tbl.SetCursor(1)
+
+	m, cmd := m.Update(tea.KeyPressMsg{Text: "j"})
+	if m.Cursor() != 0 || cmd != nil {
+		t.Fatalf("j from last row: cursor = %d, cmd = %v; want cursor 0 and nil command", m.Cursor(), cmd)
+	}
+
+	m, cmd = m.Update(tea.KeyPressMsg{Text: "k"})
+	if m.Cursor() != 1 || cmd != nil {
+		t.Fatalf("k from first row: cursor = %d, cmd = %v; want cursor 1 and nil command", m.Cursor(), cmd)
+	}
+}
+
+func TestUpdate_DelegatesNavigation(t *testing.T) {
+	m := New(stubTheme(), testReport(), 80, 20, Options{})
+
+	m, _ = m.Update(tea.KeyPressMsg{Text: "j"})
+	if m.Cursor() != 1 {
+		t.Fatalf("j from first row moved cursor to %d, want 1", m.Cursor())
+	}
+
+	m, _ = m.Update(tea.KeyPressMsg{Text: "k"})
+	if m.Cursor() != 0 {
+		t.Fatalf("k from last row moved cursor to %d, want 0", m.Cursor())
+	}
+}
