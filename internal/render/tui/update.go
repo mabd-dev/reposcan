@@ -205,6 +205,7 @@ func defaultUpdate(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 	case generateReportResponse:
 		m.loading = false
 		m.reposTable.SetReport(msg.report)
+		m.rtHeader.SetReport(msg.report, m.configs.CountStashAsDirty)
 		return m, nil
 
 	case alerts.AddAlertMsg, alerts.TickMsg:

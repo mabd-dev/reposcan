@@ -109,7 +109,7 @@ Built with Bubble Tea (Elm architecture):
 - **Model**: Contains `repostable.Table`, header, filter state, warnings, focused model tracker
 - **Focused Model Pattern**: Different input modes (table navigation, filter text input, help popup) each implement `focusedModel` interface to handle updates and keybindings
 - **Update Flow**: Messages route through focused model → update appropriate state → return new model + commands
-- **View**: Composed vertically: header → body (table + optional filter/details) → footer (keybindings)
+- **View**: Composed vertically: header → body (table + optional filter/details) → footer (keybindings). The repository header uses the current model theme at render time and must receive each refreshed scan report alongside the table. Wrap the body before applying its height limit, and wrap the header and footer to terminal width before measuring their heights so the body leaves space for every footer line. Header regressions belong in production `Model.Update`/`Model.View` tests, not only component tests.
 - **VCS Operations**: TUI dispatches fetch/push/pull through the `vcs.ActionProvider` interface via the `Registry`, making actions VCS-agnostic. Providers that don't implement `ActionProvider` (e.g., jj for push/pull) surface an "unsupported action" alert. Action results and repo refresh are handled through `vcsActionResultMsg` and `vcsRefreshRepoResultMsg` messages
 
 ## Important Implementation Notes
