@@ -57,14 +57,14 @@ func GenerateScanReport(
 // ScanOptions returns the per-repo scan options implied by configs.
 func ScanOptions(configs config.Config) vcs.ScanOptions {
 	return vcs.ScanOptions{
-		ComputeActivity: StaleFilterEnabled(configs.Only, configs.StaleDays),
+		ComputeActivity: staleFilterEnabled(configs.Only, configs.StaleDays),
 	}
 }
 
-// StaleFilterEnabled reports whether stale filtering applies. It is off when
+// staleFilterEnabled reports whether stale filtering applies. It is off when
 // staleDays <= 0 and for OnlyUnpulled, whose state reflects remote activity
 // rather than local work.
-func StaleFilterEnabled(f config.OnlyFilter, staleDays int) bool {
+func staleFilterEnabled(f config.OnlyFilter, staleDays int) bool {
 	return staleDays > 0 && f != config.OnlyUnpulled
 }
 
@@ -72,7 +72,7 @@ func StaleFilterEnabled(f config.OnlyFilter, staleDays int) bool {
 // activity. Repos whose activity is unknown (zero LastActivity) are kept so
 // that the stale filter never hides a repo it cannot date.
 func staleFilter(f config.OnlyFilter, staleDays int, repoState report.RepoState, now time.Time) bool {
-	if !StaleFilterEnabled(f, staleDays) {
+	if !staleFilterEnabled(f, staleDays) {
 		return true
 	}
 	if repoState.LastActivity.IsZero() {
