@@ -24,23 +24,63 @@ func GenerateScanReport(
 
 	repoStates := make([]report.RepoState, 0, len(repoPaths))
 
-	allRepoStates, warnings := vcs.GetRepoStatesConcurrent(repoPaths, registry, configs.MaxWorkers)
+	allRepoStates, warnings := vcs.GetRepoStatesConcurrent(
+		repoPaths,
+		registry,
+		configs.MaxWorkers,
+		ScanOptions(configs),
+	)
 	reportWarnings = append(reportWarnings, warnings...)
 
-	// filter repo states based on config OnlyFilter
+	now := time.Now()
+
+	// filter repo states based on config OnlyFilter and StaleDays
 	for _, repoState := range allRepoStates {
-		if filter(configs.Only, repoState, configs.CountStashAsDirty) {
-			repoStates = append(repoStates, repoState)
+		if !filter(configs.Only, repoState, configs.CountStashAsDirty) {
+			continue
 		}
+		if !staleFilter(configs.Only, configs.StaleDays, repoState, now) {
+			continue
+		}
+		repoStates = append(repoStates, repoState)
 	}
 
 	return report.ScanReport{
 		Version:           configs.Version,
-		GeneratedAt:       time.Now(),
+		GeneratedAt:       now,
 		RepoStates:        repoStates,
 		TotalScannedRepos: len(allRepoStates),
 		Warnings:          reportWarnings,
 	}
+}
+
+// ScanOptions returns the per-repo scan options implied by configs.
+func ScanOptions(configs config.Config) vcs.ScanOptions {
+	return vcs.ScanOptions{
+		ComputeActivity: StaleFilterEnabled(configs.Only, configs.StaleDays),
+	}
+}
+
+// StaleFilterEnabled reports whether stale filtering applies. It is off when
+// staleDays <= 0 and for OnlyUnpulled, whose state reflects remote activity
+// rather than local work.
+func StaleFilterEnabled(f config.OnlyFilter, staleDays int) bool {
+	return staleDays > 0 && f != config.OnlyUnpulled
+}
+
+// staleFilter returns true if repoState should be in output based on its last
+// activity. Repos whose activity is unknown (zero LastActivity) are kept so
+// that the stale filter never hides a repo it cannot date.
+func staleFilter(f config.OnlyFilter, staleDays int, repoState report.RepoState, now time.Time) bool {
+	if !StaleFilterEnabled(f, staleDays) {
+		return true
+	}
+	if repoState.LastActivity.IsZero() {
+		return true
+	}
+
+	threshold := time.Duration(staleDays) * 24 * time.Hour
+	return now.Sub(repoState.LastActivity) >= threshold
 }
 
 func NewVCSRegistry() *vcs.Registry {
