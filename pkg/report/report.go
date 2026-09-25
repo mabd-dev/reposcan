@@ -24,6 +24,12 @@ type RepoState struct {
 	UncommitedFiles []string       `json:"uncommitedFiles"`
 	RemoteStatus    []RemoteStatus `json:"remoteStatus"`
 	Stashes         []string       `json:"stashes"`
+
+	// LastActivity is the most recent local activity in the repository: the
+	// newest of uncommitted-file mtimes, the HEAD commit date and the newest
+	// stash date. It is only computed when stale filtering is enabled
+	// (staleDays > 0) and is the zero value otherwise or when unknown.
+	LastActivity time.Time `json:"lastActivity,omitzero"`
 }
 
 // ScanReport aggregates the results of scanning one or more directories for

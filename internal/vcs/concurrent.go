@@ -18,6 +18,7 @@ func GetRepoStatesConcurrent(
 	repos []RepoInfo,
 	registry *Registry,
 	maxWorkers int,
+	opts ScanOptions,
 ) ([]report.RepoState, []string) {
 	if maxWorkers <= 0 {
 		maxWorkers = 1
@@ -47,7 +48,7 @@ func GetRepoStatesConcurrent(
 					continue
 				}
 
-				state, repoWarnings := provider.CheckRepoState(repo.Path)
+				state, repoWarnings := CheckRepoState(provider, repo.Path, opts)
 				results <- repoResult{
 					State:    state,
 					Warnings: repoWarnings,
