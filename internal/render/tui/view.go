@@ -17,11 +17,14 @@ func (m Model) View() tea.View {
 		return view
 	}
 
-	footer := m.getFooterView()
+	footer := lipgloss.NewStyle().Width(m.width).Render(m.getFooterView())
+	m.rtHeader.Theme = m.theme
+	header := lipgloss.NewStyle().Width(m.width).Render(m.rtHeader.View())
 
 	// Calculate heights
 	footerHeight := lipgloss.Height(footer)
-	bodyHeight := m.height - footerHeight
+	headerHeight := lipgloss.Height(header)
+	bodyHeight := m.height - headerHeight - footerHeight
 
 	reposTableHeight := bodyHeight * sizeReposTableHeightPercent / 100
 	m.reposTable = m.reposTable.UpdateWindowSize(m.width, reposTableHeight)
@@ -33,11 +36,12 @@ func (m Model) View() tea.View {
 
 	body := lipgloss.JoinVertical(lipgloss.Left, reposTable, reposDetails)
 	body = lipgloss.NewStyle().
+		Width(m.width).
 		Height(bodyHeight).
 		MaxHeight(bodyHeight).
 		Render(body)
 
-	view := lipgloss.JoinVertical(lipgloss.Left, body, footer)
+	view := lipgloss.JoinVertical(lipgloss.Left, header, body, footer)
 
 	view = lipgloss.NewStyle().
 		Width(m.width).
