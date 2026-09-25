@@ -192,7 +192,7 @@ func TestLastActivity_RenameDestinationContainingArrow(t *testing.T) {
 	}
 }
 
-func TestProviderLastActivity(t *testing.T) {
+func TestProviderCheckRepoStateWithActivity(t *testing.T) {
 	gitOrSkip(t)
 
 	commitAt := time.Date(2026, 1, 10, 12, 0, 0, 0, time.UTC)
@@ -221,10 +221,12 @@ func TestProviderLastActivity(t *testing.T) {
 				}
 			}
 
-			p := New()
-			state, _ := p.CheckRepoState(repo)
-			got, warnings := p.LastActivity(repo, state)
+			state, warnings := New().CheckRepoStateWithActivity(repo)
+			got := state.LastActivity
 
+			if state.VCSType != "git" {
+				t.Fatalf("VCSType = %q, want git", state.VCSType)
+			}
 			if !got.Equal(tt.want) {
 				t.Fatalf("LastActivity = %v, want %v", got, tt.want)
 			}

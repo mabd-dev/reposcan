@@ -10,17 +10,13 @@ type ScanOptions struct {
 }
 
 // CheckRepoState checks the repo at path with provider and, when requested by
-// opts, fills in its last activity.
+// opts and supported by the provider, fills in its last activity.
 func CheckRepoState(provider Provider, path string, opts ScanOptions) (report.RepoState, []string) {
-	state, warnings := provider.CheckRepoState(path)
-
 	if opts.ComputeActivity {
 		if activityProvider, ok := provider.(ActivityProvider); ok {
-			lastActivity, activityWarnings := activityProvider.LastActivity(path, state)
-			state.LastActivity = lastActivity
-			warnings = append(warnings, activityWarnings...)
+			return activityProvider.CheckRepoStateWithActivity(path)
 		}
 	}
 
-	return state, warnings
+	return provider.CheckRepoState(path)
 }

@@ -125,7 +125,7 @@ All root paths and dirIgnore patterns support environment variable expansion via
 ### Filtering Logic
 The `filter` function in `rootCmd.go` applies `OnlyFilter` after all repos are discovered and checked. This means all git operations happen regardless of filter—filtering only affects output.
 
-`StaleDays` (`--stale-days`) is applied after `OnlyFilter` by `staleFilter` in `internal/scanGenerator.go`. It is skipped for `OnlyUnpulled`, and repos with an unknown (zero) `LastActivity` are always kept. Activity is only computed when stale filtering is enabled: `internal.ScanOptions` sets `vcs.ScanOptions.ComputeActivity`, and `vcs.CheckRepoState` then calls providers implementing the optional `vcs.ActivityProvider` interface (git only; jj does not implement it yet). Use `vcs.CheckRepoState` rather than `Provider.CheckRepoState` directly so the TUI refresh path keeps `LastActivity`.
+`StaleDays` (`--stale-days`) is applied after `OnlyFilter` by `staleFilter` in `internal/scanGenerator.go`. It is skipped for `OnlyUnpulled`, and repos with an unknown (zero) `LastActivity` are always kept. Activity is only computed when stale filtering is enabled: `internal.ScanOptions` sets `vcs.ScanOptions.ComputeActivity`, and `vcs.CheckRepoState` then calls `CheckRepoStateWithActivity` on providers implementing the optional `vcs.ActivityProvider` interface (git only; jj does not implement it yet). It runs in the same pass as the state check so providers can reuse its results; the git provider leaves activity unknown when `git status` fails. Use `vcs.CheckRepoState` rather than `Provider.CheckRepoState` directly so the TUI refresh path keeps `LastActivity`.
 
 ### Error Handling in Scan
 `scan.FindRepos` collects warnings (e.g., permission denied) but continues walking. Warnings are included in `ScanReport.Warnings`.
@@ -143,7 +143,7 @@ Tests use standard Go testing:
 - jj provider tests in `internal/vcs/jj/jj_test.go` (require `jj` and `git` binaries — skipped when unavailable)
 - jj scan integration tests in `internal/scanGenerator_jj_test.go` (end-to-end filter and JSON field tests)
 - VCS registry tests in `internal/vcs/registry_test.go` (ActionProvider dispatch)
-- Stale filtering tests: git activity in `internal/vcs/git/activity_test.go` (pins dates with `GIT_COMMITTER_DATE` and `os.Chtimes`), activity gating in `internal/vcs/check_test.go`, filter rules in `internal/filter_stale_test.go`, and end-to-end scans in `internal/scanGenerator_stale_test.go`
+- Stale filtering tests: git activity in `internal/vcs/git/activity_test.go` (pins dates with `GIT_COMMITTER_DATE` and `os.Chtimes`), activity gating in `internal/vcs/check_test.go`, a single `git status` per repo in `internal/vcs/git/activity_status_count_test.go`, filter rules in `internal/filter_stale_test.go`, and end-to-end scans in `internal/scanGenerator_stale_test.go`
 - TUI table/column tests in `internal/render/tui/repostable/ui_test.go`
 - Stdout table rendering tests in `internal/render/stdout/scanReport_test.go`
 

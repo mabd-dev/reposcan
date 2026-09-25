@@ -1,10 +1,6 @@
 package vcs
 
-import (
-	"time"
-
-	"github.com/mabd-dev/reposcan/pkg/report"
-)
+import "github.com/mabd-dev/reposcan/pkg/report"
 
 type Provider interface {
 	Type() Type
@@ -18,9 +14,10 @@ type ActionProvider interface {
 }
 
 // ActivityProvider is implemented by providers that can report when a repo was
-// last worked on locally. state is the result of CheckRepoState for the same
-// path, so implementations can reuse data it already collected.
-// A zero time means the activity is unknown.
+// last worked on locally. CheckRepoStateWithActivity returns the same state as
+// Provider.CheckRepoState with LastActivity filled in, in a single pass so the
+// provider can reuse (and know the success of) the commands it already ran.
+// A zero LastActivity means the activity is unknown.
 type ActivityProvider interface {
-	LastActivity(path string, state report.RepoState) (time.Time, []string)
+	CheckRepoStateWithActivity(path string) (report.RepoState, []string)
 }

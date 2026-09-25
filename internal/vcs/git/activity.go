@@ -7,31 +7,32 @@ import (
 	"strings"
 	"time"
 
+	"github.com/mabd-dev/reposcan/internal/vcs"
 	"github.com/mabd-dev/reposcan/pkg/report"
 )
 
-// LastActivity implements vcs.ActivityProvider. It returns the newest of:
-//   - the mtime of any uncommitted file listed in state.UncommitedFiles
+// CheckRepoStateWithActivity implements vcs.ActivityProvider. It checks the
+// repo like CheckRepoState and sets LastActivity to the newest of:
+//   - the mtime of any uncommitted file
 //   - the committer date of HEAD
 //   - the committer date of the newest stash
 //
 // Signals that are unavailable (deleted files, a repo without commits, no
-// stashes) are skipped. The zero time is returned when no signal is available.
-//
-// CheckRepoState reports an empty file list both for a clean repo and when
-// `git status` failed. Dating a repo from HEAD alone after a failed status
-// could hide recent edits and mark it stale, so an empty list is re-checked
-// and a failing status leaves the activity unknown (zero).
-func (p *Provider) LastActivity(path string, state report.RepoState) (time.Time, []string) {
-	files := state.UncommitedFiles
-	if len(files) == 0 {
-		var err error
-		files, err = GetUncommitedFiles(path)
-		if err != nil {
-			return time.Time{}, []string{"Failed to get uncommitted files, last activity unknown, path=" + path}
-		}
+// stashes) are skipped. If `git status` failed, recent edits cannot be seen,
+// so the activity is left unknown (zero) rather than dated from HEAD alone,
+// which could wrongly mark a recently edited repo stale.
+func (p *Provider) CheckRepoStateWithActivity(path string) (report.RepoState, []string) {
+	state, warnings, statusErr := checkRepoState(path)
+	state.VCSType = string(vcs.TypeGit)
+
+	if statusErr != nil {
+		warnings = append(warnings, "Last activity unknown because uncommitted files could not be read, path="+path)
+		return state, warnings
 	}
-	return LastActivity(path, files)
+
+	lastActivity, activityWarnings := LastActivity(path, state.UncommitedFiles)
+	state.LastActivity = lastActivity
+	return state, append(warnings, activityWarnings...)
 }
 
 // LastActivity returns the most recent local activity in the Git repository at

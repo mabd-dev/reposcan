@@ -14,9 +14,11 @@ type activityStubProvider struct {
 	calls *atomic.Int32
 }
 
-func (p activityStubProvider) LastActivity(path string, state report.RepoState) (time.Time, []string) {
+func (p activityStubProvider) CheckRepoStateWithActivity(path string) (report.RepoState, []string) {
 	p.calls.Add(1)
-	return p.at, []string{"activity warning"}
+	state, warnings := p.CheckRepoState(path)
+	state.LastActivity = p.at
+	return state, append(warnings, "activity warning")
 }
 
 func TestCheckRepoState_ComputeActivity(t *testing.T) {
@@ -49,7 +51,7 @@ func TestCheckRepoState_ComputeActivity(t *testing.T) {
 				t.Fatalf("LastActivity = %v, want %v", state.LastActivity, tt.wantActivity)
 			}
 			if got := calls.Load(); got != tt.wantCalls {
-				t.Fatalf("LastActivity calls = %d, want %d", got, tt.wantCalls)
+				t.Fatalf("CheckRepoStateWithActivity calls = %d, want %d", got, tt.wantCalls)
 			}
 			if len(warnings) != tt.wantWarnings {
 				t.Fatalf("warnings = %v, want %d", warnings, tt.wantWarnings)
@@ -79,7 +81,7 @@ func TestGetRepoStatesConcurrent_ComputesActivityOnlyWhenEnabled(t *testing.T) {
 			want = int32(len(repos))
 		}
 		if got := calls.Load(); got != want {
-			t.Fatalf("enabled=%v: LastActivity calls = %d, want %d", enabled, got, want)
+			t.Fatalf("enabled=%v: CheckRepoStateWithActivity calls = %d, want %d", enabled, got, want)
 		}
 		for _, s := range states {
 			if s.LastActivity.IsZero() == enabled {
