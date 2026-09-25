@@ -17,8 +17,21 @@ import (
 //
 // Signals that are unavailable (deleted files, a repo without commits, no
 // stashes) are skipped. The zero time is returned when no signal is available.
+//
+// CheckRepoState reports an empty file list both for a clean repo and when
+// `git status` failed. Dating a repo from HEAD alone after a failed status
+// could hide recent edits and mark it stale, so an empty list is re-checked
+// and a failing status leaves the activity unknown (zero).
 func (p *Provider) LastActivity(path string, state report.RepoState) (time.Time, []string) {
-	return LastActivity(path, state.UncommitedFiles)
+	files := state.UncommitedFiles
+	if len(files) == 0 {
+		var err error
+		files, err = GetUncommitedFiles(path)
+		if err != nil {
+			return time.Time{}, []string{"Failed to get uncommitted files, last activity unknown, path=" + path}
+		}
+	}
+	return LastActivity(path, files)
 }
 
 // LastActivity returns the most recent local activity in the Git repository at
@@ -103,8 +116,18 @@ func porcelainPath(line string) (string, bool) {
 	p := line[3:]
 
 	if line[0] == 'R' || line[0] == 'C' || line[1] == 'R' || line[1] == 'C' {
-		if i := strings.LastIndex(p, " -> "); i >= 0 {
-			p = p[i+len(" -> "):]
+		// Git C-quotes any name containing " -> ", so the separator is the
+		// first " -> " after the (possibly quoted) original path.
+		start := 0
+		if strings.HasPrefix(p, `"`) {
+			end := quotedPathEnd(p)
+			if end < 0 {
+				return "", false
+			}
+			start = end
+		}
+		if i := strings.Index(p[start:], " -> "); i >= 0 {
+			p = p[start+i+len(" -> "):]
 		}
 	}
 
@@ -121,4 +144,18 @@ func porcelainPath(line string) (string, bool) {
 		return "", false
 	}
 	return p, true
+}
+
+// quotedPathEnd returns the index just past the closing quote of the C-quoted
+// string at the start of s, or -1 if it is unterminated.
+func quotedPathEnd(s string) int {
+	for i := 1; i < len(s); i++ {
+		switch s[i] {
+		case '\\':
+			i++
+		case '"':
+			return i + 1
+		}
+	}
+	return -1
 }

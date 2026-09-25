@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"testing"
 	"time"
 )
@@ -163,6 +164,77 @@ func TestLastActivity(t *testing.T) {
 	}
 }
 
+func TestLastActivity_RenameDestinationContainingArrow(t *testing.T) {
+	gitOrSkip(t)
+	if runtime.GOOS == "windows" {
+		t.Skip("'>' is not allowed in Windows file names")
+	}
+
+	commitAt := time.Date(2026, 1, 10, 12, 0, 0, 0, time.UTC)
+	newFileAt := commitAt.Add(72 * time.Hour)
+
+	repo := t.TempDir()
+	runGit(t, repo, "init", "-q")
+	writeFileAt(t, filepath.Join(repo, "src.txt"), "a", commitAt)
+	runGitAt(t, repo, commitAt, "add", ".")
+	runGitAt(t, repo, commitAt, "commit", "-m", "init")
+	runGitAt(t, repo, commitAt, "mv", "src.txt", "dst -> final.txt")
+	if err := os.Chtimes(filepath.Join(repo, "dst -> final.txt"), newFileAt, newFileAt); err != nil {
+		t.Fatal(err)
+	}
+
+	files, err := GetUncommitedFiles(repo)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, _ := LastActivity(repo, files); !got.Equal(newFileAt) {
+		t.Fatalf("LastActivity = %v, want %v (files=%q)", got, newFileAt, files)
+	}
+}
+
+func TestProviderLastActivity(t *testing.T) {
+	gitOrSkip(t)
+
+	commitAt := time.Date(2026, 1, 10, 12, 0, 0, 0, time.UTC)
+
+	tests := []struct {
+		name         string
+		corruptIndex bool
+		want         time.Time
+		wantWarning  bool
+	}{
+		{name: "clean repo is dated from HEAD", want: commitAt},
+		{name: "failing status leaves activity unknown", corruptIndex: true, want: time.Time{}, wantWarning: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo := t.TempDir()
+			runGit(t, repo, "init", "-q")
+			writeFileAt(t, filepath.Join(repo, "a.txt"), "a", commitAt)
+			runGitAt(t, repo, commitAt, "add", ".")
+			runGitAt(t, repo, commitAt, "commit", "-m", "init")
+			if tt.corruptIndex {
+				// git status reads the index and fails; git log does not.
+				if err := os.WriteFile(filepath.Join(repo, ".git", "index"), []byte("garbage"), 0o644); err != nil {
+					t.Fatal(err)
+				}
+			}
+
+			p := New()
+			state, _ := p.CheckRepoState(repo)
+			got, warnings := p.LastActivity(repo, state)
+
+			if !got.Equal(tt.want) {
+				t.Fatalf("LastActivity = %v, want %v", got, tt.want)
+			}
+			if (len(warnings) > 0) != tt.wantWarning {
+				t.Fatalf("warnings = %v, wantWarning %v", warnings, tt.wantWarning)
+			}
+		})
+	}
+}
+
 func TestLastActivity_WarnsOnNonGitDir(t *testing.T) {
 	gitOrSkip(t)
 
@@ -189,6 +261,11 @@ func TestPorcelainPath(t *testing.T) {
 		{line: `?? "caf\303\251.txt"`, want: "café.txt", wantOk: true},
 		{line: `R  "a\"b.txt" -> "c\"d.txt"`, want: `c"d.txt`, wantOk: true},
 		{line: " M a -> b.txt", want: "a -> b.txt", wantOk: true},
+		{line: `R  src.txt -> "dst -> final.txt"`, want: "dst -> final.txt", wantOk: true},
+		{line: `R  "a -> b.txt" -> plain.txt`, want: "plain.txt", wantOk: true},
+		{line: `R  "a -> b" -> "c -> d"`, want: "c -> d", wantOk: true},
+		{line: `R  "a\" -> b" -> c.txt`, want: "c.txt", wantOk: true},
+		{line: `R  "unterminated -> x.txt`, wantOk: false},
 		{line: `?? "broken`, wantOk: false},
 		{line: "?? ", wantOk: false},
 		{line: "", wantOk: false},

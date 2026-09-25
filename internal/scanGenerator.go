@@ -79,8 +79,10 @@ func staleFilter(f config.OnlyFilter, staleDays int, repoState report.RepoState,
 		return true
 	}
 
-	threshold := time.Duration(staleDays) * 24 * time.Hour
-	return now.Sub(repoState.LastActivity) >= threshold
+	// Compare against a calendar cutoff rather than a time.Duration, which
+	// overflows past ~106751 days and would invert the comparison.
+	cutoff := now.AddDate(0, 0, -staleDays)
+	return !repoState.LastActivity.After(cutoff)
 }
 
 func NewVCSRegistry() *vcs.Registry {

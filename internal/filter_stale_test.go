@@ -35,6 +35,8 @@ func TestStaleFilter(t *testing.T) {
 		{name: "unpushed applies stale days", only: config.OnlyUnpushed, staleDays: 7, state: fresh, want: false},
 		{name: "stash applies stale days", only: config.OnlyStash, staleDays: 7, state: fresh, want: false},
 		{name: "negative is treated as disabled", only: config.OnlyDirty, staleDays: -1, state: fresh, want: true},
+		{name: "huge threshold does not overflow", only: config.OnlyDirty, staleDays: 106752, state: stale, want: false},
+		{name: "very huge threshold does not overflow", only: config.OnlyDirty, staleDays: 1_000_000_000, state: stale, want: false},
 	}
 
 	for _, tt := range tests {
