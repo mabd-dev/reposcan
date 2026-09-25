@@ -197,3 +197,34 @@ func TestUpdateThemeChangesThemeAndTableStyles(t *testing.T) {
 		t.Fatal("rendered table did not change after table styles were updated")
 	}
 }
+
+func TestUpdateThemeRefreshesRemoteLabelsInAllRows(t *testing.T) {
+	r := testReport()
+	for i := range r.RepoStates {
+		r.RepoStates[i].RemoteStatus = []report.RemoteStatus{{Remote: "upstream"}}
+	}
+	m := New(stubTheme(), r, 100, 20, Options{})
+	m.tbl.SetCursor(1)
+	updated := stubTheme()
+	// Padding makes embedded label styling observable without terminal color support.
+	updated.Styles.Base = lipgloss.NewStyle().PaddingLeft(2)
+	wantState := "⏳0 ↑0 ↓0   (upstream)"
+
+	m.UpdateTheme(updated)
+
+	assertRows := func() {
+		t.Helper()
+		for i, row := range m.tbl.Rows() {
+			if got := row[len(row)-1]; got != wantState {
+				t.Errorf("row %d state = %q, want %q", i, got, wantState)
+			}
+		}
+		if got := m.Cursor(); got != 1 {
+			t.Errorf("cursor = %d, want 1", got)
+		}
+	}
+	assertRows()
+
+	m.UpdateRepoState(0, r.RepoStates[0])
+	assertRows()
+}

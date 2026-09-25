@@ -140,6 +140,8 @@ func (m *Model) GetRepoStateAt(index int) *report.RepoState {
 
 func (m *Model) UpdateTheme(newTheme theme.Theme) {
 	m.theme = newTheme
+	// Remote labels embed theme styling in the cell strings.
+	m.tbl.SetRows(createRows(m.filteredRepos, m.theme, m.options))
 	m.tbl.SetStyles(table.Styles{
 		Header:   m.theme.Styles.TableHeader,
 		Selected: m.theme.Styles.TableSelectedRow,
