@@ -134,7 +134,8 @@ func TestLastActivity(t *testing.T) {
 				writeFileAt(t, filepath.Join(repo, "a.txt"), "a", oldFileAt)
 				runGitAt(t, repo, commitAt, "add", ".")
 				runGitAt(t, repo, commitAt, "commit", "-m", "init")
-				writeFileAt(t, filepath.Join(repo, "dir", "café \"q\".txt"), "x", newFileAt)
+				// Non-ASCII names are C-quoted by git (core.quotePath defaults to true).
+				writeFileAt(t, filepath.Join(repo, "dir", "café.txt"), "x", newFileAt)
 			},
 			want: newFileAt,
 		},

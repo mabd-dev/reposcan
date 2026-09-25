@@ -60,21 +60,21 @@ func TestGenerateScanReport_StaleDays(t *testing.T) {
 
 	root := t.TempDir()
 	now := time.Now()
-	stalePath := initDatedGitRepo(t, root, "stale", now.Add(-30*24*time.Hour))
-	freshPath := initDatedGitRepo(t, root, "fresh", now.Add(-1*time.Hour))
+	initDatedGitRepo(t, root, "stale", now.Add(-30*24*time.Hour))
+	initDatedGitRepo(t, root, "fresh", now.Add(-1*time.Hour))
 
 	tests := []struct {
 		name      string
 		only      config.OnlyFilter
 		staleDays int
-		wantPaths []string
+		wantRepos []string
 		wantDated bool
 	}{
-		{name: "disabled", only: config.OnlyDirty, staleDays: 0, wantPaths: []string{freshPath, stalePath}},
-		{name: "dirty stale", only: config.OnlyDirty, staleDays: 7, wantPaths: []string{stalePath}, wantDated: true},
-		{name: "uncommitted stale", only: config.OnlyUncommitted, staleDays: 7, wantPaths: []string{stalePath}, wantDated: true},
-		{name: "threshold above both", only: config.OnlyDirty, staleDays: 60, wantPaths: []string{}, wantDated: true},
-		{name: "unpulled ignores stale", only: config.OnlyUnpulled, staleDays: 7, wantPaths: []string{}},
+		{name: "disabled", only: config.OnlyDirty, staleDays: 0, wantRepos: []string{"fresh", "stale"}},
+		{name: "dirty stale", only: config.OnlyDirty, staleDays: 7, wantRepos: []string{"stale"}, wantDated: true},
+		{name: "uncommitted stale", only: config.OnlyUncommitted, staleDays: 7, wantRepos: []string{"stale"}, wantDated: true},
+		{name: "threshold above both", only: config.OnlyDirty, staleDays: 60, wantRepos: []string{}, wantDated: true},
+		{name: "unpulled ignores stale", only: config.OnlyUnpulled, staleDays: 7, wantRepos: []string{}},
 	}
 
 	for _, tt := range tests {
@@ -87,15 +87,16 @@ func TestGenerateScanReport_StaleDays(t *testing.T) {
 
 			r := GenerateScanReport(cfg)
 
-			gotPaths := []string{}
+			// Compare by directory name: temp paths can differ in form on Windows.
+			gotRepos := []string{}
 			for _, s := range r.RepoStates {
-				gotPaths = append(gotPaths, s.Path)
+				gotRepos = append(gotRepos, filepath.Base(s.Path))
 				if s.LastActivity.IsZero() == tt.wantDated {
 					t.Fatalf("%s: LastActivity=%v, wantDated=%v", s.Path, s.LastActivity, tt.wantDated)
 				}
 			}
-			if strings.Join(gotPaths, ",") != strings.Join(tt.wantPaths, ",") {
-				t.Fatalf("paths = %v, want %v", gotPaths, tt.wantPaths)
+			if strings.Join(gotRepos, ",") != strings.Join(tt.wantRepos, ",") {
+				t.Fatalf("repos = %v, want %v", gotRepos, tt.wantRepos)
 			}
 		})
 	}
