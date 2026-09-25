@@ -48,6 +48,36 @@ func TestStaleFilter(t *testing.T) {
 	}
 }
 
+func TestStaleFilter_DaylightSaving(t *testing.T) {
+	ny, err := time.LoadLocation("America/New_York")
+	if err != nil {
+		t.Skipf("timezone data unavailable: %v", err)
+	}
+
+	tests := []struct {
+		name     string
+		now      time.Time
+		activity time.Duration // how long before now
+		want     bool
+	}{
+		// 2026-03-08 02:00 EST -> 03:00 EDT: the local calendar day is 23h.
+		{name: "spring forward, 23h30m is not stale", now: time.Date(2026, 3, 8, 12, 0, 0, 0, ny), activity: 23*time.Hour + 30*time.Minute, want: false},
+		{name: "spring forward, 24h is stale", now: time.Date(2026, 3, 8, 12, 0, 0, 0, ny), activity: 24 * time.Hour, want: true},
+		// 2026-11-01 02:00 EDT -> 01:00 EST: the local calendar day is 25h.
+		{name: "fall back, 24h is stale", now: time.Date(2026, 11, 1, 12, 0, 0, 0, ny), activity: 24 * time.Hour, want: true},
+		{name: "fall back, 23h59m is not stale", now: time.Date(2026, 11, 1, 12, 0, 0, 0, ny), activity: 23*time.Hour + 59*time.Minute, want: false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			state := report.RepoState{LastActivity: tt.now.Add(-tt.activity)}
+			if got := staleFilter(config.OnlyDirty, 1, state, tt.now); got != tt.want {
+				t.Fatalf("staleFilter() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestScanOptions_ComputeActivity(t *testing.T) {
 	tests := []struct {
 		only      config.OnlyFilter

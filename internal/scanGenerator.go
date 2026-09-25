@@ -80,8 +80,9 @@ func staleFilter(f config.OnlyFilter, staleDays int, repoState report.RepoState,
 	}
 
 	// Compare against a calendar cutoff rather than a time.Duration, which
-	// overflows past ~106751 days and would invert the comparison.
-	cutoff := now.AddDate(0, 0, -staleDays)
+	// overflows past ~106751 days and would invert the comparison. Use UTC so
+	// every day is exactly 24h; local days can be 23h or 25h across DST.
+	cutoff := now.UTC().AddDate(0, 0, -staleDays)
 	return !repoState.LastActivity.After(cutoff)
 }
 
