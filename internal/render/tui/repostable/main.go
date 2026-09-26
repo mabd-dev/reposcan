@@ -105,7 +105,8 @@ func (m *Model) UpdateRepoState(index int, newState report.RepoState) {
 	m.filteredRepos[index] = newState
 	m.report.RepoStates[originalIndex] = newState
 
-	rows := createRows(m.filteredRepos, m.theme, m.options)
+	rows := m.tbl.Rows()
+	rows[index] = createRow(newState, m.theme, activeColumnDefs(m.options))
 	m.tbl.SetRows(rows)
 }
 
