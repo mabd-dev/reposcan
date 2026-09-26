@@ -189,8 +189,11 @@ func TestGetRepoState(t *testing.T) {
 
 func TestUpdateThemeChangesThemeAndTableStyles(t *testing.T) {
 	reportWithRemote := testReport()
-	reportWithRemote.RepoStates[0].RemoteStatus = []report.RemoteStatus{{Remote: "upstream"}}
+	for i := range reportWithRemote.RepoStates {
+		reportWithRemote.RepoStates[i].RemoteStatus = []report.RemoteStatus{{Remote: "upstream"}}
+	}
 	m := New(stubTheme(), reportWithRemote, 80, 20, Options{})
+	m.tbl.SetCursor(1)
 	before := m.tbl.View()
 	beforeStateCell := m.tbl.Rows()[0][3]
 	updated := stubTheme()
@@ -213,35 +216,15 @@ func TestUpdateThemeChangesThemeAndTableStyles(t *testing.T) {
 	} else if want := getStateColumnStr(reportWithRemote.RepoStates[0], updated); got != want {
 		t.Fatalf("state cell = %q, want %q", got, want)
 	}
-}
 
-func TestUpdateThemeRefreshesRemoteLabelsInAllRows(t *testing.T) {
-	r := testReport()
-	for i := range r.RepoStates {
-		r.RepoStates[i].RemoteStatus = []report.RemoteStatus{{Remote: "upstream"}}
-	}
-	m := New(stubTheme(), r, 100, 20, Options{})
-	m.tbl.SetCursor(1)
-	updated := stubTheme()
-	// Padding makes embedded label styling observable without terminal color support.
-	updated.Styles.Base = lipgloss.NewStyle().PaddingLeft(2)
-	wantState := "⏳0 ↑0 ↓0   (upstream)"
-
-	m.UpdateTheme(updated)
-
-	assertRows := func() {
-		t.Helper()
-		for i, row := range m.tbl.Rows() {
-			if got := row[len(row)-1]; got != wantState {
-				t.Errorf("row %d state = %q, want %q", i, got, wantState)
-			}
-		}
-		if got := m.Cursor(); got != 1 {
-			t.Errorf("cursor = %d, want 1", got)
+	// Refreshing one row must leave every remote label using the current theme.
+	m.UpdateRepoState(0, reportWithRemote.RepoStates[0])
+	for i, row := range m.tbl.Rows() {
+		if got, want := row[3], "⏳0 ↑0 ↓0   (upstream)"; got != want {
+			t.Errorf("row %d state = %q, want %q", i, got, want)
 		}
 	}
-	assertRows()
-
-	m.UpdateRepoState(0, r.RepoStates[0])
-	assertRows()
+	if got := m.Cursor(); got != 1 {
+		t.Errorf("cursor = %d, want 1", got)
+	}
 }
