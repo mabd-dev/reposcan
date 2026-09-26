@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -26,7 +27,9 @@ type trackedJJRepo struct {
 	WorkPath string
 }
 
-func initTrackedJJRepo(t *testing.T) trackedJJRepo {
+// initTrackedJJRepo clones a one-commit remote with jj. cloneArgs are passed to
+// jj git clone, e.g. --colocate.
+func initTrackedJJRepo(t *testing.T, cloneArgs ...string) trackedJJRepo {
 	t.Helper()
 
 	root := t.TempDir()
@@ -61,7 +64,8 @@ func initTrackedJJRepo(t *testing.T) trackedJJRepo {
 	if err := exec.Command("git", "-C", seedPath, "push", "origin", "main").Run(); err != nil {
 		t.Fatalf("git push origin main: %v", err)
 	}
-	if err := exec.Command("jj", "git", "clone", remotePath, workPath).Run(); err != nil {
+	cloneCmd := append([]string{"git", "clone"}, cloneArgs...)
+	if err := exec.Command("jj", append(cloneCmd, remotePath, workPath)...).Run(); err != nil {
 		t.Fatalf("jj git clone: %v", err)
 	}
 
@@ -312,6 +316,139 @@ func TestProviderCheckRepoStateCollectsTrackedBookmarkIncomingCommits(t *testing
 
 	if state.RemoteStatus[0].Ahead != 1 {
 		t.Fatalf("expected ahead count 1 from local tracked bookmark commit, got %d", state.RemoteStatus[0].Ahead)
+	}
+}
+
+// TestProviderCheckRepoStateReportsInSyncCloneAsZero guards against counting
+// the whole history as incoming when jj has no @git ref for the bookmark.
+func TestProviderCheckRepoStateReportsInSyncCloneAsZero(t *testing.T) {
+	if _, err := exec.LookPath("jj"); err != nil {
+		t.Skip("jj binary not available")
+	}
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git binary not available")
+	}
+
+	tests := []struct {
+		name     string
+		colocate string
+	}{
+		{name: "non-colocated", colocate: "--no-colocate"},
+		{name: "colocated", colocate: "--colocate"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repoPath := initTrackedJJRepo(t, tt.colocate).WorkPath
+
+			state, warnings := New().CheckRepoState(repoPath)
+			if len(warnings) != 0 {
+				t.Fatalf("unexpected warnings: %v", warnings)
+			}
+
+			if len(state.RemoteStatus) != 1 {
+				t.Fatalf("expected one jj remote status entry, got %d: %v", len(state.RemoteStatus), state.RemoteStatus)
+			}
+
+			status := state.RemoteStatus[0]
+			if status.Remote != "origin" || status.Ahead != 0 || status.Behind != 0 {
+				t.Fatalf("expected origin 0/0 for an in-sync clone, got %q %d/%d", status.Remote, status.Ahead, status.Behind)
+			}
+		})
+	}
+}
+
+// TestProviderCheckRepoStateCountsIncomingPerRemoteForMultiTargetConflict
+// guards against one remote's conflict target inflating another remote's
+// behind count. Fetching two diverged remotes leaves main with targets
+// {L, R, U}. origin is behind only by R because X is already in L.
+func TestProviderCheckRepoStateCountsIncomingPerRemoteForMultiTargetConflict(t *testing.T) {
+	if _, err := exec.LookPath("jj"); err != nil {
+		t.Skip("jj binary not available")
+	}
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git binary not available")
+	}
+
+	run := func(name string, args ...string) {
+		t.Helper()
+		if output, err := exec.Command(name, args...).CombinedOutput(); err != nil {
+			t.Fatalf("%s %v: %v\n%s", name, args, err, output)
+		}
+	}
+	appendLine := func(path string, line string) {
+		t.Helper()
+		f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
+		if err != nil {
+			t.Fatalf("open %s: %v", path, err)
+		}
+		defer f.Close()
+		if _, err := f.WriteString(line + "\n"); err != nil {
+			t.Fatalf("append to %s: %v", path, err)
+		}
+	}
+
+	root := t.TempDir()
+	originPath := filepath.Join(root, "origin.git")
+	upstreamPath := filepath.Join(root, "upstream.git")
+	seedPath := filepath.Join(root, "seed")
+	workPath := filepath.Join(root, "work")
+	seedFile := filepath.Join(seedPath, "README.md")
+
+	run("git", "init", "--bare", originPath)
+	run("git", "init", "--bare", upstreamPath)
+	run("git", "clone", originPath, seedPath)
+	run("git", "-C", seedPath, "config", "user.name", "test")
+	run("git", "-C", seedPath, "config", "user.email", "test@example.com")
+	run("git", "-C", seedPath, "remote", "add", "upstream", upstreamPath)
+
+	// A is on both remotes' history; origin has advanced to X before the clone.
+	appendLine(seedFile, "A")
+	run("git", "-C", seedPath, "add", "README.md")
+	run("git", "-C", seedPath, "commit", "-m", "A")
+	run("git", "-C", seedPath, "branch", "-M", "main")
+	run("git", "-C", seedPath, "push", "upstream", "main")
+	appendLine(seedFile, "X")
+	run("git", "-C", seedPath, "commit", "-am", "X")
+	run("git", "-C", seedPath, "push", "origin", "main")
+
+	run("jj", "git", "clone", "--no-colocate", originPath, workPath)
+	run("jj", "-R", workPath, "git", "remote", "add", "upstream", upstreamPath)
+	run("jj", "-R", workPath, "git", "fetch", "--remote", "upstream")
+	run("jj", "-R", workPath, "bookmark", "track", "main@upstream")
+
+	// Local main moves to L on top of X.
+	run("jj", "-R", workPath, "new", "main")
+	appendLine(filepath.Join(workPath, "README.md"), "L")
+	run("jj", "-R", workPath, "describe", "-m", "L")
+	run("jj", "-R", workPath, "bookmark", "move", "main", "-t", "@")
+	run("jj", "-R", workPath, "new")
+
+	// origin moves X -> R and upstream moves A -> U.
+	appendLine(seedFile, "R")
+	run("git", "-C", seedPath, "commit", "-am", "R")
+	run("git", "-C", seedPath, "push", "origin", "main")
+	run("git", "-C", seedPath, "checkout", "-b", "upstream-work", "HEAD~2")
+	appendLine(filepath.Join(seedPath, "UPSTREAM.md"), "U")
+	run("git", "-C", seedPath, "add", "UPSTREAM.md")
+	run("git", "-C", seedPath, "commit", "-m", "U")
+	run("git", "-C", seedPath, "push", "upstream", "upstream-work:main")
+
+	run("jj", "-R", workPath, "git", "fetch", "--remote", "origin")
+	run("jj", "-R", workPath, "git", "fetch", "--remote", "upstream")
+
+	state, warnings := New().CheckRepoState(workPath)
+	if len(warnings) != 0 {
+		t.Fatalf("unexpected warnings: %v", warnings)
+	}
+
+	behind := map[string]int{}
+	for _, status := range state.RemoteStatus {
+		behind[status.Remote] = status.Behind
+	}
+	want := map[string]int{"origin": 1, "upstream": 1}
+	if !reflect.DeepEqual(behind, want) {
+		t.Fatalf("expected behind counts %v, got %v (remote status %v)", want, behind, state.RemoteStatus)
 	}
 }
 

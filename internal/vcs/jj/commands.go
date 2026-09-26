@@ -513,12 +513,24 @@ func buildTrackedOutgoingRevset(bookmarks []trackedBookmark) string {
 func buildTrackedIncomingRevset(bookmarks []trackedBookmark) string {
 	parts := make([]string, 0, len(bookmarks))
 
+	// The local side is every local target except this remote's own: a fetch
+	// that diverges leaves the local bookmark conflicted with the remote commit
+	// as one of its targets, which would empty a plain local..remote range.
+	// When no other target remains (in sync or no local bookmark), fork_point
+	// resolves to the remote commit so the range is empty rather than all
+	// history. The internal @git ref is not used because some jj versions and
+	// non-colocated repos do not have it. exact: avoids substring matches on
+	// older jj.
 	for _, bookmark := range bookmarks {
-		parts = append(parts, fmt.Sprintf(
-			`(remote_bookmarks("%s", remote="git")..remote_bookmarks("%s", remote="%s"))`,
-			escapeRevsetString(bookmark.Name),
+		local := fmt.Sprintf(`bookmarks(exact:"%s")`, escapeRevsetString(bookmark.Name))
+		remote := fmt.Sprintf(
+			`remote_bookmarks(exact:"%s", remote=exact:"%s")`,
 			escapeRevsetString(bookmark.Name),
 			escapeRevsetString(bookmark.Remote),
+		)
+		parts = append(parts, fmt.Sprintf(
+			`(((%s ~ %s) | fork_point(%s | %s))..%s)`,
+			local, remote, local, remote, remote,
 		))
 	}
 
