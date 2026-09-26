@@ -93,12 +93,17 @@ func (m *Model) Filter(query string) {
 }
 
 func (m *Model) UpdateRepoState(index int, newState report.RepoState) {
-	m.filteredRepos[index] = newState
+	if index < 0 || index >= len(m.filteredRepos) || m.filteredRepos[index].ID != newState.ID {
+		return
+	}
 
 	originalIndex := getRepoIndex(m.report.RepoStates, newState.ID)
-	if originalIndex != -1 {
-		m.report.RepoStates[originalIndex] = newState
+	if originalIndex == -1 {
+		return
 	}
+
+	m.filteredRepos[index] = newState
+	m.report.RepoStates[originalIndex] = newState
 
 	rows := m.tbl.Rows()
 	rows[index] = createRow(newState, m.theme, activeColumnDefs(m.options))
@@ -147,4 +152,5 @@ func (m *Model) UpdateTheme(newTheme theme.Theme) {
 		Selected: m.theme.Styles.TableSelectedRow,
 		Cell:     m.theme.Styles.TableRow,
 	})
+	m.tbl.SetRows(createRows(m.filteredRepos, m.theme, m.options))
 }

@@ -42,6 +42,17 @@ func setConfigDirError(t *testing.T) {
 	t.Cleanup(func() { userConfigDir = orig })
 }
 
+// clearHomeEnv unsets every environment variable os.UserHomeDir consults so it
+// reports an error. HOME is used on Unix; Windows uses USERPROFILE and falls
+// back to HOMEDRIVE+HOMEPATH (both set on CI runners).
+func clearHomeEnv(t *testing.T) {
+	t.Helper()
+	t.Setenv("HOME", "")
+	t.Setenv("USERPROFILE", "")
+	t.Setenv("HOMEDRIVE", "")
+	t.Setenv("HOMEPATH", "")
+}
+
 // setAnalytics overrides newAnalyticsService for the duration of the test.
 func setAnalytics(t *testing.T, mock *mockAnalytics) {
 	t.Helper()
@@ -425,4 +436,124 @@ func TestSend_AnalyticsError_DoesNotPanic(t *testing.T) {
 
 	// should complete without panic
 	Send("token", false, config.OnlyAll, config.OutputTable, 1)
+}
+
+// makeDanglingSymlink creates path as a symlink pointing at a target whose
+// parent directory does not exist, so writes through it fail with ENOENT.
+func makeDanglingSymlink(t *testing.T, path string) {
+	t.Helper()
+	target := filepath.Join(filepath.Dir(path), "missing-dir", "target.json")
+	if err := os.Symlink(target, path); err != nil {
+		t.Skipf("symlink unsupported: %v", err)
+	}
+}
+
+func TestSend_GetOrCreateTelemetryError_ReturnsEarly(t *testing.T) {
+	t.Setenv("CI", "")
+	tmpDir := t.TempDir()
+	setConfigDir(t, tmpDir)
+	mock := &mockAnalytics{}
+	setAnalytics(t, mock)
+
+	// telemetry.json is a directory, so reading it fails.
+	dir := filepath.Join(tmpDir, toolName)
+	if err := os.MkdirAll(filepath.Join(dir, telemtryFileName), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	Send("token", false, config.OnlyAll, config.OutputTable, 1)
+
+	if mock.event != "" {
+		t.Error("analytics.Send should not be called when telemetry read fails")
+	}
+}
+
+func TestSend_WarnedStatePersistFails(t *testing.T) {
+	t.Setenv("CI", "")
+	tmpDir := t.TempDir()
+	setConfigDir(t, tmpDir)
+	mock := &mockAnalytics{}
+	setAnalytics(t, mock)
+	buf := captureStdout(t)
+
+	// Pre-create the tool dir with a dangling telemetry symlink so the new-file
+	// write and the warned-state write both fail (ENOENT) without erroring Send.
+	dir := filepath.Join(tmpDir, toolName)
+	if err := os.MkdirAll(dir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	makeDanglingSymlink(t, filepath.Join(dir, telemtryFileName))
+
+	Send("token", false, config.OnlyAll, config.OutputTable, 1)
+
+	if !strings.Contains(buf.String(), "anonymous usage telemetry") {
+		t.Errorf("expected warning to still be printed, got %q", buf.String())
+	}
+	if mock.event != "usage" {
+		t.Errorf("analytics.Send should still be called, got event %q", mock.event)
+	}
+}
+
+func TestGetOrCreateTelemetry_FileExistsError(t *testing.T) {
+	// A path with an embedded NUL byte is rejected by the OS stat call with a
+	// non-ErrNotExist error on both Unix (EINVAL) and Windows (EINVAL).
+	_, err := getOrCreateTelemetry("invalid\x00path")
+	if err == nil {
+		t.Fatal("expected error when stat fails, got nil")
+	}
+}
+
+func TestGetOrCreateTelemetry_WriteNewFileFails_ReturnsTelemetry(t *testing.T) {
+	link := filepath.Join(t.TempDir(), "telemetry.json")
+	makeDanglingSymlink(t, link)
+
+	// ensure it is treated as non-existent, then written (which fails).
+	if exists, _ := fileExists(link); exists {
+		t.Fatal("dangling symlink should not count as existing")
+	}
+
+	got, err := getOrCreateTelemetry(link)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got.UUID == "" {
+		t.Error("expected a UUID even when the write fails")
+	}
+}
+
+func TestGetTelemetryFilePath_MkdirAllError(t *testing.T) {
+	// config dir is a regular file, so MkdirAll(configDir/toolName) fails.
+	file := filepath.Join(t.TempDir(), "not-a-dir")
+	if err := os.WriteFile(file, []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	setConfigDir(t, file)
+
+	if _, err := getTelemetryFilePath(); err == nil {
+		t.Fatal("expected error when MkdirAll fails, got nil")
+	}
+}
+
+func TestFileExists_StatError(t *testing.T) {
+	exists, err := fileExists("invalid\x00path")
+	if err == nil {
+		t.Fatal("expected error for invalid path, got nil")
+	}
+	if exists {
+		t.Error("expected exists=false on error")
+	}
+}
+
+func TestExpandPath_HomeDirError(t *testing.T) {
+	clearHomeEnv(t)
+	if _, err := expandPath("~/file"); err == nil {
+		t.Fatal("expected error when home dir is unavailable, got nil")
+	}
+}
+
+func TestWriteTelemetry_ExpandPathError(t *testing.T) {
+	clearHomeEnv(t)
+	if err := writeTelemetry("~/telemetry.json", Telemetry{UUID: "x"}); err == nil {
+		t.Fatal("expected error when home dir is unavailable, got nil")
+	}
 }
