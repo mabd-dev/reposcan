@@ -333,7 +333,8 @@ func getUntrackedRemotesForBookmark(binary string, repoPath string, bookmarkName
 		"bookmark",
 		"list",
 		"--all",
-		bookmarkName,
+		// No name argument: its pattern syntax differs across jj versions, so
+		// exact matching happens below instead.
 		"-T",
 		`name ++ "|" ++ remote ++ "\n"`,
 	)
@@ -495,12 +496,14 @@ func parseCommitSummaries(output string) []string {
 	return commits
 }
 
+// Revset builders use exact: patterns because bare strings are substring
+// matches on older jj (e.g. "main" also matches "maintenance").
 func buildTrackedOutgoingRevset(bookmarks []trackedBookmark) string {
 	parts := make([]string, 0, len(bookmarks))
 
 	for _, bookmark := range bookmarks {
 		parts = append(parts, fmt.Sprintf(
-			`(remote_bookmarks("%s", remote="%s")..bookmarks("%s"))`,
+			`(remote_bookmarks(exact:"%s", remote=exact:"%s")..bookmarks(exact:"%s"))`,
 			escapeRevsetString(bookmark.Name),
 			escapeRevsetString(bookmark.Remote),
 			escapeRevsetString(bookmark.Name),
@@ -515,7 +518,7 @@ func buildTrackedIncomingRevset(bookmarks []trackedBookmark) string {
 
 	for _, bookmark := range bookmarks {
 		parts = append(parts, fmt.Sprintf(
-			`(remote_bookmarks("%s", remote="git")..remote_bookmarks("%s", remote="%s"))`,
+			`(remote_bookmarks(exact:"%s", remote=exact:"git")..remote_bookmarks(exact:"%s", remote=exact:"%s"))`,
 			escapeRevsetString(bookmark.Name),
 			escapeRevsetString(bookmark.Name),
 			escapeRevsetString(bookmark.Remote),
