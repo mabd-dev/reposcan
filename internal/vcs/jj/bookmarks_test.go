@@ -162,6 +162,34 @@ func TestGetBookmarkRemoteStatuses(t *testing.T) {
 		}
 	})
 
+	t.Run("returns statuses for several untracked bookmarks", func(t *testing.T) {
+		devBookmark := trackedBookmark{Name: "dev", Remote: "origin"}
+		binary := useFakeJJ(t, map[string]fakeJJResponse{
+			trackedBookmarksCommandKey():                                                    {},
+			untrackedRemotesCommandKey():                                                    {Stdout: "dev|origin\nmain|upstream\n"},
+			commitLogCommandKey(upstreamOutgoingRevset):                                     {Stdout: "ghi789|main outgoing\n"},
+			commitLogCommandKey(upstreamIncomingRevset):                                     {},
+			commitLogCommandKey(buildTrackedOutgoingRevset([]trackedBookmark{devBookmark})): {Stdout: "abc123|dev outgoing\n"},
+			commitLogCommandKey(buildTrackedIncomingRevset([]trackedBookmark{devBookmark})): {},
+		})
+		got, err := getBookmarkRemoteStatuses(binary, repoPath, []string{"main", "dev"})
+		if err != nil {
+			t.Fatalf("getBookmarkRemoteStatuses() error = %v", err)
+		}
+		want := []bookmarkRemoteStatus{{
+			Remote:          "upstream",
+			OutgoingCommits: []string{"ghi789 main outgoing"},
+			IncomingCommits: []string{},
+		}, {
+			Remote:          "origin",
+			OutgoingCommits: []string{"abc123 dev outgoing"},
+			IncomingCommits: []string{},
+		}}
+		if !reflect.DeepEqual(got, want) {
+			t.Fatalf("getBookmarkRemoteStatuses() = %#v, want %#v", got, want)
+		}
+	})
+
 	t.Run("untracked remote command fails", func(t *testing.T) {
 		binary := useFakeJJ(t, map[string]fakeJJResponse{
 			trackedBookmarksCommandKey(): {},
@@ -205,31 +233,35 @@ func TestGetBookmarkRemoteStatuses(t *testing.T) {
 	})
 }
 
-// TestGetUntrackedRemotesForBookmark covers command failures and filtering of
-// malformed, mismatched, empty, and synthetic git remote entries.
-func TestGetUntrackedRemotesForBookmark(t *testing.T) {
+// TestGetRemoteBookmarks covers command failures and filtering of malformed,
+// empty, and synthetic git remote entries.
+func TestGetRemoteBookmarks(t *testing.T) {
 	t.Run("command fails", func(t *testing.T) {
 		binary := useFakeJJ(t, map[string]fakeJJResponse{
 			untrackedRemotesCommandKey(): {Stderr: "list failed", ExitCode: 1},
 		})
-		if _, err := getUntrackedRemotesForBookmark(binary, t.TempDir(), "main"); err == nil {
-			t.Fatal("getUntrackedRemotesForBookmark() error = nil, want error")
+		if _, err := getRemoteBookmarks(binary, t.TempDir()); err == nil {
+			t.Fatal("getRemoteBookmarks() error = nil, want error")
 		}
 	})
 
 	t.Run("filters malformed and ineligible entries", func(t *testing.T) {
 		binary := useFakeJJ(t, map[string]fakeJJResponse{
 			untrackedRemotesCommandKey(): {
-				Stdout: "\ninvalid\ndev|origin\nmain|\nmain|git\nmain|origin\nmain|upstream\n",
+				Stdout: "\ninvalid\ndev|origin\nmain|\nmain|git\n|origin\nmain|origin\nmain|upstream\n",
 			},
 		})
-		got, err := getUntrackedRemotesForBookmark(binary, t.TempDir(), "main")
+		got, err := getRemoteBookmarks(binary, t.TempDir())
 		if err != nil {
-			t.Fatalf("getUntrackedRemotesForBookmark() error = %v", err)
+			t.Fatalf("getRemoteBookmarks() error = %v", err)
 		}
-		want := []string{"origin", "upstream"}
+		want := []trackedBookmark{
+			{Name: "dev", Remote: "origin"},
+			{Name: "main", Remote: "origin"},
+			{Name: "main", Remote: "upstream"},
+		}
 		if !reflect.DeepEqual(got, want) {
-			t.Fatalf("getUntrackedRemotesForBookmark() = %v, want %v", got, want)
+			t.Fatalf("getRemoteBookmarks() = %v, want %v", got, want)
 		}
 	})
 }
