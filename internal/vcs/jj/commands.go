@@ -264,6 +264,10 @@ func getBookmarkRemoteStatuses(
 		return nil, err
 	}
 
+	// Loaded at most once, and only when a bookmark has no tracked remote.
+	var remoteBookmarks []trackedBookmark
+	remoteBookmarksLoaded := false
+
 	statuses := []bookmarkRemoteStatus{}
 	seenBookmarks := map[string]struct{}{}
 	for _, bookmarkName := range bookmarkNames {
@@ -278,10 +282,14 @@ func getBookmarkRemoteStatuses(
 
 		remotes := matchingRemotes(trackedBookmarks, bookmarkName)
 		if len(remotes) == 0 {
-			remotes, err = getUntrackedRemotesForBookmark(binary, repoPath, bookmarkName)
-			if err != nil {
-				return nil, err
+			if !remoteBookmarksLoaded {
+				remoteBookmarks, err = getRemoteBookmarks(binary, repoPath)
+				if err != nil {
+					return nil, err
+				}
+				remoteBookmarksLoaded = true
 			}
+			remotes = matchingRemotes(remoteBookmarks, bookmarkName)
 		}
 
 		for _, remote := range remotes {
@@ -326,14 +334,17 @@ func matchingRemotes(bookmarks []trackedBookmark, name string) []string {
 	return remotes
 }
 
-func getUntrackedRemotesForBookmark(binary string, repoPath string, bookmarkName string) ([]string, error) {
+// getRemoteBookmarks lists every remote bookmark, tracked or not, excluding
+// jj's synthetic "git" remote.
+func getRemoteBookmarks(binary string, repoPath string) ([]trackedBookmark, error) {
 	output, err := runJJCommand(
 		binary,
 		repoPath,
 		"bookmark",
 		"list",
 		"--all",
-		bookmarkName,
+		// No name argument: its pattern syntax differs across jj versions, so
+		// callers match names exactly instead.
 		"-T",
 		`name ++ "|" ++ remote ++ "\n"`,
 	)
@@ -341,28 +352,23 @@ func getUntrackedRemotesForBookmark(binary string, repoPath string, bookmarkName
 		return nil, err
 	}
 
-	var remotes []string
-	for _, line := range strings.Split(strings.TrimRight(output, "\n"), "\n") {
-		line = strings.TrimSpace(line)
-		if line == "" {
+	var bookmarks []trackedBookmark
+	for _, line := range strings.Split(output, "\n") {
+		name, remote, ok := strings.Cut(line, "|")
+		if !ok {
 			continue
 		}
 
-		parts := strings.SplitN(line, "|", 2)
-		if len(parts) != 2 {
+		name = strings.TrimSpace(name)
+		remote = strings.TrimSpace(remote)
+		if name == "" || remote == "" || remote == "git" {
 			continue
 		}
 
-		name := strings.TrimSpace(parts[0])
-		remote := strings.TrimSpace(parts[1])
-		if name != bookmarkName || remote == "" || remote == "git" {
-			continue
-		}
-
-		remotes = append(remotes, remote)
+		bookmarks = append(bookmarks, trackedBookmark{Name: name, Remote: remote})
 	}
 
-	return remotes, nil
+	return bookmarks, nil
 }
 
 func getCommitsForRevset(binary string, repoPath string, revset string) ([]string, error) {
@@ -495,12 +501,14 @@ func parseCommitSummaries(output string) []string {
 	return commits
 }
 
+// Revset builders use exact: patterns because bare strings are substring
+// matches on older jj (e.g. "main" also matches "maintenance").
 func buildTrackedOutgoingRevset(bookmarks []trackedBookmark) string {
 	parts := make([]string, 0, len(bookmarks))
 
 	for _, bookmark := range bookmarks {
 		parts = append(parts, fmt.Sprintf(
-			`(remote_bookmarks("%s", remote="%s")..bookmarks("%s"))`,
+			`(remote_bookmarks(exact:"%s", remote=exact:"%s")..bookmarks(exact:"%s"))`,
 			escapeRevsetString(bookmark.Name),
 			escapeRevsetString(bookmark.Remote),
 			escapeRevsetString(bookmark.Name),
