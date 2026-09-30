@@ -234,6 +234,50 @@ func TestProviderCheckRepoStateCollectsTrackedBookmarkOutgoingCommits(t *testing
 	}
 }
 
+// TestProviderCheckRepoStateIgnoresBookmarksContainingTheName guards against
+// substring bookmark matching, where "main" would also match "maintenance".
+func TestProviderCheckRepoStateIgnoresBookmarksContainingTheName(t *testing.T) {
+	if _, err := exec.LookPath("jj"); err != nil {
+		t.Skip("jj binary not available")
+	}
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git binary not available")
+	}
+
+	repoPath := initTrackedJJRepo(t).WorkPath
+
+	if err := exec.Command("jj", "-R", repoPath, "new", "main", "-m", "maintenance work").Run(); err != nil {
+		t.Fatalf("jj new main: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(repoPath, "maintenance.txt"), []byte("work\n"), 0o644); err != nil {
+		t.Fatalf("write maintenance file: %v", err)
+	}
+	if err := exec.Command("jj", "-R", repoPath, "bookmark", "create", "maintenance", "-r", "@").Run(); err != nil {
+		t.Fatalf("jj bookmark create maintenance: %v", err)
+	}
+	if err := exec.Command("jj", "-R", repoPath, "new", "main").Run(); err != nil {
+		t.Fatalf("jj new main: %v", err)
+	}
+
+	state, warnings := New().CheckRepoState(repoPath)
+	if len(warnings) != 0 {
+		t.Fatalf("unexpected warnings: %v", warnings)
+	}
+
+	if state.Branch != "main" {
+		t.Fatalf("expected branch display to use main, got %q", state.Branch)
+	}
+
+	if len(state.RemoteStatus) != 1 {
+		t.Fatalf("expected one jj remote status entry, got %d: %v", len(state.RemoteStatus), state.RemoteStatus)
+	}
+
+	status := state.RemoteStatus[0]
+	if status.Ahead != 0 || len(status.OutgoingCommits) != 0 {
+		t.Fatalf("expected no outgoing commits on main, got ahead %d with %v", status.Ahead, status.OutgoingCommits)
+	}
+}
+
 func TestProviderCheckRepoStateCollectsTrackedBookmarkIncomingCommits(t *testing.T) {
 	if _, err := exec.LookPath("jj"); err != nil {
 		t.Skip("jj binary not available")
@@ -376,13 +420,9 @@ func TestProviderCheckRepoStateWarningsIncludeCommandFailureDetails(t *testing.T
 				branchCommandKey():                        {Stdout: "main*?|abc123\n"},
 				fakeJJCommandKey("diff", "--summary"):     {},
 				trackedBookmarksCommandKey():              {},
-				untrackedRemotesCommandKey("main"):        {},
+				untrackedRemotesCommandKey():              {},
 			}
 			responses[tt.failedCommand] = fakeJJResponse{Stderr: "inspection failed", ExitCode: 1}
-			if tt.failedCommand == branchCommandKey() {
-				// A failed branch lookup uses "-" for the follow-up remote lookup.
-				responses[untrackedRemotesCommandKey("-")] = fakeJJResponse{}
-			}
 			binary := useFakeJJ(t, responses)
 
 			_, warnings := (&Provider{binary: binary}).CheckRepoState(repoPath)
