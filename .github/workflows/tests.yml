@@ -72,5 +72,9 @@ jobs:
 
     - name: Run Tests on Windows (${{ matrix.go }})
       if: runner.os == 'Windows'
+      # jj names repo files with 128-character hashes. Under the default temp
+      # dir those paths pass the 260-character Windows limit, so use a short one.
       run: |
+        $env:TMP = Join-Path (Split-Path $env:RUNNER_TEMP -Qualifier) 't'
+        New-Item -ItemType Directory -Force -Path $env:TMP | Out-Null
         go test ./... -v -covermode=atomic
