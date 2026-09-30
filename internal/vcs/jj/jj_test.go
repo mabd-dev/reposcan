@@ -37,7 +37,7 @@ func initTrackedJJRepo(t *testing.T, cloneArgs ...string) trackedJJRepo {
 	seedPath := filepath.Join(root, "seed")
 	workPath := filepath.Join(root, "work")
 
-	if err := exec.Command("git", "init", "--bare", remotePath).Run(); err != nil {
+	if err := exec.Command("git", "init", "--bare", "--initial-branch=main", remotePath).Run(); err != nil {
 		t.Fatalf("git init --bare: %v", err)
 	}
 	if err := exec.Command("git", "clone", remotePath, seedPath).Run(); err != nil {
@@ -439,8 +439,8 @@ func TestProviderCheckRepoStateCountsIncomingPerRemoteForMultiTargetConflict(t *
 	workPath := filepath.Join(root, "work")
 	seedFile := filepath.Join(seedPath, "README.md")
 
-	run("git", "init", "--bare", originPath)
-	run("git", "init", "--bare", upstreamPath)
+	run("git", "init", "--bare", "--initial-branch=main", originPath)
+	run("git", "init", "--bare", "--initial-branch=main", upstreamPath)
 	run("git", "clone", originPath, seedPath)
 	run("git", "-C", seedPath, "config", "user.name", "test")
 	run("git", "-C", seedPath, "config", "user.email", "test@example.com")

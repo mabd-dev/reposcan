@@ -47,7 +47,7 @@ func initScanTrackedJJRepo(t *testing.T) scanTrackedJJRepo {
 	seedPath := filepath.Join(root, "seed")
 	workPath := filepath.Join(root, "work")
 
-	if err := exec.Command("git", "init", "--bare", remotePath).Run(); err != nil {
+	if err := exec.Command("git", "init", "--bare", "--initial-branch=main", remotePath).Run(); err != nil {
 		t.Fatalf("git init --bare: %v", err)
 	}
 	if err := exec.Command("git", "clone", remotePath, seedPath).Run(); err != nil {
