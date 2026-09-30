@@ -28,6 +28,32 @@ jobs:
         sudo apt update
         sudo apt install -y xvfb libx11-dev x11-utils
 
+    # jj tests skip when jj is missing, so install it and fail fast if it is
+    # not on PATH.
+    - name: Install jj
+      shell: bash
+      env:
+        JJ_VERSION: 0.45.1
+      run: |
+        case "${RUNNER_OS}-${RUNNER_ARCH}" in
+          Linux-X64) target=x86_64-unknown-linux-musl ext=tar.gz ;;
+          macOS-ARM64) target=aarch64-apple-darwin ext=tar.gz ;;
+          Windows-X64) target=x86_64-pc-windows-msvc ext=zip ;;
+          *) echo "No jj build mapped for ${RUNNER_OS}-${RUNNER_ARCH}"; exit 1 ;;
+        esac
+        archive="$RUNNER_TEMP/jj.$ext"
+        curl -fsSL -o "$archive" "https://github.com/jj-vcs/jj/releases/download/v${JJ_VERSION}/jj-v${JJ_VERSION}-${target}.${ext}"
+        mkdir -p "$RUNNER_TEMP/jj"
+        if [ "$ext" = zip ]; then
+          unzip -q "$archive" -d "$RUNNER_TEMP/jj"
+        else
+          tar -xzf "$archive" -C "$RUNNER_TEMP/jj"
+        fi
+        echo "$RUNNER_TEMP/jj" >> "$GITHUB_PATH"
+
+    - name: Verify jj
+      run: jj --version
+
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
