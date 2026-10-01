@@ -342,8 +342,12 @@ func TestBuildTrackedRevsets(t *testing.T) {
 		t.Fatalf("buildTrackedOutgoingRevset() = %q, want %q", got, wantOutgoing)
 	}
 
-	wantIncoming := `(remote_bookmarks(exact:"ma\"in", remote=exact:"git")..remote_bookmarks(exact:"ma\"in", remote=exact:"up\\stream")) | ` +
-		`(remote_bookmarks(exact:"dev", remote=exact:"git")..remote_bookmarks(exact:"dev", remote=exact:"origin"))`
+	wantIncoming := `(((bookmarks(exact:"ma\"in") ~ remote_bookmarks(exact:"ma\"in", remote=exact:"up\\stream")) | ` +
+		`fork_point(bookmarks(exact:"ma\"in") | remote_bookmarks(exact:"ma\"in", remote=exact:"up\\stream")))..` +
+		`remote_bookmarks(exact:"ma\"in", remote=exact:"up\\stream")) | ` +
+		`(((bookmarks(exact:"dev") ~ remote_bookmarks(exact:"dev", remote=exact:"origin")) | ` +
+		`fork_point(bookmarks(exact:"dev") | remote_bookmarks(exact:"dev", remote=exact:"origin")))..` +
+		`remote_bookmarks(exact:"dev", remote=exact:"origin"))`
 	if got := buildTrackedIncomingRevset(bookmarks); got != wantIncoming {
 		t.Fatalf("buildTrackedIncomingRevset() = %q, want %q", got, wantIncoming)
 	}
