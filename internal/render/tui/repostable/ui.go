@@ -45,13 +45,17 @@ func createRows(repoStates []report.RepoState, theme theme.Theme, options Option
 	defs := activeColumnDefs(options)
 	rows := make([]table.Row, 0, len(repoStates))
 	for _, rs := range repoStates {
-		row := make(table.Row, 0, len(defs))
-		for _, def := range defs {
-			row = append(row, def.cell(rs, theme))
-		}
-		rows = append(rows, row)
+		rows = append(rows, createRow(rs, theme, defs))
 	}
 	return rows
+}
+
+func createRow(rs report.RepoState, theme theme.Theme, defs []columnDef) table.Row {
+	row := make(table.Row, 0, len(defs))
+	for _, def := range defs {
+		row = append(row, def.cell(rs, theme))
+	}
+	return row
 }
 
 func activeColumnDefs(options Options) []columnDef {

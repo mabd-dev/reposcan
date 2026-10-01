@@ -189,8 +189,11 @@ func TestGetRepoState(t *testing.T) {
 
 func TestUpdateThemeChangesThemeAndTableStyles(t *testing.T) {
 	reportWithRemote := testReport()
-	reportWithRemote.RepoStates[0].RemoteStatus = []report.RemoteStatus{{Remote: "upstream"}}
+	for i := range reportWithRemote.RepoStates {
+		reportWithRemote.RepoStates[i].RemoteStatus = []report.RemoteStatus{{Remote: "upstream"}}
+	}
 	m := New(stubTheme(), reportWithRemote, 80, 20, Options{})
+	m.tbl.SetCursor(1)
 	before := m.tbl.View()
 	beforeStateCell := m.tbl.Rows()[0][3]
 	updated := stubTheme()
@@ -212,5 +215,16 @@ func TestUpdateThemeChangesThemeAndTableStyles(t *testing.T) {
 		t.Fatalf("state cell retained old theme styling: %q", got)
 	} else if want := getStateColumnStr(reportWithRemote.RepoStates[0], updated); got != want {
 		t.Fatalf("state cell = %q, want %q", got, want)
+	}
+
+	// Refreshing one row must leave every remote label using the current theme.
+	m.UpdateRepoState(0, reportWithRemote.RepoStates[0])
+	for i, row := range m.tbl.Rows() {
+		if got, want := row[3], "⏳0 ↑0 ↓0   (upstream)"; got != want {
+			t.Errorf("row %d state = %q, want %q", i, got, want)
+		}
+	}
+	if got := m.Cursor(); got != 1 {
+		t.Errorf("cursor = %d, want 1", got)
 	}
 }
