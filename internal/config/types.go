@@ -20,6 +20,11 @@ type Config struct {
 	// The --filter stash value is unaffected by this setting.
 	CountStashAsDirty bool `toml:"countStashAsDirty,omitempty"`
 
+	// StaleDays, when > 0, keeps only repos whose last local activity is at
+	// least this many days old. It composes with Only and is ignored for
+	// OnlyUnpulled, whose state is driven by the remote, not local activity.
+	StaleDays int `toml:"staleDays,omitempty"`
+
 	// Max git checker workers
 	MaxWorkers int `toml:"maxWorkers"`
 

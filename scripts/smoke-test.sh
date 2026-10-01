@@ -206,6 +206,30 @@ assert_eq "filter=unpushed"    "ahead"               "$(repos unpushed)"
 assert_eq "filter=unpulled"    "behind"              "$(repos unpulled)"
 assert_eq "filter=stash"       "stashed"             "$(repos stash)"
 
+# ---------------------------------------------------------------- stale filter
+
+# Separate fixture root so the main fixture counts above are unaffected.
+# "old" has a commit and an edit both dated 2020; "recent" was just edited.
+section "stale filter"
+STALE="$TMP/stale"
+for name in old recent; do
+  $G init -q "$STALE/$name"
+  echo hello > "$STALE/$name/README.md"
+  $G -C "$STALE/$name" add -A
+  GIT_COMMITTER_DATE="2020-01-01T12:00:00Z" GIT_AUTHOR_DATE="2020-01-01T12:00:00Z" \
+    $G -C "$STALE/$name" commit -qm init
+  echo changed >> "$STALE/$name/README.md"
+done
+touch -t 202001011200 "$STALE/old/README.md"
+stale_repos() { rs -r "$STALE" -o json -f "$1" --stale-days "$2" | jq -r '.repoStates[].repo' | sort | tr '\n' ' ' | sed 's/ $//'; }
+assert_eq "--stale-days 0 keeps every dirty repo"   "old recent" "$(stale_repos dirty 0)"
+assert_eq "--stale-days 7 keeps only the old repo"  "old"        "$(stale_repos dirty 7)"
+assert_eq "--stale-days composes with uncommitted"  "old"        "$(stale_repos uncommitted 7)"
+assert_eq "lastActivity is the 2020 activity" "2020-01-01" \
+  "$(rs -r "$STALE" -o json -f all --stale-days 7 | jq -r '.repoStates[0].lastActivity' | cut -c1-10)"
+assert_eq "lastActivity omitted when disabled" "0" \
+  "$(rs -r "$STALE" -o json -f all | jq '[.repoStates[] | select(has("lastActivity"))] | length')"
+
 # ---------------------------------------------------------------- repo state detail
 
 section "repo state"
@@ -293,6 +317,7 @@ section "error handling"
 "$BIN" --no-telemetry -r "$TMP/nope" -o json      >/dev/null 2>&1; assert_eq "nonexistent root exits 1"      "1" "$?"
 "$BIN" --no-telemetry --bogus-flag                >/dev/null 2>&1; assert_eq "unknown flag exits 1"          "1" "$?"
 "$BIN" --no-telemetry bogus-subcommand            >/dev/null 2>&1; assert_eq "unknown subcommand exits 1"    "1" "$?"
+"$BIN" --no-telemetry -r "$FIX" --stale-days -1   >/dev/null 2>&1; assert_eq "negative --stale-days exits 1" "1" "$?"
 
 mkdir -p "$TMP/perm/locked"; chmod 000 "$TMP/perm/locked"
 assert_eq "unreadable dir is a warning, not a crash" "1" \

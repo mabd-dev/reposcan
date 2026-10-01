@@ -7,6 +7,7 @@ import (
 	"github.com/mabd-dev/reposcan/internal/utils"
 	"os"
 	"slices"
+	"strconv"
 	"strings"
 )
 
@@ -80,6 +81,20 @@ func Validate(config Config) ValidationResult {
 			Message: "'" + string(config.Output.Type) + "' is not a valid OutputFormat",
 		}
 		errors = append(errors, issue)
+	}
+
+	if config.StaleDays < 0 {
+		issue := Issue{
+			Field:   "staleDays",
+			Message: "staleDays=" + strconv.Itoa(config.StaleDays) + " must be >= 0",
+		}
+		errors = append(errors, issue)
+	} else if config.StaleDays > 0 && config.Only == OnlyUnpulled {
+		issue := Issue{
+			Field:   "staleDays",
+			Message: "staleDays is ignored with the 'unpulled' filter",
+		}
+		warnings = append(warnings, issue)
 	}
 
 	if len(strings.TrimSpace(config.Output.JSONPath)) > 0 {

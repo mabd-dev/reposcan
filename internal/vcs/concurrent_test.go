@@ -56,7 +56,7 @@ func TestGetRepoStatesConcurrent_SortsResultsAndPreservesWarnings(t *testing.T) 
 		},
 	)
 
-	states, warnings := GetRepoStatesConcurrent(repos, registry, 2)
+	states, warnings := GetRepoStatesConcurrent(repos, registry, 2, ScanOptions{})
 
 	gotPaths := []string{}
 	for _, state := range states {
@@ -80,7 +80,7 @@ func TestGetRepoStatesConcurrent_SortsResultsAndPreservesWarnings(t *testing.T) 
 func TestGetRepoStatesConcurrent_WarnsWhenProviderIsMissing(t *testing.T) {
 	repos := []RepoInfo{{Path: "/tmp/repo", Type: TypeJJ}}
 
-	states, warnings := GetRepoStatesConcurrent(repos, NewRegistry(), 1)
+	states, warnings := GetRepoStatesConcurrent(repos, NewRegistry(), 1, ScanOptions{})
 
 	if len(states) != 0 {
 		t.Fatalf("expected no states, got %v", states)
@@ -112,7 +112,7 @@ func TestGetRepoStatesConcurrent_DefaultsMaxWorkersWhenNonPositive(t *testing.T)
 		},
 	)
 
-	states, warnings := GetRepoStatesConcurrent(repos, registry, 0)
+	states, warnings := GetRepoStatesConcurrent(repos, registry, 0, ScanOptions{})
 
 	if len(warnings) != 0 {
 		t.Fatalf("expected no warnings, got %v", warnings)

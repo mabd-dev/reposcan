@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	tea "charm.land/bubbletea/v2"
+	"github.com/mabd-dev/reposcan/internal"
 	"github.com/mabd-dev/reposcan/internal/render/tui/alerts"
 	"github.com/mabd-dev/reposcan/internal/vcs"
 	"github.com/mabd-dev/reposcan/pkg/report"
@@ -117,9 +118,10 @@ func refreshRepo(m Model, index int) tea.Cmd {
 	}
 
 	repoPath := rs.Path
+	scanOptions := internal.ScanOptions(m.configs)
 
 	return func() tea.Msg {
-		newRepoState, _ := provider.CheckRepoState(repoPath)
+		newRepoState, _ := vcs.CheckRepoState(provider, repoPath, scanOptions)
 
 		return vcsRefreshRepoResultMsg{
 			newRepoState: newRepoState,

@@ -41,6 +41,7 @@ func init() {
 	RootCmd.PersistentFlags().StringP("output", "o", string(configs.Output.Type), "Output format: json|interactive|none")
 	RootCmd.PersistentFlags().StringP("filter", "f", string(configs.Only), "Repository filter: all|dirty|uncommitted|unpushed|unpulled|stash")
 	RootCmd.PersistentFlags().String("json-output-path", configs.Output.JSONPath, "Write scan report JSON files to this directory (optional)")
+	RootCmd.PersistentFlags().Int("stale-days", configs.StaleDays, "Only show repos with no local activity for at least N days (0 = disabled). Ignored with --filter unpulled")
 	RootCmd.PersistentFlags().IntP("max-workers", "w", configs.MaxWorkers, "Number of concurrent git checks")
 	RootCmd.PersistentFlags().BoolP("debug", "", configs.Debug, "Enable/Disable debug mode")
 	RootCmd.PersistentFlags().BoolP("no-telemetry", "", configs.NoTelemetry, "Enable/Disable sending telemetry")
