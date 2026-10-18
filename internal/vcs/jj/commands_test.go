@@ -192,6 +192,7 @@ func TestGetBranchDisplay(t *testing.T) {
 			name:     "tracked bookmark lookup fails",
 			response: fakeJJResponse{Stdout: "|abc123\n"},
 			tracked:  fakeJJResponse{Stderr: "list failed", ExitCode: 1},
+			want:     "abc123",
 			wantErr:  true,
 		},
 		{
@@ -199,6 +200,7 @@ func TestGetBranchDisplay(t *testing.T) {
 			response: fakeJJResponse{Stdout: "|abc123\n"},
 			tracked:  fakeJJResponse{Stdout: "main|origin\ndev|origin\n"},
 			moved:    fakeJJResponse{Stderr: "bad revset", ExitCode: 1},
+			want:     "abc123",
 			wantErr:  true,
 		},
 	}

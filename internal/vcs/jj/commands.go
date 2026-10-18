@@ -167,9 +167,11 @@ func getBranch(binary string, repoPath string) (string, bool, error) {
 		}
 	}
 
+	// The lookup is optional, so a failure still returns the change ID with
+	// the error.
 	movedDisplay, err := getMovedBookmarkDisplay(binary, repoPath)
 	if err != nil {
-		return "", false, err
+		return fallback, false, err
 	}
 	if movedDisplay != "" {
 		return movedDisplay, true, nil

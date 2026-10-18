@@ -59,7 +59,8 @@ func (p *Provider) CheckRepoState(path string) (report.RepoState, []string) {
 	branch, isBookmark, err := getBranch(p.binary, path)
 	if err != nil {
 		warnings = append(warnings, jjWarning("get branch display", path, err))
-	} else if strings.TrimSpace(branch) != "" {
+	}
+	if strings.TrimSpace(branch) != "" {
 		state.Branch = branch
 		if isBookmark {
 			bookmarkNames = strings.Split(branch, ",")

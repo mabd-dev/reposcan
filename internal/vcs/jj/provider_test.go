@@ -96,6 +96,31 @@ func TestProviderCheckRepoStateDoesNotMatchChangeIDAsBookmark(t *testing.T) {
 	}
 }
 
+// TestProviderCheckRepoStateKeepsChangeIDWhenMovedLookupFails verifies that a
+// failed moved-bookmark lookup is reported without hiding the change ID that
+// was already read.
+func TestProviderCheckRepoStateKeepsChangeIDWhenMovedLookupFails(t *testing.T) {
+	binary := useFakeJJ(t, map[string]fakeJJResponse{
+		fakeJJCommandKey("git", "remote", "list"): {Stdout: "origin https://example.com/acme/widgets.git\n"},
+		branchCommandKey():                        {Stdout: "|abc123\n"},
+		trackedBookmarksCommandKey():              {Stderr: "list failed", ExitCode: 1},
+		fakeJJCommandKey("diff", "--summary"):     {},
+	})
+
+	state, warnings := (&Provider{binary: binary}).CheckRepoState(filepath.Join(t.TempDir(), "checkout"))
+	if len(warnings) != 1 || !strings.Contains(warnings[0], "get branch display") {
+		t.Fatalf("CheckRepoState() warnings = %v, want one branch display warning", warnings)
+	}
+	if state.Branch != "abc123" {
+		t.Fatalf("CheckRepoState() branch = %q, want abc123", state.Branch)
+	}
+
+	want := []report.RemoteStatus{{Remote: "origin", Ahead: -1, Behind: -1}}
+	if !reflect.DeepEqual(state.RemoteStatus, want) {
+		t.Fatalf("CheckRepoState() remote status = %#v, want %#v", state.RemoteStatus, want)
+	}
+}
+
 // TestProviderActions verifies fetch output and the explicit unsupported-action
 // contract for push and pull.
 func TestProviderActions(t *testing.T) {
