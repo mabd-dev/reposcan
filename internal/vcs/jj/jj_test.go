@@ -75,6 +75,14 @@ func initTrackedJJRepo(t *testing.T, cloneArgs ...string) trackedJJRepo {
 	}
 }
 
+// runCommand runs a fixture command and fails the test with its output.
+func runCommand(t *testing.T, name string, args ...string) {
+	t.Helper()
+	if output, err := exec.Command(name, args...).CombinedOutput(); err != nil {
+		t.Fatalf("%s %v: %v\n%s", name, args, err, output)
+	}
+}
+
 func TestJJProviderImplementsVcsProvider(t *testing.T) {
 	var _ vcs.Provider = (*Provider)(nil)
 }
@@ -402,6 +410,60 @@ func TestProviderCheckRepoStateReportsInSyncCloneAsZero(t *testing.T) {
 	}
 }
 
+// TestProviderCheckRepoStateCountsFromWorkingCopyParent checks that ahead and
+// behind match git's HEAD-based counts with @- as HEAD: a commit counts even if
+// no bookmark points at it, and edits in @ only show as uncommitted files.
+func TestProviderCheckRepoStateCountsFromWorkingCopyParent(t *testing.T) {
+	if _, err := exec.LookPath("jj"); err != nil {
+		t.Skip("jj binary not available")
+	}
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git binary not available")
+	}
+
+	tests := []struct {
+		name            string
+		commit          bool
+		wantAhead       int
+		wantUncommitted int
+	}{
+		{name: "edits in the working copy", wantUncommitted: 1},
+		{name: "commit without moving the bookmark", commit: true, wantAhead: 1},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			workPath := initTrackedJJRepo(t).WorkPath
+			if err := os.WriteFile(filepath.Join(workPath, "local.txt"), []byte("local\n"), 0o644); err != nil {
+				t.Fatalf("write local file: %v", err)
+			}
+			if tt.commit {
+				runCommand(t, "jj", "-R", workPath, "commit", "-m", "local change")
+			}
+
+			state, warnings := New().CheckRepoState(workPath)
+			if len(warnings) != 0 {
+				t.Fatalf("unexpected warnings: %v", warnings)
+			}
+
+			if state.Branch != "main" {
+				t.Fatalf("expected branch display main, got %q", state.Branch)
+			}
+			if len(state.UncommitedFiles) != tt.wantUncommitted {
+				t.Fatalf("expected %d uncommitted files, got %v", tt.wantUncommitted, state.UncommitedFiles)
+			}
+			if len(state.RemoteStatus) != 1 {
+				t.Fatalf("expected one jj remote status entry, got %d: %v", len(state.RemoteStatus), state.RemoteStatus)
+			}
+
+			status := state.RemoteStatus[0]
+			if status.Remote != "origin" || status.Ahead != tt.wantAhead || status.Behind != 0 {
+				t.Fatalf("expected origin %d/0, got %q %d/%d", tt.wantAhead, status.Remote, status.Ahead, status.Behind)
+			}
+		})
+	}
+}
+
 // TestProviderCheckRepoStateCountsIncomingPerRemoteForMultiTargetConflict
 // guards against one remote's conflict target inflating another remote's
 // behind count. Fetching two diverged remotes leaves main with targets
@@ -414,12 +476,6 @@ func TestProviderCheckRepoStateCountsIncomingPerRemoteForMultiTargetConflict(t *
 		t.Skip("git binary not available")
 	}
 
-	run := func(name string, args ...string) {
-		t.Helper()
-		if output, err := exec.Command(name, args...).CombinedOutput(); err != nil {
-			t.Fatalf("%s %v: %v\n%s", name, args, err, output)
-		}
-	}
 	appendLine := func(path string, line string) {
 		t.Helper()
 		f, err := os.OpenFile(path, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644)
@@ -439,47 +495,47 @@ func TestProviderCheckRepoStateCountsIncomingPerRemoteForMultiTargetConflict(t *
 	workPath := filepath.Join(root, "work")
 	seedFile := filepath.Join(seedPath, "README.md")
 
-	run("git", "init", "--bare", "--initial-branch=main", originPath)
-	run("git", "init", "--bare", "--initial-branch=main", upstreamPath)
-	run("git", "clone", originPath, seedPath)
-	run("git", "-C", seedPath, "config", "user.name", "test")
-	run("git", "-C", seedPath, "config", "user.email", "test@example.com")
-	run("git", "-C", seedPath, "remote", "add", "upstream", upstreamPath)
+	runCommand(t, "git", "init", "--bare", "--initial-branch=main", originPath)
+	runCommand(t, "git", "init", "--bare", "--initial-branch=main", upstreamPath)
+	runCommand(t, "git", "clone", originPath, seedPath)
+	runCommand(t, "git", "-C", seedPath, "config", "user.name", "test")
+	runCommand(t, "git", "-C", seedPath, "config", "user.email", "test@example.com")
+	runCommand(t, "git", "-C", seedPath, "remote", "add", "upstream", upstreamPath)
 
 	// A is on both remotes' history; origin has advanced to X before the clone.
 	appendLine(seedFile, "A")
-	run("git", "-C", seedPath, "add", "README.md")
-	run("git", "-C", seedPath, "commit", "-m", "A")
-	run("git", "-C", seedPath, "branch", "-M", "main")
-	run("git", "-C", seedPath, "push", "upstream", "main")
+	runCommand(t, "git", "-C", seedPath, "add", "README.md")
+	runCommand(t, "git", "-C", seedPath, "commit", "-m", "A")
+	runCommand(t, "git", "-C", seedPath, "branch", "-M", "main")
+	runCommand(t, "git", "-C", seedPath, "push", "upstream", "main")
 	appendLine(seedFile, "X")
-	run("git", "-C", seedPath, "commit", "-am", "X")
-	run("git", "-C", seedPath, "push", "origin", "main")
+	runCommand(t, "git", "-C", seedPath, "commit", "-am", "X")
+	runCommand(t, "git", "-C", seedPath, "push", "origin", "main")
 
-	run("jj", "git", "clone", "--no-colocate", originPath, workPath)
-	run("jj", "-R", workPath, "git", "remote", "add", "upstream", upstreamPath)
-	run("jj", "-R", workPath, "git", "fetch", "--remote", "upstream")
-	run("jj", "-R", workPath, "bookmark", "track", "main@upstream")
+	runCommand(t, "jj", "git", "clone", "--no-colocate", originPath, workPath)
+	runCommand(t, "jj", "-R", workPath, "git", "remote", "add", "upstream", upstreamPath)
+	runCommand(t, "jj", "-R", workPath, "git", "fetch", "--remote", "upstream")
+	runCommand(t, "jj", "-R", workPath, "bookmark", "track", "main@upstream")
 
 	// Local main moves to L on top of X.
-	run("jj", "-R", workPath, "new", "main")
+	runCommand(t, "jj", "-R", workPath, "new", "main")
 	appendLine(filepath.Join(workPath, "README.md"), "L")
-	run("jj", "-R", workPath, "describe", "-m", "L")
-	run("jj", "-R", workPath, "bookmark", "move", "main", "-t", "@")
-	run("jj", "-R", workPath, "new")
+	runCommand(t, "jj", "-R", workPath, "describe", "-m", "L")
+	runCommand(t, "jj", "-R", workPath, "bookmark", "move", "main", "-t", "@")
+	runCommand(t, "jj", "-R", workPath, "new")
 
 	// origin moves X -> R and upstream moves A -> U.
 	appendLine(seedFile, "R")
-	run("git", "-C", seedPath, "commit", "-am", "R")
-	run("git", "-C", seedPath, "push", "origin", "main")
-	run("git", "-C", seedPath, "checkout", "-b", "upstream-work", "HEAD~2")
+	runCommand(t, "git", "-C", seedPath, "commit", "-am", "R")
+	runCommand(t, "git", "-C", seedPath, "push", "origin", "main")
+	runCommand(t, "git", "-C", seedPath, "checkout", "-b", "upstream-work", "HEAD~2")
 	appendLine(filepath.Join(seedPath, "UPSTREAM.md"), "U")
-	run("git", "-C", seedPath, "add", "UPSTREAM.md")
-	run("git", "-C", seedPath, "commit", "-m", "U")
-	run("git", "-C", seedPath, "push", "upstream", "upstream-work:main")
+	runCommand(t, "git", "-C", seedPath, "add", "UPSTREAM.md")
+	runCommand(t, "git", "-C", seedPath, "commit", "-m", "U")
+	runCommand(t, "git", "-C", seedPath, "push", "upstream", "upstream-work:main")
 
-	run("jj", "-R", workPath, "git", "fetch", "--remote", "origin")
-	run("jj", "-R", workPath, "git", "fetch", "--remote", "upstream")
+	runCommand(t, "jj", "-R", workPath, "git", "fetch", "--remote", "origin")
+	runCommand(t, "jj", "-R", workPath, "git", "fetch", "--remote", "upstream")
 
 	state, warnings := New().CheckRepoState(workPath)
 	if len(warnings) != 0 {

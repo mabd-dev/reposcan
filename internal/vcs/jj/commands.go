@@ -501,18 +501,18 @@ func parseCommitSummaries(output string) []string {
 	return commits
 }
 
-// Revset builders use exact: patterns because bare strings are substring
-// matches on older jj (e.g. "main" also matches "maintenance").
+// The revset builders count commits the way reposcan's git provider does,
+// with @- in place of HEAD: @ is the working copy, whose changes are reported
+// as uncommitted files, so the last commit is @-. Counting from @- rather than
+// the local bookmark matters because jj git fetch moves a tracked bookmark
+// forward without moving @, and because jj commit does not move the bookmark.
+// exact: patterns avoid substring matches on older jj (e.g. "main" also
+// matching "maintenance").
 func buildTrackedOutgoingRevset(bookmarks []trackedBookmark) string {
 	parts := make([]string, 0, len(bookmarks))
 
 	for _, bookmark := range bookmarks {
-		parts = append(parts, fmt.Sprintf(
-			`(remote_bookmarks(exact:"%s", remote=exact:"%s")..bookmarks(exact:"%s"))`,
-			escapeRevsetString(bookmark.Name),
-			escapeRevsetString(bookmark.Remote),
-			escapeRevsetString(bookmark.Name),
-		))
+		parts = append(parts, fmt.Sprintf(`(%s..@-)`, remoteBookmarkRevset(bookmark)))
 	}
 
 	return strings.Join(parts, " | ")
@@ -521,28 +521,19 @@ func buildTrackedOutgoingRevset(bookmarks []trackedBookmark) string {
 func buildTrackedIncomingRevset(bookmarks []trackedBookmark) string {
 	parts := make([]string, 0, len(bookmarks))
 
-	// The local side is every local target except this remote's own: a fetch
-	// that diverges leaves the local bookmark conflicted with the remote commit
-	// as one of its targets, which would empty a plain local..remote range.
-	// When no other target remains (in sync or no local bookmark), fork_point
-	// resolves to the remote commit so the range is empty rather than all
-	// history. The internal @git ref is not used because some jj versions and
-	// non-colocated repos do not have it. exact: avoids substring matches on
-	// older jj.
 	for _, bookmark := range bookmarks {
-		local := fmt.Sprintf(`bookmarks(exact:"%s")`, escapeRevsetString(bookmark.Name))
-		remote := fmt.Sprintf(
-			`remote_bookmarks(exact:"%s", remote=exact:"%s")`,
-			escapeRevsetString(bookmark.Name),
-			escapeRevsetString(bookmark.Remote),
-		)
-		parts = append(parts, fmt.Sprintf(
-			`(((%s ~ %s) | fork_point(%s | %s))..%s)`,
-			local, remote, local, remote, remote,
-		))
+		parts = append(parts, fmt.Sprintf(`(@-..%s)`, remoteBookmarkRevset(bookmark)))
 	}
 
 	return strings.Join(parts, " | ")
+}
+
+func remoteBookmarkRevset(bookmark trackedBookmark) string {
+	return fmt.Sprintf(
+		`remote_bookmarks(exact:"%s", remote=exact:"%s")`,
+		escapeRevsetString(bookmark.Name),
+		escapeRevsetString(bookmark.Remote),
+	)
 }
 
 func escapeRevsetString(s string) string {
