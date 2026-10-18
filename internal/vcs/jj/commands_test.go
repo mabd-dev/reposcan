@@ -333,15 +333,15 @@ func trackedBookmarksCommandKey() string {
 	)
 }
 
-// untrackedRemotesCommandKey records the invocation used to discover remote
-// bookmarks that are not tracked locally.
-func untrackedRemotesCommandKey() string {
+// remoteBookmarksCommandKey records the invocation used to list every remote
+// bookmark, tracked or not.
+func remoteBookmarksCommandKey() string {
 	return fakeJJCommandKey(
 		"bookmark",
 		"list",
 		"--all",
 		"-T",
-		`name ++ "|" ++ remote ++ "\n"`,
+		`if(present, name ++ "|" ++ remote ++ "\n")`,
 	)
 }
 

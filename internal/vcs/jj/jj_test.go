@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/mabd-dev/reposcan/internal/vcs"
+	"github.com/mabd-dev/reposcan/pkg/report"
 )
 
 func initJJRepo(t *testing.T, root string, name string) string {
@@ -129,9 +130,10 @@ func TestProviderCheckRepoStateHandlesMissingRemotesAndBookmarks(t *testing.T) {
 		t.Fatalf("expected one jj remote status entry, got %d: %v", len(state.RemoteStatus), state.RemoteStatus)
 	}
 
-	if state.RemoteStatus[0].Ahead != 0 || state.RemoteStatus[0].Behind != 0 {
+	// Like git, a repo without a remote reports -1/-1, rendered as "x".
+	if state.RemoteStatus[0].Ahead != -1 || state.RemoteStatus[0].Behind != -1 {
 		t.Fatalf(
-			"expected jj ahead/behind defaults to be 0/0, got %d/%d",
+			"expected jj ahead/behind without a remote to be -1/-1, got %d/%d",
 			state.RemoteStatus[0].Ahead,
 			state.RemoteStatus[0].Behind,
 		)
@@ -464,6 +466,81 @@ func TestProviderCheckRepoStateCountsFromWorkingCopyParent(t *testing.T) {
 	}
 }
 
+// TestProviderCheckRepoStateReportsBookmarkMissingOnRemote checks that, like a
+// git branch that was never pushed, a local-only bookmark reports -1/-1 for the
+// remote instead of looking in sync.
+func TestProviderCheckRepoStateReportsBookmarkMissingOnRemote(t *testing.T) {
+	if _, err := exec.LookPath("jj"); err != nil {
+		t.Skip("jj binary not available")
+	}
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git binary not available")
+	}
+
+	workPath := initTrackedJJRepo(t).WorkPath
+	if err := os.WriteFile(filepath.Join(workPath, "feat.txt"), []byte("feat\n"), 0o644); err != nil {
+		t.Fatalf("write feature file: %v", err)
+	}
+	runCommand(t, "jj", "-R", workPath, "commit", "-m", "feature work")
+	runCommand(t, "jj", "-R", workPath, "bookmark", "create", "feat", "-r", "@-")
+
+	state, warnings := New().CheckRepoState(workPath)
+	if len(warnings) != 0 {
+		t.Fatalf("unexpected warnings: %v", warnings)
+	}
+
+	if state.Branch != "feat" {
+		t.Fatalf("expected branch display feat, got %q", state.Branch)
+	}
+
+	want := []report.RemoteStatus{{Remote: "origin", Ahead: -1, Behind: -1}}
+	if !reflect.DeepEqual(state.RemoteStatus, want) {
+		t.Fatalf("expected remote status %v, got %v", want, state.RemoteStatus)
+	}
+}
+
+// TestProviderCheckRepoStateReportsDeletedRemoteBookmark checks that a bookmark
+// deleted on the remote reports -1/-1, like a git branch whose remote branch
+// is gone, instead of counting the whole history as ahead.
+func TestProviderCheckRepoStateReportsDeletedRemoteBookmark(t *testing.T) {
+	if _, err := exec.LookPath("jj"); err != nil {
+		t.Skip("jj binary not available")
+	}
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git binary not available")
+	}
+
+	repo := initTrackedJJRepo(t)
+	if err := os.WriteFile(filepath.Join(repo.WorkPath, "local.txt"), []byte("local\n"), 0o644); err != nil {
+		t.Fatalf("write local file: %v", err)
+	}
+	runCommand(t, "jj", "-R", repo.WorkPath, "commit", "-m", "local change")
+	runCommand(t, "jj", "-R", repo.WorkPath, "bookmark", "set", "main", "-r", "@-")
+	// A bare remote refuses to delete its HEAD branch, so point HEAD elsewhere.
+	remoteURL, err := exec.Command("git", "-C", repo.SeedPath, "remote", "get-url", "origin").Output()
+	if err != nil {
+		t.Fatalf("git remote get-url origin: %v", err)
+	}
+	runCommand(t, "git", "-C", repo.SeedPath, "push", "origin", "main:other")
+	runCommand(t, "git", "--git-dir", strings.TrimSpace(string(remoteURL)), "symbolic-ref", "HEAD", "refs/heads/other")
+	runCommand(t, "git", "-C", repo.SeedPath, "push", "origin", "--delete", "main")
+	runCommand(t, "jj", "-R", repo.WorkPath, "git", "fetch")
+
+	state, warnings := New().CheckRepoState(repo.WorkPath)
+	if len(warnings) != 0 {
+		t.Fatalf("unexpected warnings: %v", warnings)
+	}
+
+	if state.Branch != "main" {
+		t.Fatalf("expected branch display main, got %q", state.Branch)
+	}
+
+	want := []report.RemoteStatus{{Remote: "origin", Ahead: -1, Behind: -1}}
+	if !reflect.DeepEqual(state.RemoteStatus, want) {
+		t.Fatalf("expected remote status %v, got %v", want, state.RemoteStatus)
+	}
+}
+
 // TestProviderCheckRepoStateCountsIncomingPerRemoteForMultiTargetConflict
 // guards against one remote's conflict target inflating another remote's
 // behind count. Fetching two diverged remotes leaves main with targets
@@ -741,9 +818,9 @@ func TestProviderCheckRepoStateWarningsIncludeCommandFailureDetails(t *testing.T
 		wantOperation string
 	}{
 		{
-			name:          "repo name",
+			name:          "remotes",
 			failedCommand: fakeJJCommandKey("git", "remote", "list"),
-			wantOperation: "get repo name",
+			wantOperation: "list remotes",
 		},
 		{
 			name:          "branch display",
@@ -757,7 +834,7 @@ func TestProviderCheckRepoStateWarningsIncludeCommandFailureDetails(t *testing.T
 		},
 		{
 			name:          "remote status",
-			failedCommand: trackedBookmarksCommandKey(),
+			failedCommand: remoteBookmarksCommandKey(),
 			wantOperation: "get remote status",
 		},
 	}
@@ -766,11 +843,10 @@ func TestProviderCheckRepoStateWarningsIncludeCommandFailureDetails(t *testing.T
 		t.Run(tt.name, func(t *testing.T) {
 			repoPath := filepath.Join(t.TempDir(), "repo")
 			responses := map[string]fakeJJResponse{
-				fakeJJCommandKey("git", "remote", "list"): {},
+				fakeJJCommandKey("git", "remote", "list"): {Stdout: "origin https://example.com/acme/widgets.git\n"},
 				branchCommandKey():                        {Stdout: "main*?|abc123\n"},
 				fakeJJCommandKey("diff", "--summary"):     {},
-				trackedBookmarksCommandKey():              {},
-				untrackedRemotesCommandKey():              {},
+				remoteBookmarksCommandKey():               {},
 			}
 			responses[tt.failedCommand] = fakeJJResponse{Stderr: "inspection failed", ExitCode: 1}
 			binary := useFakeJJ(t, responses)

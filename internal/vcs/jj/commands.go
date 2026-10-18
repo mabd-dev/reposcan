@@ -21,6 +21,14 @@ type bookmarkRemoteStatus struct {
 	Remote          string
 	OutgoingCommits []string
 	IncomingCommits []string
+	// NoRemoteBookmark is set when the remote has none of the bookmarks, so
+	// there is nothing to count against.
+	NoRemoteBookmark bool
+}
+
+type remote struct {
+	Name string
+	URL  string
 }
 
 var ErrJJActionNotImplemented = errors.New("jj action semantics are not implemented")
@@ -51,20 +59,22 @@ func GetRepoName(repoPath string) (string, error) {
 }
 
 func getRepoName(binary string, repoPath string) (string, error) {
-	remoteURL, err := getFirstRemoteURL(binary, repoPath)
+	remotes, err := getRemotes(binary, repoPath)
 	if err != nil {
 		return "", err
 	}
 
-	if remoteURL == "" {
-		return filepath.Base(repoPath), nil
+	return repoNameFromRemotes(remotes, repoPath), nil
+}
+
+func repoNameFromRemotes(remotes []remote, repoPath string) string {
+	if len(remotes) > 0 {
+		if repoName, ok := parseRepoName(remotes[0].URL); ok {
+			return repoName
+		}
 	}
 
-	if repoName, ok := parseRepoName(remoteURL); ok {
-		return repoName, nil
-	}
-
-	return filepath.Base(repoPath), nil
+	return filepath.Base(repoPath)
 }
 
 func GetFirstRemoteURL(repoPath string) (string, error) {
@@ -72,11 +82,21 @@ func GetFirstRemoteURL(repoPath string) (string, error) {
 }
 
 func getFirstRemoteURL(binary string, repoPath string) (string, error) {
-	output, err := runJJCommand(binary, repoPath, "git", "remote", "list")
-	if err != nil {
+	remotes, err := getRemotes(binary, repoPath)
+	if err != nil || len(remotes) == 0 {
 		return "", err
 	}
 
+	return remotes[0].URL, nil
+}
+
+func getRemotes(binary string, repoPath string) ([]remote, error) {
+	output, err := runJJCommand(binary, repoPath, "git", "remote", "list")
+	if err != nil {
+		return nil, err
+	}
+
+	remotes := []remote{}
 	for _, line := range strings.Split(output, "\n") {
 		line = strings.TrimSpace(line)
 		if line == "" || strings.HasPrefix(line, "Done importing changes") {
@@ -85,11 +105,11 @@ func getFirstRemoteURL(binary string, repoPath string) (string, error) {
 
 		parts := strings.Fields(line)
 		if len(parts) >= 2 {
-			return parts[1], nil
+			remotes = append(remotes, remote{Name: parts[0], URL: parts[1]})
 		}
 	}
 
-	return "", nil
+	return remotes, nil
 }
 
 func GetBranchDisplay(repoPath string) (string, error) {
@@ -97,6 +117,13 @@ func GetBranchDisplay(repoPath string) (string, error) {
 }
 
 func getBranchDisplay(binary string, repoPath string) (string, error) {
+	display, _, err := getBranch(binary, repoPath)
+	return display, err
+}
+
+// getBranch returns the branch display and whether it names bookmarks, as
+// opposed to a change ID or "-" fallback.
+func getBranch(binary string, repoPath string) (string, bool, error) {
 	output, err := runJJCommand(
 		binary,
 		repoPath,
@@ -108,12 +135,12 @@ func getBranchDisplay(binary string, repoPath string) (string, error) {
 		`bookmarks.join(",") ++ "|" ++ change_id.short() ++ "\n"`,
 	)
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 
 	output = strings.TrimSpace(output)
 	if output == "" {
-		return "-", nil
+		return "-", false, nil
 	}
 
 	fallback := "-"
@@ -132,7 +159,7 @@ func getBranchDisplay(binary string, repoPath string) (string, error) {
 		}
 
 		if bookmarkDisplay := cleanBookmarkDisplay(parts[0]); bookmarkDisplay != "" {
-			return bookmarkDisplay, nil
+			return bookmarkDisplay, true, nil
 		}
 
 		if changeID := strings.TrimSpace(parts[1]); changeID != "" && fallback == "-" {
@@ -142,13 +169,13 @@ func getBranchDisplay(binary string, repoPath string) (string, error) {
 
 	movedDisplay, err := getMovedBookmarkDisplay(binary, repoPath)
 	if err != nil {
-		return "", err
+		return "", false, err
 	}
 	if movedDisplay != "" {
-		return movedDisplay, nil
+		return movedDisplay, true, nil
 	}
 
-	return fallback, nil
+	return fallback, false, nil
 }
 
 // getMovedBookmarkDisplay finds tracked bookmarks that moved past @ when no
@@ -325,25 +352,33 @@ func getIncomingCommits(binary string, repoPath string) ([]string, error) {
 	return parseCommitSummaries(output), nil
 }
 
+// getBookmarkRemoteStatuses compares each bookmark with the bookmark of the
+// same name on every remote, like the git provider compares the current branch
+// with <remote>/<branch>. Tracking does not matter. A remote that has none of
+// the bookmarks, or every remote when there are no bookmarks, gets a
+// NoRemoteBookmark entry.
 func getBookmarkRemoteStatuses(
 	binary string,
 	repoPath string,
 	bookmarkNames []string,
+	remoteNames []string,
 ) ([]bookmarkRemoteStatus, error) {
-	if len(bookmarkNames) == 0 {
+	if len(remoteNames) == 0 {
 		return []bookmarkRemoteStatus{}, nil
 	}
 
-	trackedBookmarks, err := getTrackedBookmarks(binary, repoPath)
-	if err != nil {
-		return nil, err
+	onRemote := map[trackedBookmark]struct{}{}
+	if len(bookmarkNames) > 0 {
+		remoteBookmarks, err := getRemoteBookmarks(binary, repoPath)
+		if err != nil {
+			return nil, err
+		}
+		for _, bookmark := range remoteBookmarks {
+			onRemote[bookmark] = struct{}{}
+		}
 	}
 
-	// Loaded at most once, and only when a bookmark has no tracked remote.
-	var remoteBookmarks []trackedBookmark
-	remoteBookmarksLoaded := false
-
-	statuses := []bookmarkRemoteStatus{}
+	names := []string{}
 	seenBookmarks := map[string]struct{}{}
 	for _, bookmarkName := range bookmarkNames {
 		bookmarkName = cleanBookmarkName(bookmarkName)
@@ -354,21 +389,19 @@ func getBookmarkRemoteStatuses(
 			continue
 		}
 		seenBookmarks[bookmarkName] = struct{}{}
+		names = append(names, bookmarkName)
+	}
 
-		remotes := matchingRemotes(trackedBookmarks, bookmarkName)
-		if len(remotes) == 0 {
-			if !remoteBookmarksLoaded {
-				remoteBookmarks, err = getRemoteBookmarks(binary, repoPath)
-				if err != nil {
-					return nil, err
-				}
-				remoteBookmarksLoaded = true
+	// Remotes stay in configured order, as in the git provider.
+	statuses := []bookmarkRemoteStatus{}
+	for _, remoteName := range remoteNames {
+		found := false
+		for _, name := range names {
+			tb := trackedBookmark{Name: name, Remote: remoteName}
+			if _, ok := onRemote[tb]; !ok {
+				continue
 			}
-			remotes = matchingRemotes(remoteBookmarks, bookmarkName)
-		}
-
-		for _, remote := range remotes {
-			tb := trackedBookmark{Name: bookmarkName, Remote: remote}
+			found = true
 
 			outgoingCommits, err := getCommitsForRevset(
 				binary,
@@ -389,28 +422,24 @@ func getBookmarkRemoteStatuses(
 			}
 
 			statuses = append(statuses, bookmarkRemoteStatus{
-				Remote:          remote,
+				Remote:          remoteName,
 				OutgoingCommits: outgoingCommits,
 				IncomingCommits: incomingCommits,
 			})
+		}
+
+		if !found {
+			statuses = append(statuses, bookmarkRemoteStatus{Remote: remoteName, NoRemoteBookmark: true})
 		}
 	}
 
 	return statuses, nil
 }
 
-func matchingRemotes(bookmarks []trackedBookmark, name string) []string {
-	var remotes []string
-	for _, b := range bookmarks {
-		if b.Name == name {
-			remotes = append(remotes, b.Remote)
-		}
-	}
-	return remotes
-}
-
 // getRemoteBookmarks lists every remote bookmark, tracked or not, excluding
-// jj's synthetic "git" remote.
+// jj's synthetic "git" remote. Newer jj keeps a remote bookmark that was
+// deleted on the remote as an absent entry until it is untracked; it is left
+// out so it reports like a missing branch instead of counting all history.
 func getRemoteBookmarks(binary string, repoPath string) ([]trackedBookmark, error) {
 	output, err := runJJCommand(
 		binary,
@@ -421,7 +450,7 @@ func getRemoteBookmarks(binary string, repoPath string) ([]trackedBookmark, erro
 		// No name argument: its pattern syntax differs across jj versions, so
 		// callers match names exactly instead.
 		"-T",
-		`name ++ "|" ++ remote ++ "\n"`,
+		`if(present, name ++ "|" ++ remote ++ "\n")`,
 	)
 	if err != nil {
 		return nil, err
