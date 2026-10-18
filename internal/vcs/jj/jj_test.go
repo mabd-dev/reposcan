@@ -552,6 +552,163 @@ func TestProviderCheckRepoStateCountsIncomingPerRemoteForMultiTargetConflict(t *
 	}
 }
 
+// TestProviderCheckRepoStateFollowsBookmarkMovedPastWorkingCopy covers a fetch
+// that fast-forwards main while @ stays on the old commit: reposcan should
+// still show main and count the fetched commit as behind.
+func TestProviderCheckRepoStateFollowsBookmarkMovedPastWorkingCopy(t *testing.T) {
+	if _, err := exec.LookPath("jj"); err != nil {
+		t.Skip("jj binary not available")
+	}
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git binary not available")
+	}
+
+	tests := []struct {
+		name      string
+		setup     func(t *testing.T, repo trackedJJRepo)
+		wantAhead int
+	}{
+		{name: "only main"},
+		{
+			name: "local commit",
+			setup: func(t *testing.T, repo trackedJJRepo) {
+				workPath := repo.WorkPath
+				if err := os.WriteFile(filepath.Join(workPath, "local.txt"), []byte("local\n"), 0o644); err != nil {
+					t.Fatalf("write local file: %v", err)
+				}
+				runCommand(t, "jj", "-R", workPath, "commit", "-m", "local change")
+			},
+			wantAhead: 1,
+		},
+		{
+			// feat has no remote, so it is not shown next to main.
+			name: "local-only bookmark off the same commit",
+			setup: func(t *testing.T, repo trackedJJRepo) {
+				workPath := repo.WorkPath
+				runCommand(t, "jj", "-R", workPath, "new", "main", "-m", "feature work")
+				if err := os.WriteFile(filepath.Join(workPath, "feat.txt"), []byte("feat\n"), 0o644); err != nil {
+					t.Fatalf("write feature file: %v", err)
+				}
+				runCommand(t, "jj", "-R", workPath, "bookmark", "create", "feat", "-r", "@")
+				runCommand(t, "jj", "-R", workPath, "new", "main")
+			},
+		},
+		{
+			// feat branches off @'s own parent C, which is newer than the commit
+			// shared with main; it must not hide main. C is unpushed, so it
+			// counts as ahead.
+			name: "local-only bookmark between working copy and main",
+			setup: func(t *testing.T, repo trackedJJRepo) {
+				workPath := repo.WorkPath
+				runCommand(t, "jj", "-R", workPath, "new", "main", "-m", "C")
+				runCommand(t, "jj", "-R", workPath, "new", "-m", "feature work")
+				if err := os.WriteFile(filepath.Join(workPath, "feat.txt"), []byte("feat\n"), 0o644); err != nil {
+					t.Fatalf("write feature file: %v", err)
+				}
+				runCommand(t, "jj", "-R", workPath, "bookmark", "create", "feat", "-r", "@")
+				runCommand(t, "jj", "-R", workPath, "new", "feat-", "-m", "W")
+			},
+			wantAhead: 1,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo := initTrackedJJRepo(t)
+			if tt.setup != nil {
+				tt.setup(t, repo)
+			}
+
+			seedFile := filepath.Join(repo.SeedPath, "README.md")
+			if err := os.WriteFile(seedFile, []byte("one\nremote\n"), 0o644); err != nil {
+				t.Fatalf("write seed file: %v", err)
+			}
+			runCommand(t, "git", "-C", repo.SeedPath, "commit", "-am", "remote change")
+			runCommand(t, "git", "-C", repo.SeedPath, "push", "origin", "main")
+			runCommand(t, "jj", "-R", repo.WorkPath, "git", "fetch")
+
+			state, warnings := New().CheckRepoState(repo.WorkPath)
+			if len(warnings) != 0 {
+				t.Fatalf("unexpected warnings: %v", warnings)
+			}
+
+			if state.Branch != "main" {
+				t.Fatalf("expected branch display main, got %q", state.Branch)
+			}
+
+			if len(state.RemoteStatus) != 1 {
+				t.Fatalf("expected one jj remote status entry, got %d: %v", len(state.RemoteStatus), state.RemoteStatus)
+			}
+
+			status := state.RemoteStatus[0]
+			if status.Remote != "origin" || status.Ahead != tt.wantAhead || status.Behind != 1 {
+				t.Fatalf("expected origin %d/1, got %q %d/%d", tt.wantAhead, status.Remote, status.Ahead, status.Behind)
+			}
+		})
+	}
+}
+
+// TestProviderCheckRepoStateKeepsChangeIDWhenBookmarkIsUnclear checks that the
+// moved-bookmark fallback does not guess: sharing only root() with main, or a
+// fetch that leaves main and a tracked feature bookmark both past @, keeps the
+// change ID because jj does not record which bookmark @ started from.
+func TestProviderCheckRepoStateKeepsChangeIDWhenBookmarkIsUnclear(t *testing.T) {
+	if _, err := exec.LookPath("jj"); err != nil {
+		t.Skip("jj binary not available")
+	}
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git binary not available")
+	}
+
+	tests := []struct {
+		name  string
+		setup func(t *testing.T, repo trackedJJRepo)
+	}{
+		{
+			name: "working copy off root",
+			setup: func(t *testing.T, repo trackedJJRepo) {
+				runCommand(t, "jj", "-R", repo.WorkPath, "new", "root()")
+			},
+		},
+		{
+			name: "main and a tracked feature bookmark past the working copy",
+			setup: func(t *testing.T, repo trackedJJRepo) {
+				runCommand(t, "git", "-C", repo.SeedPath, "checkout", "-b", "feature")
+				if err := os.WriteFile(filepath.Join(repo.SeedPath, "feature.txt"), []byte("feature\n"), 0o644); err != nil {
+					t.Fatalf("write feature file: %v", err)
+				}
+				runCommand(t, "git", "-C", repo.SeedPath, "add", "feature.txt")
+				runCommand(t, "git", "-C", repo.SeedPath, "commit", "-m", "feature work")
+				runCommand(t, "git", "-C", repo.SeedPath, "push", "origin", "feature")
+				runCommand(t, "git", "-C", repo.SeedPath, "checkout", "main")
+				if err := os.WriteFile(filepath.Join(repo.SeedPath, "README.md"), []byte("one\nremote\n"), 0o644); err != nil {
+					t.Fatalf("write seed file: %v", err)
+				}
+				runCommand(t, "git", "-C", repo.SeedPath, "commit", "-am", "remote change")
+				runCommand(t, "git", "-C", repo.SeedPath, "push", "origin", "main")
+				runCommand(t, "jj", "-R", repo.WorkPath, "git", "fetch")
+				runCommand(t, "jj", "-R", repo.WorkPath, "bookmark", "track", "feature@origin")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo := initTrackedJJRepo(t)
+			tt.setup(t, repo)
+
+			state, warnings := New().CheckRepoState(repo.WorkPath)
+			if len(warnings) != 0 {
+				t.Fatalf("unexpected warnings: %v", warnings)
+			}
+
+			if strings.Contains(state.Branch, "main") || strings.Contains(state.Branch, "feature") {
+				t.Fatalf("expected a change id, got %q", state.Branch)
+			}
+		})
+	}
+}
+
 func TestProviderCheckRepoStateWarnsWhenBinaryMissing(t *testing.T) {
 	repoPath := filepath.Join(t.TempDir(), "repo")
 

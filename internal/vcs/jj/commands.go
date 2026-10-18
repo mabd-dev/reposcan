@@ -140,7 +140,82 @@ func getBranchDisplay(binary string, repoPath string) (string, error) {
 		}
 	}
 
+	movedDisplay, err := getMovedBookmarkDisplay(binary, repoPath)
+	if err != nil {
+		return "", err
+	}
+	if movedDisplay != "" {
+		return movedDisplay, nil
+	}
+
 	return fallback, nil
+}
+
+// getMovedBookmarkDisplay finds tracked bookmarks that moved past @ when no
+// bookmark sits below it, e.g. after jj git fetch fast-forwards main while the
+// working copy stays on the old commit. Candidates are the tracked bookmarks at
+// or after the newest commit @ shares with any tracked bookmark. Local-only
+// bookmarks are left out of the search so they cannot pull the shared commit
+// away from the tracked ones; they have no remote updates to report anyway.
+//
+// jj does not record which bookmark @ started from, so the result must be
+// unambiguous: sharing only root() says nothing, and candidates on more than
+// one commit (e.g. main moved and a feature bookmark branched off the shared
+// commit) could be either. Both cases return "" so the caller keeps the change
+// ID.
+func getMovedBookmarkDisplay(binary string, repoPath string) (string, error) {
+	trackedBookmarks, err := getTrackedBookmarks(binary, repoPath)
+	if err != nil {
+		return "", err
+	}
+
+	tracked := map[string]struct{}{}
+	parts := []string{}
+	for _, bookmark := range trackedBookmarks {
+		if _, ok := tracked[bookmark.Name]; ok {
+			continue
+		}
+		tracked[bookmark.Name] = struct{}{}
+		parts = append(parts, fmt.Sprintf(`bookmarks(exact:"%s")`, escapeRevsetString(bookmark.Name)))
+	}
+	if len(parts) == 0 {
+		return "", nil
+	}
+
+	trackedLocal := strings.Join(parts, " | ")
+	output, err := runJJCommand(
+		binary,
+		repoPath,
+		"log",
+		"-r",
+		fmt.Sprintf("(%s) & (heads(::@ & ::(%s)) ~ root())::", trackedLocal, trackedLocal),
+		"--no-graph",
+		"-T",
+		`bookmarks.join(",") ++ "\n"`,
+	)
+	if err != nil {
+		return "", err
+	}
+
+	lines := []string{}
+	for _, line := range strings.Split(output, "\n") {
+		if strings.TrimSpace(line) != "" {
+			lines = append(lines, line)
+		}
+	}
+	if len(lines) != 1 {
+		return "", nil
+	}
+
+	// The commit can carry other bookmarks too, so filter names again.
+	names := []string{}
+	for _, name := range strings.Split(cleanBookmarkDisplay(lines[0]), ",") {
+		if _, ok := tracked[name]; ok {
+			names = append(names, name)
+		}
+	}
+
+	return strings.Join(names, ","), nil
 }
 
 func cleanBookmarkDisplay(display string) string {
