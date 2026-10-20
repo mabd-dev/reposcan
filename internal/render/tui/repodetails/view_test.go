@@ -203,3 +203,23 @@ func TestUncommittedFilesTruncationIncludesRemainingCount(t *testing.T) {
 		"  ... (+1 more)",
 	}, lines)
 }
+
+// git -z and jj print file names raw. Control characters must be shown
+// escaped so each file stays on one row of the height budget and cannot send
+// terminal escape sequences.
+func TestUncommittedFilesEscapeControlCharacters(t *testing.T) {
+	repoState := createRepoState(
+		[]string{"?? a\nb", "?? esc\x1b[31mred", "?? ünïcødé file.txt"},
+		[]string{},
+	)
+	model := createModel(0, repoState)
+	model.UpdateSize(6)
+
+	lines := model.buildUncommittedFiles()
+
+	assert.Equal(t, []string{
+		`?? a\nb`,
+		`?? esc\x1b[31mred`,
+		"?? ünïcødé file.txt",
+	}, lines)
+}
