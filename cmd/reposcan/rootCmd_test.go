@@ -99,6 +99,12 @@ func TestRootCmdRunE_WritesJSONToStdoutAndOutputDir(t *testing.T) {
 }
 
 func TestRun_Telemetry(t *testing.T) {
+	// Clear any token injected via -ldflags so telemetry prints to stdout
+	// instead of sending real events to Mixpanel.
+	oldToken := mixpanelToken
+	mixpanelToken = ""
+	t.Cleanup(func() { mixpanelToken = oldToken })
+
 	tests := []struct {
 		name        string
 		noTelemetry bool
@@ -110,8 +116,6 @@ func TestRun_Telemetry(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Without a build-time mixpanelToken, telemetry prints to stdout
-			// instead of calling Mixpanel.
 			isolateHome(t)
 			cfg := config.Defaults()
 			cfg.Roots = []string{t.TempDir()}
