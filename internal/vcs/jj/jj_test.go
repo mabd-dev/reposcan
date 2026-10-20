@@ -147,17 +147,31 @@ func TestProviderCheckRepoStateCollectsUncommittedFiles(t *testing.T) {
 		t.Fatalf("write dirty file: %v", err)
 	}
 
-	state, warnings := New().CheckRepoState(repoPath)
-	if len(warnings) != 0 {
-		t.Fatalf("unexpected warnings: %v", warnings)
+	// The process never runs from the repo, so both cases also check that paths
+	// are relative to the repo root rather than the process working directory.
+	// A relative repo path comes from a relative scan root such as -r work.
+	tests := []struct {
+		name     string
+		repoPath string
+	}{
+		{name: "absolute repo path", repoPath: repoPath},
+		{name: "relative repo path", repoPath: "dirty"},
 	}
 
-	if len(state.UncommitedFiles) != 1 {
-		t.Fatalf("expected 1 uncommitted file, got %d: %v", len(state.UncommitedFiles), state.UncommitedFiles)
-	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Chdir(root)
 
-	if !strings.Contains(state.UncommitedFiles[0], "hello.txt") {
-		t.Fatalf("expected summary to mention hello.txt, got %v", state.UncommitedFiles)
+			state, warnings := New().CheckRepoState(tt.repoPath)
+			if len(warnings) != 0 {
+				t.Fatalf("unexpected warnings: %v", warnings)
+			}
+
+			want := []string{"A hello.txt"}
+			if !reflect.DeepEqual(state.UncommitedFiles, want) {
+				t.Fatalf("uncommitted files = %q, want %q", state.UncommitedFiles, want)
+			}
+		})
 	}
 }
 
@@ -551,7 +565,7 @@ func TestProviderCheckRepoStateWarningsIncludeCommandFailureDetails(t *testing.T
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			repoPath := filepath.Join(t.TempDir(), "repo")
+			repoPath := t.TempDir()
 			responses := map[string]fakeJJResponse{
 				fakeJJCommandKey("git", "remote", "list"): {},
 				branchCommandKey():                        {Stdout: "main*?|abc123\n"},

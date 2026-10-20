@@ -2,7 +2,6 @@ package jj
 
 import (
 	"errors"
-	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -14,7 +13,7 @@ import (
 // are assembled into a complete RepoState and that the provider advertises the
 // VCS type consumed by the registry.
 func TestProviderCheckRepoStateWithFakeJJ(t *testing.T) {
-	repoPath := filepath.Join(t.TempDir(), "checkout")
+	repoPath := t.TempDir()
 	bookmark := trackedBookmark{Name: "main", Remote: "origin"}
 	outgoingRevset := buildTrackedOutgoingRevset([]trackedBookmark{bookmark})
 	incomingRevset := buildTrackedIncomingRevset([]trackedBookmark{bookmark})

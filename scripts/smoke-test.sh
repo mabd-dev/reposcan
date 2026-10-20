@@ -224,6 +224,8 @@ if [ "$HAS_JJ" = "1" ]; then
     "$(rs -r "$FIX" -o json -f all | jq -r '[.repoStates[] | select(.repo=="jjrepo")][0].vcsType')"
   assert_eq "jj working-copy change detected" "1" \
     "$(rs -r "$FIX" -o json -f all | jq '[.repoStates[] | select(.repo=="jjrepo")][0].uncommitedFiles | length')"
+  assert_eq "jj uncommitted path is repo-relative" "A file.txt" \
+    "$(rs -r "$FIX" -o json -f all | jq -r '[.repoStates[] | select(.repo=="jjrepo")][0].uncommitedFiles[0]')"
 else
   skip "jj state checks"
 fi
@@ -343,7 +345,6 @@ bug_worktree_repo_name() {
   name=$(rs -r "$FIX" -o json -f all | jq -r --arg p /wt-linked '[.repoStates[] | select(.path|endswith($p))][0].repo')
   [ "$name" = "wt-main" ]
 }
-bug_jj_relative_paths()     { field jjrepo .uncommitedFiles[0] | grep -q '\.\./\.\./'; }
 bug_jj_null_stashes()       { [ "$(field jjrepo .stashes)" = "null" ]; }
 
 reset_config
@@ -355,7 +356,6 @@ reset_config
 known_bug "repo with no upstream reports ahead/behind as -1"                 bug_no_upstream_minus_one
 known_bug "linked worktree row is named after the main repo, not its dir"    bug_worktree_repo_name
 if [ "$HAS_JJ" = "1" ]; then
-  known_bug "jj uncommitted paths rendered relative to cwd (../../.. chain)" bug_jj_relative_paths
   known_bug "jj repos emit stashes:null while git emits stashes:[]"          bug_jj_null_stashes
 fi
 

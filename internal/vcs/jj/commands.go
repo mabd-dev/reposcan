@@ -448,7 +448,12 @@ func RunJJCommand(repoPath string, args ...string) (string, error) {
 }
 
 func runJJCommand(binary string, repoPath string, args ...string) (string, error) {
-	cmd := exec.Command(binary, append([]string{"-R", repoPath}, args...)...)
+	// jj prints file paths relative to its working directory, even with -R, so
+	// run it from the repo. -R . still pins the repo so jj never falls back to a
+	// parent one, and unlike -R repoPath it is not re-resolved against Dir when
+	// repoPath is relative.
+	cmd := exec.Command(binary, append([]string{"-R", "."}, args...)...)
+	cmd.Dir = repoPath
 
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
