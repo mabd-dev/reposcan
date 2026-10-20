@@ -44,15 +44,38 @@ func GetRepoBranch(path string) (branchName string, err error) {
 // GetUncommitedFiles returns the list of uncommitted files (status porcelain)
 // for the Git repository at path.
 func GetUncommitedFiles(path string) (changes []string, err error) {
-	str, err := RunGitCommand(path, "status", "--porcelain=v1", "-uall")
+	// -z prints paths verbatim. Without it git C-quotes paths that contain
+	// spaces or non-ASCII characters.
+	str, err := RunGitCommand(path, "status", "--porcelain=v1", "-z", "-uall")
 	if err != nil {
 		return []string{}, err
 	}
 
-	changes = strings.Split(strings.TrimRight(str, "\n"), "\n")
-	changes = removeEmptyStrings(changes)
+	return parsePorcelainZ(str), nil
+}
 
-	return changes, nil
+// parsePorcelainZ converts `git status --porcelain=v1 -z` output into the
+// "XY path" and "XY orig -> path" lines of the newline-separated format.
+func parsePorcelainZ(output string) []string {
+	changes := []string{}
+	fields := strings.Split(output, "\x00")
+
+	for i := 0; i < len(fields); i++ {
+		entry := fields[i]
+		if len(entry) < 4 {
+			continue
+		}
+
+		// A rename or copy is followed by a separate field with the original path.
+		if strings.ContainsAny(entry[:2], "RC") && i+1 < len(fields) {
+			i++
+			entry = entry[:3] + fields[i] + " -> " + entry[3:]
+		}
+
+		changes = append(changes, entry)
+	}
+
+	return changes
 }
 
 // GetStashes returns the list of stash entries (one per `git stash list` line)
