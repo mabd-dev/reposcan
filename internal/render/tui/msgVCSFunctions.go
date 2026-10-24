@@ -20,7 +20,6 @@ const (
 type vcsActionResultMsg struct {
 	Action vcsAction
 	RepoID string
-	Index  int
 	Err    string
 	Output string
 }
@@ -31,6 +30,12 @@ func (m Model) runVCSAction(action vcsAction) (Model, tea.Cmd) {
 		return m, nil
 	}
 
+	// Ignore repeated presses while an action for this repo is still running:
+	// concurrent pulls compete for git locks and produce misleading failures.
+	if getRepoIndex(m.reposBeingUpdated, rs.ID) != -1 {
+		return m, nil
+	}
+
 	actionProvider, ok := m.actionProvider(*rs)
 	if !ok {
 		return m, unsupportedVCSActionAlert(action, rs.VCSType)
@@ -38,7 +43,6 @@ func (m Model) runVCSAction(action vcsAction) (Model, tea.Cmd) {
 
 	repoID := rs.ID
 	repoPath := rs.Path
-	index := m.reposTable.Cursor()
 	m.reposBeingUpdated = append(m.reposBeingUpdated, repoID)
 
 	return m, func() tea.Msg {
@@ -52,7 +56,6 @@ func (m Model) runVCSAction(action vcsAction) (Model, tea.Cmd) {
 		return vcsActionResultMsg{
 			Action: action,
 			RepoID: repoID,
-			Index:  index,
 			Err:    errMessage,
 			Output: stdout,
 		}
@@ -98,11 +101,10 @@ func unsupportedVCSActionAlert(action vcsAction, vcsType string) tea.Cmd {
 
 type vcsRefreshRepoResultMsg struct {
 	newRepoState report.RepoState
-	index        int
 }
 
-func refreshRepo(m Model, index int) tea.Cmd {
-	rs := m.reposTable.GetRepoStateAt(index)
+func refreshRepo(m Model, repoID string) tea.Cmd {
+	rs := m.reposTable.GetRepoStateByID(repoID)
 	if rs == nil {
 		return nil
 	}
@@ -120,10 +122,9 @@ func refreshRepo(m Model, index int) tea.Cmd {
 
 	return func() tea.Msg {
 		newRepoState, _ := provider.CheckRepoState(repoPath)
+		// Keep the stable identity the table and report are keyed by.
+		newRepoState.ID = repoID
 
-		return vcsRefreshRepoResultMsg{
-			newRepoState: newRepoState,
-			index:        index,
-		}
+		return vcsRefreshRepoResultMsg{newRepoState: newRepoState}
 	}
 }

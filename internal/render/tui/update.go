@@ -11,6 +11,13 @@ import (
 )
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	// Background results (VCS actions, refreshes, scans, alerts) must be handled
+	// no matter which view has focus. Routing them through the focus switch
+	// would drop a pull that finishes while the filter or theme switcher is open.
+	if nm, cmd := defaultUpdate(m, msg); nm != nil {
+		return nm, cmd
+	}
+
 	switch m.currentFocus() {
 	case FocusReposTable:
 		return m.updateReposTable(msg)
@@ -72,12 +79,6 @@ func (m Model) updateReposTable(msg tea.Msg) (tea.Model, tea.Cmd) {
 	}
 
 	var cmd tea.Cmd
-	nm, cmd := defaultUpdate(m, msg)
-
-	if nm != nil {
-		return nm, cmd
-	}
-
 	m.reposTable, cmd = m.reposTable.Update(msg)
 	return m, cmd
 }
@@ -161,12 +162,6 @@ func (m Model) keybindingPopup(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	var cmd tea.Cmd
-	nm, cmd := defaultUpdate(m, msg)
-
-	if nm != nil {
-		return nm, cmd
-	}
 	return m, nil
 }
 
@@ -177,25 +172,30 @@ func defaultUpdate(m Model, msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 
 	case vcsActionResultMsg:
+		m.removeRepoBeingUpdated(msg.RepoID)
+
 		if len(msg.Err) != 0 {
 			logger.Warn(msg.Err)
-			m.removeRepoBeingUpdated(msg.RepoID)
-			return m, func() tea.Msg {
-				return alerts.AddAlertMsg{
-					Msg: alerts.Alert{
-						Type:    alerts.MsgTypeError,
-						Title:   "Action failed",
-						Message: msg.Err,
-					},
-				}
-			}
+			// A failed pull can still change the working tree (for example,
+			// merge conflicts), so refresh the repo alongside the alert.
+			return m, tea.Batch(
+				func() tea.Msg {
+					return alerts.AddAlertMsg{
+						Msg: alerts.Alert{
+							Type:    alerts.MsgTypeError,
+							Title:   "Action failed",
+							Message: msg.Err,
+						},
+					}
+				},
+				refreshRepo(m, msg.RepoID),
+			)
 		}
 
-		m.removeRepoBeingUpdated(msg.RepoID)
-		return m, refreshRepo(m, msg.Index)
+		return m, refreshRepo(m, msg.RepoID)
 
 	case vcsRefreshRepoResultMsg:
-		m.reposTable.UpdateRepoState(msg.index, msg.newRepoState)
+		m.reposTable.UpdateRepoState(msg.newRepoState)
 
 		return m, nil
 	case generateReportResponse:

@@ -258,7 +258,7 @@ func TestActionProvider(t *testing.T) {
 
 func TestRefreshRepo(t *testing.T) {
 	m := newTestModel(t)
-	cmd := refreshRepo(m, 0)
+	cmd := refreshRepo(m, "a")
 	if cmd == nil {
 		t.Fatal("expected refresh command")
 	}
@@ -270,7 +270,7 @@ func TestRefreshRepo(t *testing.T) {
 	// nil registry -> unsupported alert (covers getRepoStateAt index)
 	m2 := newTestModel(t)
 	m2.vcsRegistry = nil
-	cmd = refreshRepo(m2, 0)
+	cmd = refreshRepo(m2, "a")
 	if cmd == nil {
 		t.Fatal("expected command for nil registry")
 	}
@@ -280,7 +280,7 @@ func TestRefreshRepo(t *testing.T) {
 	}
 
 	// out-of-range index returns nil
-	if cmd := refreshRepo(m, 99); cmd != nil {
+	if cmd := refreshRepo(m, "missing"); cmd != nil {
 		t.Error("expected nil command for bad index")
 	}
 }
@@ -351,6 +351,71 @@ func TestPullKeybindingVisible(t *testing.T) {
 	}
 }
 
+func batchCommands(t *testing.T, cmd tea.Cmd) []tea.Cmd {
+	t.Helper()
+	if cmd == nil {
+		return nil
+	}
+	msg := cmd()
+	batch, ok := msg.(tea.BatchMsg)
+	if !ok {
+		return []tea.Cmd{func() tea.Msg { return msg }}
+	}
+	cmds := make([]tea.Cmd, 0, len(batch))
+	for _, c := range batch {
+		if c != nil {
+			cmds = append(cmds, c)
+		}
+	}
+	return cmds
+}
+
+func TestBackgroundResultsHandledInAnyFocus(t *testing.T) {
+	for _, focus := range []FocusState{FocusReposFilter, FocusThemeSwitcher} {
+		m := newTestModel(t)
+		m.focusStack = []FocusState{focus}
+
+		updated := report.RepoState{ID: "b", Repo: "beta", Branch: "pulled", Path: "/tmp/beta"}
+		nm, _ := m.Update(vcsRefreshRepoResultMsg{newRepoState: updated})
+		res := nm.(Model)
+
+		if got := res.reposTable.GetRepoStateAt(1); got == nil || got.Branch != "pulled" {
+			t.Errorf("focus %v: refreshed state not applied: %#v", focus, got)
+		}
+	}
+}
+
+func TestPullCompletionAfterFilterChange(t *testing.T) {
+	m := newTestModel(t)
+	m.reposTable.Filter("beta")
+
+	updated := report.RepoState{ID: "a", Repo: "alpha", Branch: "pulled", Path: "/tmp/alpha"}
+	nm, _ := m.Update(vcsRefreshRepoResultMsg{newRepoState: updated})
+	res := nm.(Model)
+
+	if got := res.reposTable.GetRepoStateAt(0); got == nil || got.ID != "b" || got.Branch != "dev" {
+		t.Errorf("visible filtered repo changed: %#v", got)
+	}
+
+	res.reposTable.Filter("")
+	if got := res.reposTable.GetRepoStateAt(0); got == nil || got.Branch != "pulled" {
+		t.Errorf("alpha after clearing filter = %#v, want pulled", got)
+	}
+}
+
+func TestRepeatedPullIgnored(t *testing.T) {
+	m := newTestModel(t)
+	m.reposBeingUpdated = []string{"a"}
+
+	res, cmd := m.runVCSAction(vcsActionPull)
+	if cmd != nil {
+		t.Error("second pull while the first is running should be ignored")
+	}
+	if len(res.reposBeingUpdated) != 1 {
+		t.Errorf("reposBeingUpdated = %v, want the original single entry", res.reposBeingUpdated)
+	}
+}
+
 func TestRunVCSActionNilRepo(t *testing.T) {
 	m := newTestModel(t)
 	m.reposTable = repostable.New(testTheme(t), report.ScanReport{}, 100, 30, repostable.Options{ShowVCS: true})
@@ -386,7 +451,7 @@ func TestRefreshRepoUnknownVCS(t *testing.T) {
 	}}
 	m := newTestModel(t)
 	m.reposTable = repostable.New(testTheme(t), rep, 100, 30, repostable.Options{ShowVCS: true})
-	cmd := refreshRepo(m, 0)
+	cmd := refreshRepo(m, "x")
 	if cmd == nil {
 		t.Fatal("expected unsupported alert command for unknown vcs")
 	}
@@ -583,7 +648,7 @@ func TestDefaultUpdate(t *testing.T) {
 		t.Errorf("window size not updated: %v x %v", res.width, res.height)
 	}
 
-	// vcsActionResultMsg with error
+	// vcsActionResultMsg with error: alert and refresh of the affected repo
 	m.reposBeingUpdated = []string{"a"}
 	nm, cmd := m.Update(vcsActionResultMsg{RepoID: "a", Err: "boom"})
 	res = nm.(Model)
@@ -591,23 +656,30 @@ func TestDefaultUpdate(t *testing.T) {
 		t.Errorf("error should remove repo from being updated, got %v", res.reposBeingUpdated)
 	}
 	if cmd == nil {
-		t.Error("expected error alert command")
+		t.Fatal("expected alert and refresh commands")
 	}
-	if cmd != nil {
-		if _, ok := cmd().(alerts.AddAlertMsg); !ok {
-			t.Errorf("expected error alert message from cmd")
+	sawAlert, sawRefresh := false, false
+	for _, c := range batchCommands(t, cmd) {
+		switch c().(type) {
+		case alerts.AddAlertMsg:
+			sawAlert = true
+		case vcsRefreshRepoResultMsg:
+			sawRefresh = true
 		}
+	}
+	if !sawAlert || !sawRefresh {
+		t.Errorf("error path commands: alert=%v refresh=%v, want both", sawAlert, sawRefresh)
 	}
 
 	// vcsActionResultMsg success
-	nm, _ = m.Update(vcsActionResultMsg{RepoID: "a", Index: 0})
+	nm, _ = m.Update(vcsActionResultMsg{RepoID: "a"})
 	res = nm.(Model)
 	if len(res.reposBeingUpdated) != 0 {
 		t.Errorf("success should remove repo from being updated")
 	}
 
 	// vcsRefreshRepoResultMsg
-	nm, _ = m.Update(vcsRefreshRepoResultMsg{index: 0, newRepoState: report.RepoState{}})
+	nm, _ = m.Update(vcsRefreshRepoResultMsg{newRepoState: report.RepoState{ID: "a"}})
 	res = nm.(Model)
 
 	// generateReportResponse
@@ -784,8 +856,8 @@ func TestDefaultUpdateAlertsMsg(t *testing.T) {
 func TestKeybindingPopupDefaultUpdate(t *testing.T) {
 	m := newTestModel(t)
 	m.focusStack = []FocusState{FocusReposTable, FocusHelpPopup}
-	// non-keypress msg falls through to defaultUpdate (WindowSizeMsg handled there)
-	nm, _ := m.keybindingPopup(tea.WindowSizeMsg{Width: 100, Height: 50})
+	// background messages are handled before focus routing
+	nm, _ := m.Update(tea.WindowSizeMsg{Width: 100, Height: 50})
 	res := nm.(Model)
 	if res.width != 100 || res.height != 50 {
 		t.Errorf("window size not updated in popup: %d x %d", res.width, res.height)
