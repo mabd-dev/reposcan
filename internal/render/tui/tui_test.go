@@ -314,6 +314,43 @@ func TestRunVCSAction(t *testing.T) {
 	}
 }
 
+func TestPullKeybinding(t *testing.T) {
+	m := newTestModel(t)
+
+	nm, cmd := m.Update(tea.KeyPressMsg{Text: "p"})
+	res := nm.(Model)
+	if cmd == nil {
+		t.Fatal("expected pull command for p key")
+	}
+	if len(res.reposBeingUpdated) != 1 || res.reposBeingUpdated[0] != "a" {
+		t.Errorf("expected selected repo recorded as being updated, got %v", res.reposBeingUpdated)
+	}
+
+	msg, ok := cmd().(vcsActionResultMsg)
+	if !ok {
+		t.Fatalf("expected vcsActionResultMsg, got %T", cmd())
+	}
+	if msg.Action != vcsActionPull {
+		t.Errorf("expected pull action, got %q", msg.Action)
+	}
+	if msg.RepoID != "a" {
+		t.Errorf("expected repo ID a, got %q", msg.RepoID)
+	}
+}
+
+func TestPullKeybindingVisible(t *testing.T) {
+	m := newTestModel(t)
+
+	if footer := m.generateKeybindingsFooterView(); !strings.Contains(footer, "Pull") {
+		t.Errorf("footer missing pull keybinding: %q", footer)
+	}
+
+	help := generateHelpPopup(m.theme, reposTableKeybindings)
+	if !strings.Contains(help, "Pull changes for the selected repository") {
+		t.Errorf("help popup missing pull keybinding: %q", help)
+	}
+}
+
 func TestRunVCSActionNilRepo(t *testing.T) {
 	m := newTestModel(t)
 	m.reposTable = repostable.New(testTheme(t), report.ScanReport{}, 100, 30, repostable.Options{ShowVCS: true})

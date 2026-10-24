@@ -127,7 +127,7 @@ Reports include a `vcsType` field so JSON consumers and table users can distingu
 
 Current jj limitations:
 
-- TUI fetch, push, and pull keybindings are not active.
+- TUI fetch and push keybindings are not active. The `p` pull keybinding targets git repositories; jj pull has no direct Git equivalent and returns an error.
 - jj fetch has a command wrapper but is not exposed through TUI actions yet.
 - jj push and pull behavior is not enabled until per-operation semantics are defined.
 - jj incoming/unpulled detection depends on tracked bookmarks and fetched remote bookmark state.
@@ -198,7 +198,8 @@ Each step overrides the one before it
 - [x] Worker pool for speed
 - [x] Support git worktrees
 - [x] ColorScheme switcher
-- [ ] Perform git push/pull/fetch on repos
+- [x] Pull the selected repo from the TUI
+- [ ] Perform git push/fetch on repos
 - [ ] Show branches with their states on each repo
 
 
