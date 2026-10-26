@@ -2,7 +2,6 @@ package jj
 
 import (
 	"errors"
-	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -15,7 +14,7 @@ import (
 // are assembled into a complete RepoState and that the provider advertises the
 // VCS type consumed by the registry.
 func TestProviderCheckRepoStateWithFakeJJ(t *testing.T) {
-	repoPath := filepath.Join(t.TempDir(), "checkout")
+	repoPath := fakeRepoDir(t, "checkout")
 	bookmark := trackedBookmark{Name: "main", Remote: "origin"}
 	outgoingRevset := buildTrackedOutgoingRevset([]trackedBookmark{bookmark})
 	incomingRevset := buildTrackedIncomingRevset([]trackedBookmark{bookmark})
@@ -79,7 +78,7 @@ func TestProviderCheckRepoStateDoesNotMatchChangeIDAsBookmark(t *testing.T) {
 		fakeJJCommandKey("diff", "--summary"):     {},
 	})
 
-	state, warnings := (&Provider{binary: binary}).CheckRepoState(filepath.Join(t.TempDir(), "checkout"))
+	state, warnings := (&Provider{binary: binary}).CheckRepoState(fakeRepoDir(t, "checkout"))
 	if len(warnings) != 0 {
 		t.Fatalf("CheckRepoState() warnings = %v, want none", warnings)
 	}
@@ -107,7 +106,7 @@ func TestProviderCheckRepoStateKeepsChangeIDWhenMovedLookupFails(t *testing.T) {
 		fakeJJCommandKey("diff", "--summary"):     {},
 	})
 
-	state, warnings := (&Provider{binary: binary}).CheckRepoState(filepath.Join(t.TempDir(), "checkout"))
+	state, warnings := (&Provider{binary: binary}).CheckRepoState(fakeRepoDir(t, "checkout"))
 	if len(warnings) != 1 || !strings.Contains(warnings[0], "get branch display") {
 		t.Fatalf("CheckRepoState() warnings = %v, want one branch display warning", warnings)
 	}
@@ -131,7 +130,7 @@ func TestProviderCheckRepoStateSkipsMovedLookupWithoutRemotes(t *testing.T) {
 		fakeJJCommandKey("diff", "--summary"):     {},
 	})
 
-	state, warnings := (&Provider{binary: binary}).CheckRepoState(filepath.Join(t.TempDir(), "checkout"))
+	state, warnings := (&Provider{binary: binary}).CheckRepoState(fakeRepoDir(t, "checkout"))
 	if len(warnings) != 0 {
 		t.Fatalf("CheckRepoState() warnings = %v, want none", warnings)
 	}

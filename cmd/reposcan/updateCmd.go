@@ -72,17 +72,19 @@ type ghRelease struct {
 	TagName string `json:"tag_name"`
 }
 
+// latestReleaseURL is a var so tests can point it at an httptest server.
+var latestReleaseURL = "https://api.github.com/repos/mabd-dev/reposcan/releases/latest"
+
 func getLatestVersion() (string, error) {
-	response, err := http.Get("https://api.github.com/repos/mabd-dev/reposcan/releases/latest")
+	response, err := http.Get(latestReleaseURL)
 	if err != nil {
 		return "", err
 	}
+	defer response.Body.Close()
 
 	if response.StatusCode != 200 {
 		return "", errors.New("failed to fetch latest version")
 	}
-
-	defer response.Body.Close()
 
 	var release ghRelease
 	if err := json.NewDecoder(response.Body).Decode(&release); err != nil {

@@ -900,7 +900,7 @@ func TestProviderCheckRepoStateWarningsIncludeCommandFailureDetails(t *testing.T
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			repoPath := filepath.Join(t.TempDir(), "repo")
+			repoPath := fakeRepoDir(t, "repo")
 			responses := map[string]fakeJJResponse{
 				fakeJJCommandKey("git", "remote", "list"): {Stdout: "origin https://example.com/acme/widgets.git\n"},
 				branchCommandKey():                        {Stdout: "main*?|abc123\n"},
@@ -927,5 +927,27 @@ func TestProviderCheckRepoStateWarningsIncludeCommandFailureDetails(t *testing.T
 				}
 			}
 		})
+	}
+}
+
+// TestProviderCheckRepoStateReportsRepoRelativePaths guards against jj printing
+// changed files relative to the process working directory (the test package
+// dir here) instead of the repo, e.g. "A ../../../../tmp/.../a.txt".
+func TestProviderCheckRepoStateReportsRepoRelativePaths(t *testing.T) {
+	if _, err := exec.LookPath("jj"); err != nil {
+		t.Skip("jj binary not available")
+	}
+
+	repoPath := initJJRepo(t, t.TempDir(), "repo")
+	if err := os.WriteFile(filepath.Join(repoPath, "a.txt"), []byte("a"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	state, warnings := New().CheckRepoState(repoPath)
+	if len(warnings) != 0 {
+		t.Fatalf("unexpected warnings: %v", warnings)
+	}
+	if !reflect.DeepEqual(state.UncommitedFiles, []string{"A a.txt"}) {
+		t.Fatalf("uncommitted files = %q, want [\"A a.txt\"]", state.UncommitedFiles)
 	}
 }

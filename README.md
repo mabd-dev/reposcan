@@ -105,8 +105,15 @@ Common flags
     --json-output-path string   # Write scan report JSON files to this directory (optional)
 -w, --max-workers int           # Number of concurrent git checks (default 8)
 -o, --output string             # Output format: json|interactive|none (default "interactive")
+    --stale-days int            # Only show repos with no local activity for at least N days (0 = disabled)
 -r, --root stringArray          # Root directory to scan (repeatable). Defaults to $HOME if unset in config. (default [$HOME])
   , --debug                     # Enable/Disable debug mode
+```
+
+Only the repos you forgot about (dirty, but untouched for a week)
+```sh
+reposcan --stale-days 7
+reposcan -f unpushed --stale-days 14
 ```
 
 Help
@@ -165,6 +172,10 @@ only = "dirty"
 # Only affects `only = "dirty"`; `only = "stash"` is unaffected.
 countStashAsDirty = false
 
+# Only show repos with no local activity for at least N days (default 0 = disabled).
+# Ignored with only = "unpulled".
+staleDays = 0
+
 # Skip these directories (glob patterns)
 dirIgnore = [
   "/node_modules/",
@@ -194,23 +205,6 @@ check [sample/config.toml](sample/config.toml) for detailed configuration with e
 1. Config in `~/.config/reposcan/config.toml` (if exists)
 2. Cli flags (if exists)
 Each step overrides the one before it
-
-
-## 🛣 Roadmap
-- [x] Scan filesystem for repos
-- [x] Detect uncommitted files, unpushed commits and unpulled commits
-- [x] Detect Git and jj repositories
-- [x] Detect stashed changes
-- [x] Stdout Ouput in 3 formats: json, interactive, none
-- [x] Read user customizable `config.toml` file
-- [x] Export Report to json file
-- [x] Support dirignore
-- [x] Worker pool for speed
-- [x] Support git worktrees
-- [x] ColorScheme switcher
-- [ ] Perform git push/pull/fetch on repos
-- [ ] Show branches with their states on each repo
-
 
 ## Telemetry
 
