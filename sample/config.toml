@@ -15,6 +15,11 @@ only = 'dirty'
 # Only affects only='dirty'; only='stash' is unaffected.
 countStashAsDirty = false
 
+# Only show repos with no local activity (newest of uncommitted-file mtime,
+# HEAD commit date and newest stash date) for at least N days.
+# 0 disables it. Ignored with only='unpulled'. CLI: --stale-days
+staleDays = 0
+
 dirIgnore = [
     # --- Package managers / deps ---
     "**/node_modules/**",

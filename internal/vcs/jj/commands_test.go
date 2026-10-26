@@ -2,8 +2,6 @@ package jj
 
 import (
 	"errors"
-	"os"
-	"path/filepath"
 	"reflect"
 	"testing"
 )
@@ -32,7 +30,7 @@ func TestCommandError(t *testing.T) {
 // TestPublicCommandWrappers verifies the package's current exported command
 // surface. These entry points hardcode "jj", so the fake must be on PATH.
 func TestPublicCommandWrappers(t *testing.T) {
-	repoPath := t.TempDir()
+	repoPath := fakeRepoDir(t, "checkout")
 	responses := map[string]fakeJJResponse{
 		fakeJJCommandKey("git", "remote", "list"): {Stdout: "origin https://example.com/acme/widgets.git\n"},
 		branchCommandKey():                        {Stdout: "main*?|abc123\n"},
@@ -110,11 +108,7 @@ func TestGetRepoName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// The fallback cases expect the directory name, so it must be fixed.
-			repoPath := filepath.Join(t.TempDir(), "checkout")
-			if err := os.Mkdir(repoPath, 0o755); err != nil {
-				t.Fatalf("create repo dir: %v", err)
-			}
+			repoPath := fakeRepoDir(t, "checkout")
 			binary := useFakeJJ(t, map[string]fakeJJResponse{
 				fakeJJCommandKey("git", "remote", "list"): tt.remoteList,
 			})
