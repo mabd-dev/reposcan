@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- fix/jjBranchDisplayAfterFetch: jj repos count ahead/behind from the working copy like git's `HEAD` against every remote, keep showing the bookmark after a fetch moves it past `@`, and show `x` when a remote has no matching bookmark by @frittlechasm in [#98](https://github.com/mabd-dev/reposcan/pull/98)
 - feat/jjSupport: add Jujutsu (jj) repo support alongisde git repos by @frittlechasm in [#62](https://github.com/mabd-dev/reposcan/pull/62)
 - fix/crashInRepoDetails: repo details package crashes if repo state is nil - happens if scan result has no repos by @mabd-dev in [#61](https://github.com/mabd-dev/reposcan/pull/61)
 - feat/colorSchemeSwitcher: change app color scheme from bunch of predefined schemes by @mabd-dev in [#60](https://github.com/mabd-dev/reposcan/pull/60)

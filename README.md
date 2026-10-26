@@ -136,6 +136,8 @@ Current jj limitations:
 - jj push and pull behavior is not enabled until per-operation semantics are defined.
 - jj ahead/behind uses already-fetched remote bookmark state; RepoScan does not fetch.
 - When no bookmark sits below `@` and RepoScan cannot tell which tracked bookmark moved past it, it shows the change ID and `x`.
+- If an old bookmark still sits below `@` when a fetch moves a tracked bookmark past `@`, RepoScan shows the old bookmark
+  and compares with its remote copy.
 - JSON reports do not expose incoming commit details directly.
 - TUI details show shared repository status fields, with limited jj-specific metadata.
 
