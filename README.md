@@ -196,23 +196,6 @@ check [sample/config.toml](sample/config.toml) for detailed configuration with e
 2. Cli flags (if exists)
 Each step overrides the one before it
 
-
-## 🛣 Roadmap
-- [x] Scan filesystem for repos
-- [x] Detect uncommitted files, unpushed commits and unpulled commits
-- [x] Detect Git and jj repositories
-- [x] Detect stashed changes
-- [x] Stdout Ouput in 3 formats: json, interactive, none
-- [x] Read user customizable `config.toml` file
-- [x] Export Report to json file
-- [x] Support dirignore
-- [x] Worker pool for speed
-- [x] Support git worktrees
-- [x] ColorScheme switcher
-- [ ] Perform git push/pull/fetch on repos
-- [ ] Show branches with their states on each repo
-
-
 ## Telemetry
 
 reposcan collects anonymous usage data to help understand how the tool is used and improve it over time.
