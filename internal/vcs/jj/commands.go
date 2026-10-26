@@ -612,8 +612,10 @@ func parseCommitSummaries(output string) []string {
 // as uncommitted files, so the last commit is @-. Counting from @- rather than
 // the local bookmark matters because jj git fetch moves a tracked bookmark
 // forward without moving @, and because jj commit does not move the bookmark.
-// exact: patterns avoid substring matches on older jj (e.g. "main" also
-// matching "maintenance").
+// Incoming excludes ::@ instead of ::@-, which only differs when the remote
+// bookmark already contains @, e.g. after jj git push -c @; @ is local work,
+// not a commit to pull. exact: patterns avoid substring matches on older jj
+// (e.g. "main" also matching "maintenance").
 func buildTrackedOutgoingRevset(bookmarks []trackedBookmark) string {
 	parts := make([]string, 0, len(bookmarks))
 
@@ -628,7 +630,7 @@ func buildTrackedIncomingRevset(bookmarks []trackedBookmark) string {
 	parts := make([]string, 0, len(bookmarks))
 
 	for _, bookmark := range bookmarks {
-		parts = append(parts, fmt.Sprintf(`(@-..%s)`, remoteBookmarkRevset(bookmark)))
+		parts = append(parts, fmt.Sprintf(`(@..%s)`, remoteBookmarkRevset(bookmark)))
 	}
 
 	return strings.Join(parts, " | ")

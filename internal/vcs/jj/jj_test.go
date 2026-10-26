@@ -466,6 +466,65 @@ func TestProviderCheckRepoStateCountsFromWorkingCopyParent(t *testing.T) {
 	}
 }
 
+// TestProviderCheckRepoStateReportsPushedWorkingCopyAsInSync checks that a
+// bookmark pushed from @ is not counted as behind: the remote bookmark contains
+// @, which is local work rather than a commit to pull.
+func TestProviderCheckRepoStateReportsPushedWorkingCopyAsInSync(t *testing.T) {
+	if _, err := exec.LookPath("jj"); err != nil {
+		t.Skip("jj binary not available")
+	}
+	if _, err := exec.LookPath("git"); err != nil {
+		t.Skip("git binary not available")
+	}
+
+	tests := []struct {
+		name string
+		push func(t *testing.T, workPath string)
+	}{
+		{
+			name: "push -c @",
+			push: func(t *testing.T, workPath string) {
+				runCommand(t, "jj", "-R", workPath, "git", "push", "-c", "@")
+			},
+		},
+		{
+			name: "push a bookmark set on @",
+			push: func(t *testing.T, workPath string) {
+				runCommand(t, "jj", "-R", workPath, "bookmark", "set", "feat", "-r", "@")
+				runCommand(t, "jj", "-R", workPath, "git", "push", "-b", "feat")
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// jj git push rejects commits without an author.
+			t.Setenv("JJ_USER", "test")
+			t.Setenv("JJ_EMAIL", "test@example.com")
+
+			workPath := initTrackedJJRepo(t).WorkPath
+			if err := os.WriteFile(filepath.Join(workPath, "feature.txt"), []byte("feature\n"), 0o644); err != nil {
+				t.Fatalf("write feature file: %v", err)
+			}
+			runCommand(t, "jj", "-R", workPath, "describe", "-m", "feature")
+			tt.push(t, workPath)
+
+			state, warnings := New().CheckRepoState(workPath)
+			if len(warnings) != 0 {
+				t.Fatalf("unexpected warnings: %v", warnings)
+			}
+			if len(state.RemoteStatus) != 1 {
+				t.Fatalf("expected one jj remote status entry, got %d: %v", len(state.RemoteStatus), state.RemoteStatus)
+			}
+
+			status := state.RemoteStatus[0]
+			if status.Remote != "origin" || status.Ahead != 0 || status.Behind != 0 {
+				t.Fatalf("expected origin 0/0 after pushing @, got %q %d/%d", status.Remote, status.Ahead, status.Behind)
+			}
+		})
+	}
+}
+
 // TestProviderCheckRepoStateReportsBookmarkMissingOnRemote checks that, like a
 // git branch that was never pushed, a local-only bookmark reports -1/-1 for the
 // remote instead of looking in sync.
