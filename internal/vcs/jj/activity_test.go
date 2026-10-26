@@ -211,8 +211,6 @@ func TestCheckRepoStateWithActivityFailures(t *testing.T) {
 				fakeJJCommandKey("git", "remote", "list"): {},
 				branchCommandKey():                        {Stdout: "main*?|abc123\n"},
 				fakeJJCommandKey("diff", "--summary"):     {Stdout: "M a.txt\n"},
-				trackedBookmarksCommandKey():              {},
-				untrackedRemotesCommandKey():              {},
 				parentCommitDateCommandKey():              {Stdout: commitAt.Format(time.RFC3339)},
 			}
 			if tt.failedCommand != "" {

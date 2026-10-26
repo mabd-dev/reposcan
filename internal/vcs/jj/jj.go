@@ -39,10 +39,11 @@ func (p *Provider) checkRepoState(path string) (report.RepoState, []string, erro
 		Repo:    filepath.Base(path),
 		Branch:  "-",
 		VCSType: string(vcs.TypeJJ),
+		// -1 renders as "x", as for a git repo without a remote.
 		RemoteStatus: []report.RemoteStatus{{
 			Remote: "",
-			Ahead:  0,
-			Behind: 0,
+			Ahead:  -1,
+			Behind: -1,
 		}},
 	}
 
@@ -54,18 +55,25 @@ func (p *Provider) checkRepoState(path string) (report.RepoState, []string, erro
 
 	warnings := []string{}
 
-	repoName, err := getRepoName(p.binary, path)
-	if err != nil {
-		warnings = append(warnings, jjWarning("get repo name", path, err))
-	} else if strings.TrimSpace(repoName) != "" {
-		state.Repo = repoName
+	remotes, remotesErr := getRemotes(p.binary, path)
+	if remotesErr != nil {
+		warnings = append(warnings, jjWarning("list remotes", path, remotesErr))
+	} else {
+		state.Repo = repoNameFromRemotes(remotes, path)
 	}
 
-	branch, err := getBranchDisplay(p.binary, path)
+	// A change ID fallback is not a bookmark name, so it is never compared with
+	// remote bookmarks.
+	var bookmarkNames []string
+	branch, isBookmark, err := getBranch(p.binary, path, len(remotes) > 0)
 	if err != nil {
 		warnings = append(warnings, jjWarning("get branch display", path, err))
-	} else if strings.TrimSpace(branch) != "" {
+	}
+	if strings.TrimSpace(branch) != "" {
 		state.Branch = branch
+		if isBookmark {
+			bookmarkNames = strings.Split(branch, ",")
+		}
 	}
 
 	uncommittedFiles, diffErr := getUncommittedFiles(p.binary, path)
@@ -75,12 +83,30 @@ func (p *Provider) checkRepoState(path string) (report.RepoState, []string, erro
 		state.UncommitedFiles = uncommittedFiles
 	}
 
-	remoteStatuses, err := getBookmarkRemoteStatuses(p.binary, path, strings.Split(state.Branch, ","))
+	if remotesErr != nil || len(remotes) == 0 {
+		return state, warnings, diffErr
+	}
+
+	remoteNames := make([]string, 0, len(remotes))
+	for _, remote := range remotes {
+		remoteNames = append(remoteNames, remote.Name)
+	}
+
+	remoteStatuses, err := getBookmarkRemoteStatuses(p.binary, path, bookmarkNames, remoteNames)
 	if err != nil {
 		warnings = append(warnings, jjWarning("get remote status", path, err))
 	} else if len(remoteStatuses) > 0 {
 		state.RemoteStatus = make([]report.RemoteStatus, 0, len(remoteStatuses))
 		for _, remoteStatus := range remoteStatuses {
+			if remoteStatus.NoRemoteBookmark {
+				state.RemoteStatus = append(state.RemoteStatus, report.RemoteStatus{
+					Remote: remoteStatus.Remote,
+					Ahead:  -1,
+					Behind: -1,
+				})
+				continue
+			}
+
 			state.RemoteStatus = append(state.RemoteStatus, report.RemoteStatus{
 				Remote:          remoteStatus.Remote,
 				Ahead:           len(remoteStatus.OutgoingCommits),

@@ -130,15 +130,25 @@ RepoScan currently discovers and reports on:
 - Git repositories with a `.git` directory or worktree-style `.git` file.
 - jj repositories with a `.jj` directory.
 
-Reports include a `vcsType` field so JSON consumers and table users can distinguish Git and jj repositories. For jj repositories, RepoScan collects read-only state: repository name, current bookmark/change display, uncommitted file summaries, outgoing commits for tracked bookmarks, and incoming/unpulled counts based on already-fetched remote bookmark state.
+Reports include a `vcsType` field so JSON consumers and table users can distinguish Git and jj repositories.
+For jj repositories, RepoScan collects read-only state: repository name, current bookmark/change display,
+uncommitted file summaries, and ahead/behind counts per remote.
+Counts compare with the bookmark of the same name on each remote, the way Git compares `HEAD` with `<remote>/<branch>`.
+Ahead counts commits up to the working copy's parent `@-`, since edits in `@` show as uncommitted files.
+Behind counts remote commits not already in `@`, so pushing `@` itself reads as in sync.
+Tracking does not matter, and a remote without the bookmark shows `x`.
 
 Current jj limitations:
 
 - TUI fetch, push, and pull keybindings are not active.
 - jj fetch has a command wrapper but is not exposed through TUI actions yet.
 - jj push and pull behavior is not enabled until per-operation semantics are defined.
-- jj incoming/unpulled detection depends on tracked bookmarks and fetched remote bookmark state.
-- jj remote status is simplified into a single synthetic status entry.
+- jj ahead/behind uses already-fetched remote bookmark state; RepoScan does not fetch.
+- When no bookmark sits below `@` and RepoScan cannot tell which tracked bookmark moved past it, it shows the change ID and `x`.
+- If another bookmark, such as `main`, sits below `@` when a fetch moves a tracked bookmark past `@`,
+  RepoScan shows that bookmark and compares with its remote copy.
+- Editing `@` after pushing it rewrites `@`, so the remote bookmark still points at the old version.
+  RepoScan then shows 1 behind, and the edits as uncommitted files.
 - JSON reports do not expose incoming commit details directly.
 - TUI details show shared repository status fields, with limited jj-specific metadata.
 
