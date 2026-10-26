@@ -20,6 +20,7 @@ func TestReadFlags_AppliesAllFlags(t *testing.T) {
 		"-o", "json",
 		"-f", "all",
 		"--json-output-path", "/tmp/out",
+		"--stale-days", "7",
 		"-w", "16",
 		"--debug=true",
 		"--no-telemetry=false",
@@ -31,6 +32,9 @@ func TestReadFlags_AppliesAllFlags(t *testing.T) {
 		t.Fatalf("readFlags error: %v", err)
 	}
 
+	if cfg.StaleDays != 7 {
+		t.Fatalf("stale days not applied: %d", cfg.StaleDays)
+	}
 	if len(cfg.Roots) != 2 || cfg.Roots[0] != "/tmp/root1" || cfg.Roots[1] != "/tmp/root2" {
 		t.Fatalf("roots not applied: %#v", cfg.Roots)
 	}

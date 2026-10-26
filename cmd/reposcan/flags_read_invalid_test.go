@@ -34,7 +34,7 @@ func TestReadFlags_InvalidValues_Error(t *testing.T) {
 // Each flag lookup returns an error when the command does not define the flag.
 func TestReadFlags_UndefinedFlag_Errors(t *testing.T) {
 	flags := []string{
-		"root", "dirIgnore", "output", "filter",
+		"root", "dirIgnore", "output", "filter", "stale-days",
 		"json-output-path", "max-workers", "debug", "no-telemetry",
 	}
 

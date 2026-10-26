@@ -60,6 +60,7 @@ func newRootFlagsCmd(skip string) *cobra.Command {
 		"dirIgnore":        func() { cmd.Flags().StringArrayP("dirIgnore", "d", nil, "") },
 		"output":           func() { cmd.Flags().StringP("output", "o", "json", "") },
 		"filter":           func() { cmd.Flags().StringP("filter", "f", "all", "") },
+		"stale-days":       func() { cmd.Flags().Int("stale-days", 0, "") },
 		"json-output-path": func() { cmd.Flags().String("json-output-path", "", "") },
 		"max-workers":      func() { cmd.Flags().IntP("max-workers", "w", 1, "") },
 		"debug":            func() { cmd.Flags().Bool("debug", false, "") },

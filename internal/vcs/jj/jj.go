@@ -24,6 +24,15 @@ func (p *Provider) Type() vcs.Type {
 }
 
 func (p *Provider) CheckRepoState(path string) (report.RepoState, []string) {
+	state, warnings, _ := p.checkRepoState(path)
+	return state, warnings
+}
+
+// checkRepoState is CheckRepoState that also returns why the working-copy
+// changes could not be read, if they could not. An empty UncommitedFiles list
+// alone cannot tell a clean repo from a failure, which matters when dating the
+// repo's last activity.
+func (p *Provider) checkRepoState(path string) (report.RepoState, []string, error) {
 	state := report.RepoState{
 		ID:      utils.Hash(path),
 		Path:    path,
@@ -40,7 +49,7 @@ func (p *Provider) CheckRepoState(path string) (report.RepoState, []string) {
 	if _, err := exec.LookPath(p.binary); err != nil {
 		return state, []string{
 			fmt.Sprintf("Failed to inspect jj repo, path=%s: %v", path, err),
-		}
+		}, err
 	}
 
 	warnings := []string{}
@@ -59,9 +68,9 @@ func (p *Provider) CheckRepoState(path string) (report.RepoState, []string) {
 		state.Branch = branch
 	}
 
-	uncommittedFiles, err := getUncommittedFiles(p.binary, path)
-	if err != nil {
-		warnings = append(warnings, jjWarning("get uncommitted files", path, err))
+	uncommittedFiles, diffErr := getUncommittedFiles(p.binary, path)
+	if diffErr != nil {
+		warnings = append(warnings, jjWarning("get uncommitted files", path, diffErr))
 	} else {
 		state.UncommitedFiles = uncommittedFiles
 	}
@@ -81,7 +90,7 @@ func (p *Provider) CheckRepoState(path string) (report.RepoState, []string) {
 		}
 	}
 
-	return state, warnings
+	return state, warnings, diffErr
 }
 
 func jjWarning(operation string, path string, err error) string {

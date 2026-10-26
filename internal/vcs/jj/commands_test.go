@@ -2,7 +2,6 @@ package jj
 
 import (
 	"errors"
-	"path/filepath"
 	"reflect"
 	"testing"
 )
@@ -31,7 +30,7 @@ func TestCommandError(t *testing.T) {
 // TestPublicCommandWrappers verifies the package's current exported command
 // surface. These entry points hardcode "jj", so the fake must be on PATH.
 func TestPublicCommandWrappers(t *testing.T) {
-	repoPath := filepath.Join(t.TempDir(), "checkout")
+	repoPath := fakeRepoDir(t, "checkout")
 	responses := map[string]fakeJJResponse{
 		fakeJJCommandKey("git", "remote", "list"): {Stdout: "origin https://example.com/acme/widgets.git\n"},
 		branchCommandKey():                        {Stdout: "main*?|abc123\n"},
@@ -109,7 +108,7 @@ func TestGetRepoName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			repoPath := filepath.Join(t.TempDir(), "checkout")
+			repoPath := fakeRepoDir(t, "checkout")
 			binary := useFakeJJ(t, map[string]fakeJJResponse{
 				fakeJJCommandKey("git", "remote", "list"): tt.remoteList,
 			})
@@ -210,7 +209,7 @@ func TestRunJJCommandError(t *testing.T) {
 	binary := useFakeJJ(t, map[string]fakeJJResponse{
 		fakeJJCommandKey("git", "fetch"): {Stderr: "authentication failed\n", ExitCode: 1},
 	})
-	_, err := runJJCommand(binary, "/tmp/repo", "git", "fetch")
+	_, err := runJJCommand(binary, t.TempDir(), "git", "fetch")
 	if err == nil {
 		t.Fatal("runJJCommand() error = nil, want error")
 	}
