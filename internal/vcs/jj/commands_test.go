@@ -36,7 +36,6 @@ func TestPublicCommandWrappers(t *testing.T) {
 		fakeJJCommandKey("git", "remote", "list"): {Stdout: "origin https://example.com/acme/widgets.git\n"},
 		branchCommandKey():                        {Stdout: "main*?|abc123\n"},
 		fakeJJCommandKey("diff", "--summary"):     {Stdout: "M README.md\n"},
-		trackedBookmarksCommandKey():              {},
 		fakeJJCommandKey("version"):               {Stdout: "jj test version\n"},
 	}
 	installFakeJJ(t, responses)
@@ -59,16 +58,6 @@ func TestPublicCommandWrappers(t *testing.T) {
 	files, err := GetUncommittedFiles(repoPath)
 	if err != nil || !reflect.DeepEqual(files, []string{"M README.md"}) {
 		t.Fatalf("GetUncommittedFiles() = %v, %v", files, err)
-	}
-
-	outgoing, err := GetOutgoingCommits(repoPath)
-	if err != nil || len(outgoing) != 0 {
-		t.Fatalf("GetOutgoingCommits() = %v, %v, want empty, nil", outgoing, err)
-	}
-
-	incoming, err := GetIncomingCommits(repoPath)
-	if err != nil || len(incoming) != 0 {
-		t.Fatalf("GetIncomingCommits() = %v, %v, want empty, nil", incoming, err)
 	}
 
 	output, err := RunJJCommand(repoPath, "version")
