@@ -105,8 +105,15 @@ Common flags
     --json-output-path string   # Write scan report JSON files to this directory (optional)
 -w, --max-workers int           # Number of concurrent git checks (default 8)
 -o, --output string             # Output format: json|interactive|none (default "interactive")
+    --stale-days int            # Only show repos with no local activity for at least N days (0 = disabled)
 -r, --root stringArray          # Root directory to scan (repeatable). Defaults to $HOME if unset in config. (default [$HOME])
   , --debug                     # Enable/Disable debug mode
+```
+
+Only the repos you forgot about (dirty, but untouched for a week)
+```sh
+reposcan --stale-days 7
+reposcan -f unpushed --stale-days 14
 ```
 
 Help
@@ -154,6 +161,10 @@ only = "dirty"
 # Count repos whose only local state is stashed work as dirty (default false).
 # Only affects `only = "dirty"`; `only = "stash"` is unaffected.
 countStashAsDirty = false
+
+# Only show repos with no local activity for at least N days (default 0 = disabled).
+# Ignored with only = "unpulled".
+staleDays = 0
 
 # Skip these directories (glob patterns)
 dirIgnore = [

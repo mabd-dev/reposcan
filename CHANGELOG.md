@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- feat/staleDays: add `--stale-days` / `staleDays` to show only repos with no local activity for N days by @mabd-dev in [#79](https://github.com/mabd-dev/reposcan/pull/79)
 - feat/jjSupport: add Jujutsu (jj) repo support alongisde git repos by @frittlechasm in [#62](https://github.com/mabd-dev/reposcan/pull/62)
 - fix/crashInRepoDetails: repo details package crashes if repo state is nil - happens if scan result has no repos by @mabd-dev in [#61](https://github.com/mabd-dev/reposcan/pull/61)
 - feat/colorSchemeSwitcher: change app color scheme from bunch of predefined schemes by @mabd-dev in [#60](https://github.com/mabd-dev/reposcan/pull/60)

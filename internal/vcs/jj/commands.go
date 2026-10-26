@@ -449,6 +449,9 @@ func RunJJCommand(repoPath string, args ...string) (string, error) {
 
 func runJJCommand(binary string, repoPath string, args ...string) (string, error) {
 	cmd := exec.Command(binary, append([]string{"-R", repoPath}, args...)...)
+	// jj prints file paths relative to the working directory, so run inside the
+	// repo to get repo-relative paths like git's.
+	cmd.Dir = repoPath
 
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
