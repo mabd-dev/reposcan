@@ -44,20 +44,30 @@ func GetRepoBranch(path string) (branchName string, err error) {
 // GetUncommitedFiles returns the list of uncommitted files (status porcelain)
 // for the Git repository at path.
 func GetUncommitedFiles(path string) (changes []string, err error) {
+	changes, _, err = getUncommittedChanges(path)
+	return changes, err
+}
+
+// getUncommittedChanges is GetUncommitedFiles that also returns the current
+// path of each change. Paths are taken from the -z output rather than parsed
+// back out of the display lines, where " -> " is ambiguous in file names.
+func getUncommittedChanges(path string) (changes []string, paths []string, err error) {
 	// -z prints paths verbatim. Without it git C-quotes paths that contain
 	// spaces or non-ASCII characters.
 	str, err := RunGitCommand(path, "status", "--porcelain=v1", "-z", "-uall")
 	if err != nil {
-		return []string{}, err
+		return []string{}, nil, err
 	}
 
-	return parsePorcelainZ(str), nil
+	changes, paths = parsePorcelainZ(str)
+	return changes, paths, nil
 }
 
 // parsePorcelainZ converts `git status --porcelain=v1 -z` output into the
-// "XY path" and "XY orig -> path" lines of the newline-separated format.
-func parsePorcelainZ(output string) []string {
-	changes := []string{}
+// "XY path" and "XY orig -> path" lines of the newline-separated format, and
+// the current path of each entry.
+func parsePorcelainZ(output string) (changes []string, paths []string) {
+	changes = []string{}
 	fields := strings.Split(output, "\x00")
 
 	for i := 0; i < len(fields); i++ {
@@ -65,6 +75,7 @@ func parsePorcelainZ(output string) []string {
 		if len(entry) < 4 {
 			continue
 		}
+		paths = append(paths, entry[3:])
 
 		// A rename or copy is followed by a separate field with the original path.
 		if strings.ContainsAny(entry[:2], "RC") && i+1 < len(fields) {
@@ -75,7 +86,7 @@ func parsePorcelainZ(output string) []string {
 		changes = append(changes, entry)
 	}
 
-	return changes
+	return changes, paths
 }
 
 // GetStashes returns the list of stash entries (one per `git stash list` line)

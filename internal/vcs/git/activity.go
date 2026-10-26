@@ -3,7 +3,6 @@ package git
 import (
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -22,7 +21,7 @@ import (
 // so the activity is left unknown (zero) rather than dated from HEAD alone,
 // which could wrongly mark a recently edited repo stale.
 func (p *Provider) CheckRepoStateWithActivity(path string) (report.RepoState, []string) {
-	state, warnings, statusErr := checkRepoState(path)
+	state, warnings, changedPaths, statusErr := checkRepoState(path)
 	state.VCSType = string(vcs.TypeGit)
 
 	if statusErr != nil {
@@ -30,16 +29,16 @@ func (p *Provider) CheckRepoStateWithActivity(path string) (report.RepoState, []
 		return state, warnings
 	}
 
-	lastActivity, activityWarnings := LastActivity(path, state.UncommitedFiles)
+	lastActivity, activityWarnings := LastActivity(path, changedPaths)
 	state.LastActivity = lastActivity
 	return state, append(warnings, activityWarnings...)
 }
 
 // LastActivity returns the most recent local activity in the Git repository at
-// path. uncommittedFiles are `git status --porcelain=v1` lines, as returned by
-// GetUncommitedFiles.
-func LastActivity(path string, uncommittedFiles []string) (latest time.Time, warnings []string) {
-	latest = newestFileModTime(path, uncommittedFiles)
+// path. changedPaths are the repo-relative paths of uncommitted files, as
+// returned by getUncommittedChanges.
+func LastActivity(path string, changedPaths []string) (latest time.Time, warnings []string) {
+	latest = newestFileModTime(path, changedPaths)
 
 	headDate, err := getHeadCommitDate(path)
 	if err != nil {
@@ -87,15 +86,11 @@ func parseGitDate(out string) (time.Time, error) {
 	return time.Parse(time.RFC3339, out)
 }
 
-// newestFileModTime returns the newest mtime among porcelain status entries.
-// Entries that no longer exist on disk (e.g. deletions) are skipped.
-func newestFileModTime(repoPath string, porcelainLines []string) time.Time {
+// newestFileModTime returns the newest mtime among the changed paths. Paths
+// that no longer exist on disk (e.g. deletions) are skipped.
+func newestFileModTime(repoPath string, changedPaths []string) time.Time {
 	var latest time.Time
-	for _, line := range porcelainLines {
-		rel, ok := porcelainPath(line)
-		if !ok {
-			continue
-		}
+	for _, rel := range changedPaths {
 		info, err := os.Lstat(filepath.Join(repoPath, filepath.FromSlash(rel)))
 		if err != nil {
 			continue
@@ -105,58 +100,4 @@ func newestFileModTime(repoPath string, porcelainLines []string) time.Time {
 		}
 	}
 	return latest
-}
-
-// porcelainPath extracts the current path from a `git status --porcelain=v1`
-// line ("XY path" or "XY orig -> path" for renames/copies). C-quoted paths are
-// unquoted.
-func porcelainPath(line string) (string, bool) {
-	if len(line) < 4 {
-		return "", false
-	}
-	p := line[3:]
-
-	if line[0] == 'R' || line[0] == 'C' || line[1] == 'R' || line[1] == 'C' {
-		// Git C-quotes any name containing " -> ", so the separator is the
-		// first " -> " after the (possibly quoted) original path.
-		start := 0
-		if strings.HasPrefix(p, `"`) {
-			end := quotedPathEnd(p)
-			if end < 0 {
-				return "", false
-			}
-			start = end
-		}
-		if i := strings.Index(p[start:], " -> "); i >= 0 {
-			p = p[start+i+len(" -> "):]
-		}
-	}
-
-	if strings.HasPrefix(p, `"`) {
-		unquoted, err := strconv.Unquote(p)
-		if err != nil {
-			return "", false
-		}
-		p = unquoted
-	}
-
-	p = strings.TrimSuffix(p, "/")
-	if p == "" {
-		return "", false
-	}
-	return p, true
-}
-
-// quotedPathEnd returns the index just past the closing quote of the C-quoted
-// string at the start of s, or -1 if it is unterminated.
-func quotedPathEnd(s string) int {
-	for i := 1; i < len(s); i++ {
-		switch s[i] {
-		case '\\':
-			i++
-		case '"':
-			return i + 1
-		}
-	}
-	return -1
 }
