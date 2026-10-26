@@ -121,6 +121,25 @@ func TestProviderCheckRepoStateKeepsChangeIDWhenMovedLookupFails(t *testing.T) {
 	}
 }
 
+// TestProviderCheckRepoStateSkipsMovedLookupWithoutRemotes verifies that a repo
+// without remotes keeps the change ID without running the moved-bookmark
+// lookup. The fake has no response for that lookup, so running it would warn.
+func TestProviderCheckRepoStateSkipsMovedLookupWithoutRemotes(t *testing.T) {
+	binary := useFakeJJ(t, map[string]fakeJJResponse{
+		fakeJJCommandKey("git", "remote", "list"): {},
+		branchCommandKey():                        {Stdout: "|abc123\n"},
+		fakeJJCommandKey("diff", "--summary"):     {},
+	})
+
+	state, warnings := (&Provider{binary: binary}).CheckRepoState(filepath.Join(t.TempDir(), "checkout"))
+	if len(warnings) != 0 {
+		t.Fatalf("CheckRepoState() warnings = %v, want none", warnings)
+	}
+	if state.Branch != "abc123" {
+		t.Fatalf("CheckRepoState() branch = %q, want abc123", state.Branch)
+	}
+}
+
 // TestProviderActions verifies fetch output and the explicit unsupported-action
 // contract for push and pull.
 func TestProviderActions(t *testing.T) {

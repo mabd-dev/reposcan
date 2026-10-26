@@ -56,7 +56,7 @@ func (p *Provider) CheckRepoState(path string) (report.RepoState, []string) {
 	// A change ID fallback is not a bookmark name, so it is never compared with
 	// remote bookmarks.
 	var bookmarkNames []string
-	branch, isBookmark, err := getBranch(p.binary, path)
+	branch, isBookmark, err := getBranch(p.binary, path, len(remotes) > 0)
 	if err != nil {
 		warnings = append(warnings, jjWarning("get branch display", path, err))
 	}

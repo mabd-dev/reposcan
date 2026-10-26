@@ -117,13 +117,15 @@ func GetBranchDisplay(repoPath string) (string, error) {
 }
 
 func getBranchDisplay(binary string, repoPath string) (string, error) {
-	display, _, err := getBranch(binary, repoPath)
+	display, _, err := getBranch(binary, repoPath, true)
 	return display, err
 }
 
 // getBranch returns the branch display and whether it names bookmarks, as
-// opposed to a change ID or "-" fallback.
-func getBranch(binary string, repoPath string) (string, bool, error) {
+// opposed to a change ID or "-" fallback. findMoved enables the moved-bookmark
+// lookup; callers turn it off when the repo has no remotes, since only tracked
+// bookmarks can move past @ and tracking needs a remote.
+func getBranch(binary string, repoPath string, findMoved bool) (string, bool, error) {
 	output, err := runJJCommand(
 		binary,
 		repoPath,
@@ -165,6 +167,10 @@ func getBranch(binary string, repoPath string) (string, bool, error) {
 		if changeID := strings.TrimSpace(parts[1]); changeID != "" && fallback == "-" {
 			fallback = changeID
 		}
+	}
+
+	if !findMoved {
+		return fallback, false, nil
 	}
 
 	// The lookup is optional, so a failure still returns the change ID with
