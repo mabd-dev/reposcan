@@ -229,6 +229,22 @@ assert_eq "lastActivity is the 2020 activity" "2020-01-01" \
   "$(rs -r "$STALE" -o json -f all --stale-days 7 | jq -r '.repoStates[0].lastActivity' | cut -c1-10)"
 assert_eq "lastActivity omitted when disabled" "0" \
   "$(rs -r "$STALE" -o json -f all | jq '[.repoStates[] | select(has("lastActivity"))] | length')"
+if [ "$HAS_JJ" = "1" ]; then
+  STALE_JJ="$TMP/stale-jj"
+  mkdir -p "$STALE_JJ"
+  for name in old recent; do
+    jj git init "$STALE_JJ/$name" >/dev/null 2>&1
+    echo hello > "$STALE_JJ/$name/README.md"
+    JJ_TIMESTAMP="2020-01-01T12:00:00Z" JJ_USER=smoke JJ_EMAIL=smoke@example.com \
+      jj -R "$STALE_JJ/$name" commit -m init >/dev/null 2>&1
+    echo changed >> "$STALE_JJ/$name/README.md"
+  done
+  touch -t 202001011200 "$STALE_JJ/old/README.md"
+  assert_eq "jj: --stale-days 7 keeps only the old repo" "old" \
+    "$(rs -r "$STALE_JJ" -o json -f dirty --stale-days 7 | jq -r '.repoStates[].repo' | sort | tr '\n' ' ' | sed 's/ $//')"
+else
+  skip "jj stale filter"
+fi
 
 # ---------------------------------------------------------------- repo state detail
 
@@ -248,6 +264,8 @@ if [ "$HAS_JJ" = "1" ]; then
     "$(rs -r "$FIX" -o json -f all | jq -r '[.repoStates[] | select(.repo=="jjrepo")][0].vcsType')"
   assert_eq "jj working-copy change detected" "1" \
     "$(rs -r "$FIX" -o json -f all | jq '[.repoStates[] | select(.repo=="jjrepo")][0].uncommitedFiles | length')"
+  assert_eq "jj uncommitted path is repo-relative" "A file.txt" \
+    "$(rs -r "$FIX" -o json -f all | jq -r '[.repoStates[] | select(.repo=="jjrepo")][0].uncommitedFiles[0]')"
 else
   skip "jj state checks"
 fi
@@ -368,7 +386,6 @@ bug_worktree_repo_name() {
   name=$(rs -r "$FIX" -o json -f all | jq -r --arg p /wt-linked '[.repoStates[] | select(.path|endswith($p))][0].repo')
   [ "$name" = "wt-main" ]
 }
-bug_jj_relative_paths()     { field jjrepo .uncommitedFiles[0] | grep -q '\.\./\.\./'; }
 bug_jj_null_stashes()       { [ "$(field jjrepo .stashes)" = "null" ]; }
 
 reset_config
@@ -380,7 +397,6 @@ reset_config
 known_bug "repo with no upstream reports ahead/behind as -1"                 bug_no_upstream_minus_one
 known_bug "linked worktree row is named after the main repo, not its dir"    bug_worktree_repo_name
 if [ "$HAS_JJ" = "1" ]; then
-  known_bug "jj uncommitted paths rendered relative to cwd (../../.. chain)" bug_jj_relative_paths
   known_bug "jj repos emit stashes:null while git emits stashes:[]"          bug_jj_null_stashes
 fi
 

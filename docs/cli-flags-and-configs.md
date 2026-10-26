@@ -61,8 +61,9 @@ below are all available flags
   - Config: `staleDays = 7` (default `0` = disabled)
   - Description: Only show repositories with no local activity for at least `N` days. Composes with `--filter`, so you can surface the repos you forgot about instead of the ones you are actively working on.
     - Last activity is the newest of: the modification time of any uncommitted file, the HEAD commit date, and the newest stash date.
+    - For jj repositories it is the newest of: the modification time of any file changed in the working-copy commit (`@`), and the committer date of its parent (`@-`). jj has no stash.
     - Applies to every filter except `unpulled` (behind-upstream is driven by remote activity, not yours); with `unpulled` it is ignored and a config warning is logged.
-    - Repositories whose last activity cannot be determined are always kept, so the filter never hides a repo it cannot date. jj repositories are currently in this category.
+    - Repositories whose last activity cannot be determined are always kept, so the filter never hides a repo it cannot date.
     - When enabled, JSON entries include a `lastActivity` timestamp. It is omitted when the flag is `0`.
   - Examples:
     - `reposcan --filter uncommitted --stale-days 7`: uncommitted changes untouched for a week.

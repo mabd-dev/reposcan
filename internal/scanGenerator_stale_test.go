@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/mabd-dev/reposcan/internal/config"
+	"github.com/mabd-dev/reposcan/internal/vcs"
 )
 
 // initDatedGitRepo creates a git repo under root with a single commit dated at,
@@ -126,5 +127,61 @@ func TestGenerateScanReport_LastActivityJSONOnlyWhenEnabled(t *testing.T) {
 		if got := strings.Contains(string(b), `"lastActivity"`); got != want {
 			t.Fatalf("staleDays=%d: lastActivity present=%v, want %v\n%s", staleDays, got, want, b)
 		}
+	}
+}
+
+// initDatedJJRepo creates a jj repo under root with a single commit dated at,
+// plus a working-copy change whose mtime is also at.
+func initDatedJJRepo(t *testing.T, root string, name string, at time.Time) string {
+	t.Helper()
+
+	repo := initScanJJRepo(t, root, name)
+	file := filepath.Join(repo, "a.txt")
+	if err := os.WriteFile(file, []byte("a"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	cmd := exec.Command("jj", "-R", repo, "commit", "-m", "init")
+	cmd.Env = append(os.Environ(),
+		"JJ_TIMESTAMP="+at.Format(time.RFC3339),
+		"JJ_USER=test",
+		"JJ_EMAIL=test@example.com",
+	)
+	if out, err := cmd.CombinedOutput(); err != nil {
+		t.Fatalf("jj commit: %v\n%s", err, out)
+	}
+	if err := os.WriteFile(file, []byte("dirty"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chtimes(file, at, at); err != nil {
+		t.Fatal(err)
+	}
+
+	return repo
+}
+
+func TestGenerateScanReport_StaleDaysJJ(t *testing.T) {
+	if _, err := exec.LookPath("jj"); err != nil {
+		t.Skip("jj binary not available")
+	}
+
+	root := t.TempDir()
+	now := time.Now()
+	initDatedJJRepo(t, root, "stale", now.Add(-30*24*time.Hour))
+	initDatedJJRepo(t, root, "fresh", now.Add(-1*time.Hour))
+
+	cfg := config.Defaults()
+	cfg.Roots = []string{root}
+	cfg.DirIgnore = nil
+	cfg.Only = config.OnlyDirty
+	cfg.StaleDays = 7
+
+	r := GenerateScanReport(cfg)
+
+	if len(r.RepoStates) != 1 {
+		t.Fatalf("repos = %v, want only stale", r.RepoStates)
+	}
+	s := r.RepoStates[0]
+	if filepath.Base(s.Path) != "stale" || s.VCSType != string(vcs.TypeJJ) || s.LastActivity.IsZero() {
+		t.Fatalf("got %s (vcs %q, lastActivity %v), want dated jj repo stale", s.Path, s.VCSType, s.LastActivity)
 	}
 }
