@@ -26,12 +26,20 @@ func FindRepos(
 	for _, root := range roots {
 		root = os.ExpandEnv(root)
 
-		_ = filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
+		// WalkDir does not follow a symlinked root, so walk its target and
+		// report paths under the root as the user spelled it.
+		walkRoot := root
+		if resolved, err := filepath.EvalSymlinks(root); err == nil {
+			walkRoot = resolved
+		}
+
+		_ = filepath.WalkDir(walkRoot, func(path string, d fs.DirEntry, err error) error {
 			if err != nil {
 				// possible errors: permission denied
 				warnings = append(warnings, err.Error())
 				return nil
 			}
+			path = filepath.Join(root, strings.TrimPrefix(path, walkRoot))
 
 			if !d.IsDir() {
 				return nil
