@@ -4,6 +4,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 )
@@ -56,6 +57,39 @@ func TestGetStashes_NoStashes(t *testing.T) {
 	}
 	if len(stashes) != 0 {
 		t.Fatalf("expected 0 stashes, got %d: %v", len(stashes), stashes)
+	}
+}
+
+// Paths with spaces or non-ASCII characters must be reported as-is, not in
+// git's C-quoted form, and renames must keep the "orig -> new" shape.
+func TestGetUncommitedFiles_PathsAreNotQuoted(t *testing.T) {
+	gitOrSkip(t)
+	repo := t.TempDir()
+	runGit(t, repo, "init")
+	if err := os.WriteFile(filepath.Join(repo, "base"), []byte("base\n"), 0o644); err != nil {
+		t.Fatalf("write base: %v", err)
+	}
+	runGit(t, repo, "add", "base")
+	runGit(t, repo, "commit", "-m", "base")
+	runGit(t, repo, "mv", "base", "renamed ü")
+	for _, name := range []string{"ünïcødé.txt", "with spaces.txt"} {
+		if err := os.WriteFile(filepath.Join(repo, name), []byte("x\n"), 0o644); err != nil {
+			t.Fatalf("write %s: %v", name, err)
+		}
+	}
+
+	got, err := GetUncommitedFiles(repo)
+	if err != nil {
+		t.Fatalf("GetUncommitedFiles: %v", err)
+	}
+
+	want := []string{
+		"R  base -> renamed ü",
+		"?? with spaces.txt",
+		"?? ünïcødé.txt",
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Fatalf("GetUncommitedFiles() = %q, want %q", got, want)
 	}
 }
 

@@ -130,12 +130,11 @@ func TestLastActivity(t *testing.T) {
 			want: newFileAt,
 		},
 		{
-			name: "quoted path with special characters",
+			name: "non-ASCII path in subdirectory",
 			setup: func(t *testing.T, repo string) {
 				writeFileAt(t, filepath.Join(repo, "a.txt"), "a", oldFileAt)
 				runGitAt(t, repo, commitAt, "add", ".")
 				runGitAt(t, repo, commitAt, "commit", "-m", "init")
-				// Non-ASCII names are C-quoted by git (core.quotePath defaults to true).
 				writeFileAt(t, filepath.Join(repo, "dir", "café.txt"), "x", newFileAt)
 			},
 			want: newFileAt,
@@ -148,47 +147,64 @@ func TestLastActivity(t *testing.T) {
 			runGit(t, repo, "init", "-q")
 			tt.setup(t, repo)
 
-			files, err := GetUncommitedFiles(repo)
+			_, paths, err := getUncommittedChanges(repo)
 			if err != nil {
-				t.Fatalf("GetUncommitedFiles: %v", err)
+				t.Fatalf("getUncommittedChanges: %v", err)
 			}
 
-			got, warnings := LastActivity(repo, files)
+			got, warnings := LastActivity(repo, paths)
 			if len(warnings) != 0 {
 				t.Fatalf("unexpected warnings: %v", warnings)
 			}
 			if !got.Equal(tt.want) {
-				t.Fatalf("LastActivity = %v, want %v (files=%q)", got, tt.want, files)
+				t.Fatalf("LastActivity = %v, want %v (paths=%q)", got, tt.want, paths)
 			}
 		})
 	}
 }
 
-func TestLastActivity_RenameDestinationContainingArrow(t *testing.T) {
+// File names that look like porcelain syntax must still be dated from their
+// mtime: a leading quote, or " -> " on either side of a rename.
+func TestLastActivity_NamesWithPorcelainSyntax(t *testing.T) {
 	gitOrSkip(t)
 	if runtime.GOOS == "windows" {
-		t.Skip("'>' is not allowed in Windows file names")
+		t.Skip(`'"' and '>' are not allowed in Windows file names`)
 	}
 
 	commitAt := time.Date(2026, 1, 10, 12, 0, 0, 0, time.UTC)
 	newFileAt := commitAt.Add(72 * time.Hour)
 
-	repo := t.TempDir()
-	runGit(t, repo, "init", "-q")
-	writeFileAt(t, filepath.Join(repo, "src.txt"), "a", commitAt)
-	runGitAt(t, repo, commitAt, "add", ".")
-	runGitAt(t, repo, commitAt, "commit", "-m", "init")
-	runGitAt(t, repo, commitAt, "mv", "src.txt", "dst -> final.txt")
-	if err := os.Chtimes(filepath.Join(repo, "dst -> final.txt"), newFileAt, newFileAt); err != nil {
-		t.Fatal(err)
+	tests := []struct {
+		name     string
+		original string
+		renameTo string // empty: modify original in place
+	}{
+		{name: "modified file with leading quote", original: `"quoted"`},
+		{name: "rename destination containing arrow", original: "src.txt", renameTo: "dst -> final.txt"},
+		{name: "rename source containing arrow", original: "a -> b", renameTo: "new.txt"},
 	}
 
-	files, err := GetUncommitedFiles(repo)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if got, _ := LastActivity(repo, files); !got.Equal(newFileAt) {
-		t.Fatalf("LastActivity = %v, want %v (files=%q)", got, newFileAt, files)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo := t.TempDir()
+			runGit(t, repo, "init", "-q")
+			writeFileAt(t, filepath.Join(repo, tt.original), "a", commitAt)
+			runGitAt(t, repo, commitAt, "add", ".")
+			runGitAt(t, repo, commitAt, "commit", "-m", "init")
+
+			changed := tt.original
+			if tt.renameTo != "" {
+				runGitAt(t, repo, commitAt, "mv", tt.original, tt.renameTo)
+				changed = tt.renameTo
+			}
+			writeFileAt(t, filepath.Join(repo, changed), "changed", newFileAt)
+
+			// Goes through the provider so it also covers which paths reach LastActivity.
+			state, _ := New().CheckRepoStateWithActivity(repo)
+			if !state.LastActivity.Equal(newFileAt) {
+				t.Fatalf("LastActivity = %v, want %v (files=%q)", state.LastActivity, newFileAt, state.UncommitedFiles)
+			}
+		})
 	}
 }
 
@@ -246,39 +262,5 @@ func TestLastActivity_WarnsOnNonGitDir(t *testing.T) {
 	}
 	if len(warnings) == 0 {
 		t.Fatalf("expected warnings for non-git dir")
-	}
-}
-
-func TestPorcelainPath(t *testing.T) {
-	tests := []struct {
-		line   string
-		want   string
-		wantOk bool
-	}{
-		{line: " M a.txt", want: "a.txt", wantOk: true},
-		{line: "?? dir/new file.txt", want: "dir/new file.txt", wantOk: true},
-		{line: "R  old.txt -> new.txt", want: "new.txt", wantOk: true},
-		{line: "RM old.txt -> new.txt", want: "new.txt", wantOk: true},
-		{line: "C  src.txt -> copy.txt", want: "copy.txt", wantOk: true},
-		{line: `?? "caf\303\251.txt"`, want: "café.txt", wantOk: true},
-		{line: `R  "a\"b.txt" -> "c\"d.txt"`, want: `c"d.txt`, wantOk: true},
-		{line: " M a -> b.txt", want: "a -> b.txt", wantOk: true},
-		{line: `R  src.txt -> "dst -> final.txt"`, want: "dst -> final.txt", wantOk: true},
-		{line: `R  "a -> b.txt" -> plain.txt`, want: "plain.txt", wantOk: true},
-		{line: `R  "a -> b" -> "c -> d"`, want: "c -> d", wantOk: true},
-		{line: `R  "a\" -> b" -> c.txt`, want: "c.txt", wantOk: true},
-		{line: `R  "unterminated -> x.txt`, wantOk: false},
-		{line: `?? "broken`, wantOk: false},
-		{line: "?? ", wantOk: false},
-		{line: "", wantOk: false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.line, func(t *testing.T) {
-			got, ok := porcelainPath(tt.line)
-			if ok != tt.wantOk || got != tt.want {
-				t.Fatalf("porcelainPath(%q) = (%q, %v), want (%q, %v)", tt.line, got, ok, tt.want, tt.wantOk)
-			}
-		})
 	}
 }
