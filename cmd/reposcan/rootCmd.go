@@ -39,7 +39,7 @@ var RootCmd = &cobra.Command{
 
 		// validationResult configs data are valid
 		validationResult := config.Validate(configs)
-		if validationResult.IsValid() {
+		if validationResult.HasErrors() {
 			validationResult.Print()
 			return err
 		}
@@ -52,7 +52,7 @@ var RootCmd = &cobra.Command{
 
 		// validate after overriding existing configs with flags data
 		validationResult = config.Validate(configs)
-		if validationResult.IsValid() {
+		if validationResult.HasErrors() {
 			validationResult.Print()
 			return fmt.Errorf("invalid configuration after flags")
 		}

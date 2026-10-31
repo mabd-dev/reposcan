@@ -31,7 +31,7 @@ func init() {
 
 	// validationResult configs data are valid
 	validationResult := config.Validate(configs)
-	if validationResult.IsValid() {
+	if validationResult.HasErrors() {
 		validationResult.Print()
 		os.Exit(1)
 	}
