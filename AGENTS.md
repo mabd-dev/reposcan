@@ -114,6 +114,11 @@ Built with Bubble Tea (Elm architecture):
 
 ## Important Implementation Notes
 
+### Flag Defaults
+Config-backed flags are registered with zero values, and `readFlags` applies only flags where `cmd.Flags().Changed(name)` is true.
+- Do not register them with real defaults: `--help` would show values that the user's config overrides.
+- Only the root command reads `config.toml`, and it validates once after flags are applied. See [docs/config-loading.md](docs/config-loading.md).
+
 ### Git Detection
 `scan.isGitRepo` checks for `.git` as either:
 1. A directory (normal repos)

@@ -24,9 +24,8 @@ type ValidationResult struct {
 	Errors   []Issue
 }
 
-// IsValid reports whether the configuration contains any errors.
-// It returns true when there is at least one error.
-func (v *ValidationResult) IsValid() bool {
+// HasErrors reports whether the configuration contains any errors.
+func (v *ValidationResult) HasErrors() bool {
 	return len(v.Errors) > 0
 }
 

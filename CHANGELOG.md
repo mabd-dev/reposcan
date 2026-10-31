@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- fix/config-startup-flow: `--help`, `version` and `update` work with a broken config.toml, `--help` no longer shows config values as defaults, and CLI flags can override invalid config values by @frittlechasm in [#104](https://github.com/mabd-dev/reposcan/pull/104)
 - fix/jj-branch-display-after-fetch: jj repos count ahead/behind like git's `HEAD` against every remote, keep showing the bookmark after a fetch moves it past `@` when no other bookmark sits below `@`, and show `x` when a remote has no matching bookmark by @frittlechasm in [#98](https://github.com/mabd-dev/reposcan/pull/98)
 - feat/staleDays: add `--stale-days` / `staleDays` to show only repos with no local activity for N days by @mabd-dev in [#79](https://github.com/mabd-dev/reposcan/pull/79)
 - feat/jjSupport: add Jujutsu (jj) repo support alongisde git repos by @frittlechasm in [#62](https://github.com/mabd-dev/reposcan/pull/62)

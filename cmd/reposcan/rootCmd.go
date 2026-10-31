@@ -2,7 +2,6 @@ package reposcan
 
 import (
 	"fmt"
-	"os"
 	"strings"
 
 	"github.com/mabd-dev/reposcan/internal"
@@ -16,11 +15,12 @@ import (
 )
 
 // RootCmd is the root Cobra command implementing the reposcan CLI.
-// It parses flags, loads configuration, runs the scan, and renders output.
+// It loads configuration, applies flags, runs the scan, and renders output.
 var RootCmd = &cobra.Command{
-	Use:           "reposcan",
-	Short:         "Scan directories for Git repositories and report status",
-	Long:          "RepoScan scans one or more root directories for Git repositories and reports uncommitted, ahead/behind status.",
+	Use:   "reposcan",
+	Short: "Scan directories for Git repositories and report status",
+	Long: "RepoScan scans one or more root directories for Git repositories and reports uncommitted, ahead/behind status.\n\n" +
+		"Flags override the matching keys in ~/.config/reposcan/config.toml.",
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -28,33 +28,27 @@ var RootCmd = &cobra.Command{
 		paths := config.DefaultPaths()
 		configFullPath, err := paths.GetConfigFullPath()
 		if err != nil {
-			fmt.Println(err)
-			os.Exit(1)
+			return err
 		}
 		configs, err := config.CreateOrReadConfigs(configFullPath)
 		if err != nil {
-			fmt.Println(err)
 			return err
 		}
-
-		// validationResult configs data are valid
-		validationResult := config.Validate(configs)
-		if validationResult.IsValid() {
-			validationResult.Print()
-			return err
+		// "table" was the default before v1.3.7 and may still be in older config files.
+		if configs.Output.Type == config.OutputTable {
+			configs.Output.Type = config.OutputInteractive
 		}
 
-		// read flags + override configs data
+		// Validate only after flags are applied, so a flag can replace a bad config value.
 		err = readFlags(cmd, &configs)
 		if err != nil {
 			return err
 		}
 
-		// validate after overriding existing configs with flags data
-		validationResult = config.Validate(configs)
-		if validationResult.IsValid() {
+		validationResult := config.Validate(configs)
+		if validationResult.HasErrors() {
 			validationResult.Print()
-			return fmt.Errorf("invalid configuration after flags")
+			return fmt.Errorf("invalid configuration")
 		}
 
 		logger.Init(configs.Debug, paths.LogFileDir)
@@ -65,8 +59,8 @@ var RootCmd = &cobra.Command{
 	},
 }
 
-// readFlags reads CLI flags from the provided Cobra command and applies them
-// to the given config. Flags override values loaded from the config file.
+// readFlags applies the flags the user set on the command line to the given
+// config. Flags left unset keep the value loaded from the config file.
 //
 // Supported flags:
 //   - root (-r)					: repeatable directory roots to scan
@@ -80,57 +74,63 @@ var RootCmd = &cobra.Command{
 //   - colorscheme (--colorscheme)  : enable/disable debug mode
 //   - no-telemetry					: enable/disable sending telemetry data
 func readFlags(cmd *cobra.Command, configs *config.Config) error {
-	// Read roots flags
-	roots, err := cmd.Flags().GetStringArray("root")
-	if err != nil {
-		return err
-	}
-	(*configs).Roots = roots
+	flags := cmd.Flags()
 
-	// Read dirIgnore flags
-	dirIgnore, err := cmd.Flags().GetStringArray("dirIgnore")
-	if err != nil {
-		return err
-	}
-	if len(dirIgnore) > 0 {
-		(*configs).DirIgnore = dirIgnore
+	if flags.Changed("root") {
+		roots, err := flags.GetStringArray("root")
+		if err != nil {
+			return err
+		}
+		configs.Roots = roots
 	}
 
-	// Read output format flag
-	output, err := cmd.Flags().GetString("output")
-	if err != nil {
-		return err
+	if flags.Changed("dirIgnore") {
+		dirIgnore, err := flags.GetStringArray("dirIgnore")
+		if err != nil {
+			return err
+		}
+		configs.DirIgnore = dirIgnore
 	}
-	outputFormat, err := config.CreateOutputFormat(output)
-	if err != nil {
-		return err
-	}
-	(*configs).Output.Type = outputFormat
 
-	// Read only-filter flag
-	onlyFilterStr, err := cmd.Flags().GetString("filter")
-	if err != nil {
-		return err
+	if flags.Changed("output") {
+		output, err := flags.GetString("output")
+		if err != nil {
+			return err
+		}
+		outputFormat, err := config.CreateOutputFormat(output)
+		if err != nil {
+			return err
+		}
+		configs.Output.Type = outputFormat
 	}
-	onlyFilter, err := config.CreateOnlyFilter(onlyFilterStr)
-	if err != nil {
-		return err
-	}
-	(*configs).Only = onlyFilter
 
-	// Read stale-days flag
-	staleDays, err := cmd.Flags().GetInt("stale-days")
-	if err != nil {
-		return err
+	if flags.Changed("filter") {
+		onlyFilterStr, err := flags.GetString("filter")
+		if err != nil {
+			return err
+		}
+		onlyFilter, err := config.CreateOnlyFilter(onlyFilterStr)
+		if err != nil {
+			return err
+		}
+		configs.Only = onlyFilter
 	}
-	(*configs).StaleDays = staleDays
 
-	// Read json output path flag
-	jsonOutputPath, err := cmd.Flags().GetString("json-output-path")
-	if err != nil {
-		return err
+	if flags.Changed("stale-days") {
+		staleDays, err := flags.GetInt("stale-days")
+		if err != nil {
+			return err
+		}
+		configs.StaleDays = staleDays
 	}
-	(*configs).Output.JSONPath = jsonOutputPath
+
+	if flags.Changed("json-output-path") {
+		jsonOutputPath, err := flags.GetString("json-output-path")
+		if err != nil {
+			return err
+		}
+		configs.Output.JSONPath = jsonOutputPath
+	}
 
 	// Read output colorscheme
 	// colorscheme, err := cmd.Flags().GetString("colorscheme")
@@ -139,24 +139,29 @@ func readFlags(cmd *cobra.Command, configs *config.Config) error {
 	// }
 	// (*configs).Output.ColorSchemeName = colorscheme
 
-	// Read max workers flag
-	maxWorkers, err := cmd.Flags().GetInt("max-workers")
-	if err != nil {
-		return err
+	if flags.Changed("max-workers") {
+		maxWorkers, err := flags.GetInt("max-workers")
+		if err != nil {
+			return err
+		}
+		configs.MaxWorkers = maxWorkers
 	}
-	(*configs).MaxWorkers = maxWorkers
 
-	debug, err := cmd.Flags().GetBool("debug")
-	if err != nil {
-		return err
+	if flags.Changed("debug") {
+		debug, err := flags.GetBool("debug")
+		if err != nil {
+			return err
+		}
+		configs.Debug = debug
 	}
-	(*configs).Debug = debug
 
-	noTelemetry, err := cmd.Flags().GetBool("no-telemetry")
-	if err != nil {
-		return err
+	if flags.Changed("no-telemetry") {
+		noTelemetry, err := flags.GetBool("no-telemetry")
+		if err != nil {
+			return err
+		}
+		configs.NoTelemetry = noTelemetry
 	}
-	(*configs).NoTelemetry = noTelemetry
 
 	return nil
 }
@@ -176,8 +181,7 @@ func run(configs config.Config) error {
 		}
 	case config.OutputInteractive:
 		if err := tui.Render(report, configs); err != nil {
-			fmt.Fprintf(os.Stderr, "tui error: %v\n", err)
-			os.Exit(1)
+			return fmt.Errorf("tui error: %w", err)
 		}
 	case config.OutputNone:
 		// no-output
