@@ -2,19 +2,19 @@ package jj
 
 import (
 	"errors"
-	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/mabd-dev/reposcan/internal/vcs"
+	"github.com/mabd-dev/reposcan/pkg/report"
 )
 
 // TestProviderCheckRepoStateWithFakeJJ verifies that successful command results
 // are assembled into a complete RepoState and that the provider advertises the
 // VCS type consumed by the registry.
 func TestProviderCheckRepoStateWithFakeJJ(t *testing.T) {
-	repoPath := filepath.Join(t.TempDir(), "checkout")
+	repoPath := fakeRepoDir(t, "checkout")
 	bookmark := trackedBookmark{Name: "main", Remote: "origin"}
 	outgoingRevset := buildTrackedOutgoingRevset([]trackedBookmark{bookmark})
 	incomingRevset := buildTrackedIncomingRevset([]trackedBookmark{bookmark})
@@ -22,7 +22,7 @@ func TestProviderCheckRepoStateWithFakeJJ(t *testing.T) {
 		fakeJJCommandKey("git", "remote", "list"): {Stdout: "origin https://example.com/acme/widgets.git\n"},
 		branchCommandKey():                        {Stdout: "main*?|abc123\n"},
 		fakeJJCommandKey("diff", "--summary"):     {Stdout: "M README.md\n"},
-		trackedBookmarksCommandKey():              {Stdout: "main|origin\n"},
+		remoteBookmarksCommandKey():               {Stdout: "main|origin\n"},
 		commitLogCommandKey(outgoingRevset):       {Stdout: "abc123|local change\n"},
 		commitLogCommandKey(incomingRevset):       {Stdout: "def456|remote change\n"},
 	}
@@ -64,6 +64,78 @@ func TestProviderCheckRepoStateWithFakeJJ(t *testing.T) {
 	}
 	if !reflect.DeepEqual(remoteStatus.OutgoingCommits, []string{"abc123 local change"}) {
 		t.Fatalf("CheckRepoState() outgoing commits = %v", remoteStatus.OutgoingCommits)
+	}
+}
+
+// TestProviderCheckRepoStateDoesNotMatchChangeIDAsBookmark verifies that a
+// change ID display reports every remote as -1/-1 without looking up remote
+// bookmarks, so a remote bookmark that happens to share the name never counts.
+func TestProviderCheckRepoStateDoesNotMatchChangeIDAsBookmark(t *testing.T) {
+	binary := useFakeJJ(t, map[string]fakeJJResponse{
+		fakeJJCommandKey("git", "remote", "list"): {Stdout: "origin https://example.com/acme/widgets.git\nupstream https://example.com/up/widgets.git\n"},
+		branchCommandKey():                        {Stdout: "|abc123\n"},
+		trackedBookmarksCommandKey():              {},
+		fakeJJCommandKey("diff", "--summary"):     {},
+	})
+
+	state, warnings := (&Provider{binary: binary}).CheckRepoState(fakeRepoDir(t, "checkout"))
+	if len(warnings) != 0 {
+		t.Fatalf("CheckRepoState() warnings = %v, want none", warnings)
+	}
+	if state.Branch != "abc123" {
+		t.Fatalf("CheckRepoState() branch = %q, want abc123", state.Branch)
+	}
+
+	want := []report.RemoteStatus{
+		{Remote: "origin", Ahead: -1, Behind: -1},
+		{Remote: "upstream", Ahead: -1, Behind: -1},
+	}
+	if !reflect.DeepEqual(state.RemoteStatus, want) {
+		t.Fatalf("CheckRepoState() remote status = %#v, want %#v", state.RemoteStatus, want)
+	}
+}
+
+// TestProviderCheckRepoStateKeepsChangeIDWhenMovedLookupFails verifies that a
+// failed moved-bookmark lookup is reported without hiding the change ID that
+// was already read.
+func TestProviderCheckRepoStateKeepsChangeIDWhenMovedLookupFails(t *testing.T) {
+	binary := useFakeJJ(t, map[string]fakeJJResponse{
+		fakeJJCommandKey("git", "remote", "list"): {Stdout: "origin https://example.com/acme/widgets.git\n"},
+		branchCommandKey():                        {Stdout: "|abc123\n"},
+		trackedBookmarksCommandKey():              {Stderr: "list failed", ExitCode: 1},
+		fakeJJCommandKey("diff", "--summary"):     {},
+	})
+
+	state, warnings := (&Provider{binary: binary}).CheckRepoState(fakeRepoDir(t, "checkout"))
+	if len(warnings) != 1 || !strings.Contains(warnings[0], "get branch display") {
+		t.Fatalf("CheckRepoState() warnings = %v, want one branch display warning", warnings)
+	}
+	if state.Branch != "abc123" {
+		t.Fatalf("CheckRepoState() branch = %q, want abc123", state.Branch)
+	}
+
+	want := []report.RemoteStatus{{Remote: "origin", Ahead: -1, Behind: -1}}
+	if !reflect.DeepEqual(state.RemoteStatus, want) {
+		t.Fatalf("CheckRepoState() remote status = %#v, want %#v", state.RemoteStatus, want)
+	}
+}
+
+// TestProviderCheckRepoStateSkipsMovedLookupWithoutRemotes verifies that a repo
+// without remotes keeps the change ID without running the moved-bookmark
+// lookup. The fake has no response for that lookup, so running it would warn.
+func TestProviderCheckRepoStateSkipsMovedLookupWithoutRemotes(t *testing.T) {
+	binary := useFakeJJ(t, map[string]fakeJJResponse{
+		fakeJJCommandKey("git", "remote", "list"): {},
+		branchCommandKey():                        {Stdout: "|abc123\n"},
+		fakeJJCommandKey("diff", "--summary"):     {},
+	})
+
+	state, warnings := (&Provider{binary: binary}).CheckRepoState(fakeRepoDir(t, "checkout"))
+	if len(warnings) != 0 {
+		t.Fatalf("CheckRepoState() warnings = %v, want none", warnings)
+	}
+	if state.Branch != "abc123" {
+		t.Fatalf("CheckRepoState() branch = %q, want abc123", state.Branch)
 	}
 }
 

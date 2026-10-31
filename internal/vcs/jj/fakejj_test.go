@@ -124,3 +124,16 @@ func installFakeJJ(t *testing.T, responses map[string]fakeJJResponse) {
 
 	t.Setenv("PATH", binDir+string(os.PathListSeparator)+os.Getenv("PATH"))
 }
+
+// fakeRepoDir creates an empty directory named name to pass as the repo path:
+// jj commands run inside the repo, so it must exist even for the fake.
+func fakeRepoDir(t *testing.T, name string) string {
+	t.Helper()
+
+	dir := filepath.Join(t.TempDir(), name)
+	if err := os.Mkdir(dir, 0o755); err != nil {
+		t.Fatalf("create fake repo dir: %v", err)
+	}
+
+	return dir
+}

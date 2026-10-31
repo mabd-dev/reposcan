@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"image/color"
 	"strconv"
+	"strings"
+	"unicode"
 
 	"charm.land/lipgloss/v2"
 	"github.com/mabd-dev/reposcan/internal/theme"
@@ -85,7 +87,7 @@ func (m *Model) buildUncommittedFiles() []string {
 	for _, f := range files {
 		changeSymbol := f[:2]
 		color := getFileStatusColor(changeSymbol, m.theme.Colors)
-		lines = append(lines, fileStyle.Foreground(color).Render(f))
+		lines = append(lines, fileStyle.Foreground(color).Render(escapeControlChars(f)))
 	}
 
 	if trimUncommitedFiles {
@@ -108,6 +110,22 @@ func (m *Model) buildStashes() []string {
 		lines = append(lines, m.theme.Styles.Base.Foreground(m.theme.Colors.Foreground).Render(line))
 	}
 	return lines
+}
+
+// escapeControlChars shows control characters escaped, e.g. a newline as \n.
+// git -z and jj print file names raw, so a name could otherwise span several
+// rows or send terminal escape sequences.
+func escapeControlChars(s string) string {
+	var b strings.Builder
+	for _, r := range s {
+		if unicode.IsControl(r) {
+			quoted := strconv.QuoteRune(r)
+			b.WriteString(quoted[1 : len(quoted)-1])
+		} else {
+			b.WriteRune(r)
+		}
+	}
+	return b.String()
 }
 
 func getFileStatusColor(symbol string, colors theme.ColorScheme) color.Color {

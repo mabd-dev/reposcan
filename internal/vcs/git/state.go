@@ -12,6 +12,15 @@ import (
 // CheckRepoState inspects the Git repository at path and returns its RepoState
 // along with any non-fatal warnings encountered while collecting information.
 func CheckRepoState(path string) (repoState report.RepoState, warnings []string) {
+	repoState, warnings, _, _ = checkRepoState(path)
+	return repoState, warnings
+}
+
+// checkRepoState is CheckRepoState that also returns the current paths of the
+// uncommitted files and the `git status` error. An empty UncommitedFiles list
+// alone cannot tell a clean repo from a failed status, which matters when
+// dating the repo's last activity.
+func checkRepoState(path string) (repoState report.RepoState, warnings []string, changedPaths []string, statusErr error) {
 
 	branch, err := GetRepoBranch(path)
 	if err != nil {
@@ -74,8 +83,8 @@ func CheckRepoState(path string) (repoState report.RepoState, warnings []string)
 		warnings = append(warnings, msg)
 	}
 
-	uncommitedFiles, err := GetUncommitedFiles(path)
-	if err != nil {
+	uncommitedFiles, changedPaths, statusErr := getUncommittedChanges(path)
+	if statusErr != nil {
 		msg := "Failed to get uncommited files, path=" + path
 		warnings = append(warnings, msg)
 	}
@@ -95,7 +104,7 @@ func CheckRepoState(path string) (repoState report.RepoState, warnings []string)
 		UncommitedFiles: uncommitedFiles,
 		RemoteStatus:    remoteStatuses,
 		Stashes:         stashes,
-	}, warnings
+	}, warnings, changedPaths, statusErr
 }
 
 func removeEmptyStrings(input []string) []string {

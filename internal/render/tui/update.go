@@ -37,6 +37,10 @@ func (m Model) updateReposTable(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.String() {
 		case "p":
 			return m.runVCSAction(vcsActionPull)
+		// case "P":
+		// 	return m.runVCSAction(vcsActionPush)
+		// case "f":
+		// 	return m.runVCSAction(vcsActionFetch)
 		case "q", "esc", "ctrl+c":
 			return m, tea.Quit
 		case "c":

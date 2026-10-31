@@ -2,7 +2,6 @@ package jj
 
 import (
 	"errors"
-	"path/filepath"
 	"reflect"
 	"testing"
 )
@@ -31,12 +30,11 @@ func TestCommandError(t *testing.T) {
 // TestPublicCommandWrappers verifies the package's current exported command
 // surface. These entry points hardcode "jj", so the fake must be on PATH.
 func TestPublicCommandWrappers(t *testing.T) {
-	repoPath := filepath.Join(t.TempDir(), "checkout")
+	repoPath := fakeRepoDir(t, "checkout")
 	responses := map[string]fakeJJResponse{
 		fakeJJCommandKey("git", "remote", "list"): {Stdout: "origin https://example.com/acme/widgets.git\n"},
 		branchCommandKey():                        {Stdout: "main*?|abc123\n"},
 		fakeJJCommandKey("diff", "--summary"):     {Stdout: "M README.md\n"},
-		trackedBookmarksCommandKey():              {},
 		fakeJJCommandKey("version"):               {Stdout: "jj test version\n"},
 	}
 	installFakeJJ(t, responses)
@@ -59,16 +57,6 @@ func TestPublicCommandWrappers(t *testing.T) {
 	files, err := GetUncommittedFiles(repoPath)
 	if err != nil || !reflect.DeepEqual(files, []string{"M README.md"}) {
 		t.Fatalf("GetUncommittedFiles() = %v, %v", files, err)
-	}
-
-	outgoing, err := GetOutgoingCommits(repoPath)
-	if err != nil || len(outgoing) != 0 {
-		t.Fatalf("GetOutgoingCommits() = %v, %v, want empty, nil", outgoing, err)
-	}
-
-	incoming, err := GetIncomingCommits(repoPath)
-	if err != nil || len(incoming) != 0 {
-		t.Fatalf("GetIncomingCommits() = %v, %v, want empty, nil", incoming, err)
 	}
 
 	output, err := RunJJCommand(repoPath, "version")
@@ -109,7 +97,7 @@ func TestGetRepoName(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			repoPath := filepath.Join(t.TempDir(), "checkout")
+			repoPath := fakeRepoDir(t, "checkout")
 			binary := useFakeJJ(t, map[string]fakeJJResponse{
 				fakeJJCommandKey("git", "remote", "list"): tt.remoteList,
 			})
@@ -149,6 +137,8 @@ func TestGetBranchDisplay(t *testing.T) {
 	tests := []struct {
 		name     string
 		response fakeJJResponse
+		moved    fakeJJResponse
+		tracked  fakeJJResponse
 		want     string
 		wantErr  bool
 	}{
@@ -161,11 +151,58 @@ func TestGetBranchDisplay(t *testing.T) {
 			response: fakeJJResponse{Stdout: "origin@origin*?, , main*?|abc123\n"},
 			want:     "main",
 		},
+		{
+			name:     "tracked bookmark moved past working copy",
+			response: fakeJJResponse{Stdout: "|abc123\n"},
+			tracked:  fakeJJResponse{Stdout: "main|origin\nmain|upstream\ndev|origin\n"},
+			moved:    fakeJJResponse{Stdout: "main,main@origin,feat,dev\n"},
+			want:     "main,dev",
+		},
+		{
+			name:     "bookmarks on several commits keep the change id",
+			response: fakeJJResponse{Stdout: "|abc123\n"},
+			tracked:  fakeJJResponse{Stdout: "main|origin\ndev|origin\n"},
+			moved:    fakeJJResponse{Stdout: "main\ndev\n"},
+			want:     "abc123",
+		},
+		{
+			name:     "no tracked bookmarks",
+			response: fakeJJResponse{Stdout: "|abc123\n"},
+			want:     "abc123",
+		},
+		{
+			name:     "no tracked bookmark moved past working copy",
+			response: fakeJJResponse{Stdout: "|abc123\n"},
+			tracked:  fakeJJResponse{Stdout: "main|origin\ndev|origin\n"},
+			want:     "abc123",
+		},
+		{
+			name:     "tracked bookmark lookup fails",
+			response: fakeJJResponse{Stdout: "|abc123\n"},
+			tracked:  fakeJJResponse{Stderr: "list failed", ExitCode: 1},
+			want:     "abc123",
+			wantErr:  true,
+		},
+		{
+			name:     "moved bookmark lookup fails",
+			response: fakeJJResponse{Stdout: "|abc123\n"},
+			tracked:  fakeJJResponse{Stdout: "main|origin\ndev|origin\n"},
+			moved:    fakeJJResponse{Stderr: "bad revset", ExitCode: 1},
+			want:     "abc123",
+			wantErr:  true,
+		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			binary := useFakeJJ(t, map[string]fakeJJResponse{branchCommandKey(): tt.response})
+			binary := useFakeJJ(t, map[string]fakeJJResponse{
+				branchCommandKey(): tt.response,
+				movedBookmarksCommandKey(
+					`(bookmarks(exact:"main") | bookmarks(exact:"dev")) & ` +
+						`(heads(::@ & ::(bookmarks(exact:"main") | bookmarks(exact:"dev"))) ~ root())::`,
+				): tt.moved,
+				trackedBookmarksCommandKey(): tt.tracked,
+			})
 			got, err := getBranchDisplay(binary, t.TempDir())
 			if (err != nil) != tt.wantErr {
 				t.Fatalf("getBranchDisplay() error = %v, wantErr %v", err, tt.wantErr)
@@ -210,7 +247,7 @@ func TestRunJJCommandError(t *testing.T) {
 	binary := useFakeJJ(t, map[string]fakeJJResponse{
 		fakeJJCommandKey("git", "fetch"): {Stderr: "authentication failed\n", ExitCode: 1},
 	})
-	_, err := runJJCommand(binary, "/tmp/repo", "git", "fetch")
+	_, err := runJJCommand(binary, t.TempDir(), "git", "fetch")
 	if err == nil {
 		t.Fatal("runJJCommand() error = nil, want error")
 	}
@@ -261,6 +298,19 @@ func branchCommandKey() string {
 	)
 }
 
+// movedBookmarksCommandKey records the jj log invocation used to find tracked
+// bookmarks that moved past the working copy.
+func movedBookmarksCommandKey(revset string) string {
+	return fakeJJCommandKey(
+		"log",
+		"-r",
+		revset,
+		"--no-graph",
+		"-T",
+		`bookmarks.join(",") ++ "\n"`,
+	)
+}
+
 // trackedBookmarksCommandKey records the exact template used to list tracked
 // bookmark and remote pairs.
 func trackedBookmarksCommandKey() string {
@@ -273,15 +323,15 @@ func trackedBookmarksCommandKey() string {
 	)
 }
 
-// untrackedRemotesCommandKey records the invocation used to discover remote
-// bookmarks that are not tracked locally.
-func untrackedRemotesCommandKey() string {
+// remoteBookmarksCommandKey records the invocation used to list every remote
+// bookmark, tracked or not.
+func remoteBookmarksCommandKey() string {
 	return fakeJJCommandKey(
 		"bookmark",
 		"list",
 		"--all",
 		"-T",
-		`name ++ "|" ++ remote ++ "\n"`,
+		`if(present, name ++ "|" ++ remote ++ "\n")`,
 	)
 }
 
