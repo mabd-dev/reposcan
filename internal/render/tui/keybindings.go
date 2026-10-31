@@ -21,6 +21,11 @@ var reposTableKeybindings = []common.Keybinding{
 		ShortDesc:   "Copy Path",
 	},
 	{
+		Key:         "p",
+		Description: "Pull changes for the selected repository",
+		ShortDesc:   "Pull",
+	},
+	{
 		Key:         "r",
 		Description: "Refresh list",
 		ShortDesc:   "Refresh list",

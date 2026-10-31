@@ -140,7 +140,7 @@ Tracking does not matter, and a remote without the bookmark shows `x`.
 
 Current jj limitations:
 
-- TUI fetch, push, and pull keybindings are not active.
+- TUI fetch and push keybindings are not active. The `p` pull keybinding targets git repositories; jj pull has no direct Git equivalent and returns an error.
 - jj fetch has a command wrapper but is not exposed through TUI actions yet.
 - jj push and pull behavior is not enabled until per-operation semantics are defined.
 - jj ahead/behind uses already-fetched remote bookmark state; RepoScan does not fetch.

@@ -92,21 +92,28 @@ func (m *Model) Filter(query string) {
 	}
 }
 
-func (m *Model) UpdateRepoState(index int, newState report.RepoState) {
-	if index < 0 || index >= len(m.filteredRepos) || m.filteredRepos[index].ID != newState.ID {
-		return
-	}
-
+// UpdateRepoState replaces the state of the repository with the same ID. The
+// lookup is by ID rather than by row, so a state that arrives after the filter
+// changed still lands on the right repository.
+func (m *Model) UpdateRepoState(newState report.RepoState) {
 	originalIndex := getRepoIndex(m.report.RepoStates, newState.ID)
 	if originalIndex == -1 {
 		return
 	}
-
-	m.filteredRepos[index] = newState
 	m.report.RepoStates[originalIndex] = newState
 
+	visibleIndex := getRepoIndex(m.filteredRepos, newState.ID)
+	if visibleIndex == -1 {
+		// Hidden by the current filter; the report is fresh for when it clears.
+		return
+	}
+	m.filteredRepos[visibleIndex] = newState
+
 	rows := m.tbl.Rows()
-	rows[index] = createRow(newState, m.theme, activeColumnDefs(m.options))
+	if visibleIndex >= len(rows) {
+		return
+	}
+	rows[visibleIndex] = createRow(newState, m.theme, activeColumnDefs(m.options))
 	m.tbl.SetRows(rows)
 }
 
@@ -141,6 +148,16 @@ func (m *Model) GetRepoStateAt(index int) *report.RepoState {
 		return nil
 	}
 	return &m.filteredRepos[index]
+}
+
+// GetRepoStateByID returns the repository with the given ID from the full
+// report, even when the current filter hides it.
+func (m *Model) GetRepoStateByID(id string) *report.RepoState {
+	index := getRepoIndex(m.report.RepoStates, id)
+	if index == -1 {
+		return nil
+	}
+	return &m.report.RepoStates[index]
 }
 
 func (m *Model) UpdateTheme(newTheme theme.Theme) {
