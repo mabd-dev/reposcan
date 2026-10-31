@@ -50,28 +50,24 @@ func captureStdout(t *testing.T, fn func()) string {
 	return <-done
 }
 
-// newRootFlagsCmd returns a throwaway command with the same flags RootCmd
-// registers, minus the flag named in skip. RootCmd's own flag defaults come
-// from the developer's real config file, so tests must not rely on them.
-func newRootFlagsCmd(skip string) *cobra.Command {
+// newRootFlagsCmd returns a throwaway command with the flags RootCmd
+// registers, so tests can parse flags without touching RootCmd's state.
+func newRootFlagsCmd() *cobra.Command {
 	cmd := &cobra.Command{Use: "reposcan"}
-	flags := map[string]func(){
-		"root":             func() { cmd.Flags().StringArrayP("root", "r", nil, "") },
-		"dirIgnore":        func() { cmd.Flags().StringArrayP("dirIgnore", "d", nil, "") },
-		"output":           func() { cmd.Flags().StringP("output", "o", "json", "") },
-		"filter":           func() { cmd.Flags().StringP("filter", "f", "all", "") },
-		"stale-days":       func() { cmd.Flags().Int("stale-days", 0, "") },
-		"json-output-path": func() { cmd.Flags().String("json-output-path", "", "") },
-		"max-workers":      func() { cmd.Flags().IntP("max-workers", "w", 1, "") },
-		"debug":            func() { cmd.Flags().Bool("debug", false, "") },
-		"no-telemetry":     func() { cmd.Flags().Bool("no-telemetry", true, "") },
-	}
-	for name, register := range flags {
-		if name != skip {
-			register()
-		}
-	}
+	addRootFlags(cmd)
 	return cmd
+}
+
+// writeConfig writes contents to the config.toml under an isolated home.
+func writeConfig(t *testing.T, home, contents string) {
+	t.Helper()
+	path := filepath.Join(home, ".config", "reposcan", "config.toml")
+	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(path, []byte(contents), 0o644); err != nil {
+		t.Fatal(err)
+	}
 }
 
 func parseFlags(t *testing.T, cmd *cobra.Command, args ...string) {
