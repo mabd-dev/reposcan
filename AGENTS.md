@@ -50,9 +50,8 @@ REPOSCAN_BIN=/path/to/reposcan ./scripts/smoke-test.sh
 KEEP_FIXTURES=1 ./scripts/smoke-test.sh
 ```
 
-Full pre-release checklist (including the manual TUI steps the script cannot
-cover, and the current list of known issues) lives in
-[docs/release-testing.md](docs/release-testing.md).
+The script does not cover the interactive TUI: before a release, also launch
+`reposcan` and check the TUI by hand (navigation, themes, and the repo actions).
 
 ### Running
 ```bash
