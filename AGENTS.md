@@ -16,7 +16,7 @@ go build -o reposcan .
 # Install
 curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | sh
 
-# VERSION: is optional with default value='latests'
+# VERSION: is optional with default value='latest'
 # ALIAS: is optional with default value='reposcan'
 curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh | VERSION=v1.3.8 ALIAS=reposcan sh 
 ```
@@ -70,10 +70,10 @@ go run . -o json
 
 ### Core Flow
 1. **Configuration Loading** (`internal/config`): Loads defaults → reads `~/.config/reposcan/config.toml` → applies CLI flags (in that order of precedence)
-2. **Repository Discovery** (`internal/scan`): Walks filesystem from root directories, applying `dirIgnore` glob patterns, identifying `.git` directories
+2. **Repository Discovery** (`internal/scan`): Walks filesystem from root directories, applying `dirIgnore` glob patterns, identifying git (`.git`) and jj (`.jj`) repositories; a directory with both is treated as jj
 3. **VCS State Checking** (`internal/vcs`): Concurrently checks each repo using registered VCS providers to gather branch, uncommitted files, ahead/behind counts, and VCS-specific metadata
-4. **Filtering** (`cmd/reposcan/rootCmd.go`): Applies `OnlyFilter` (all/dirty/uncommitted/unpushed/unpulled) to determine which repos to include in output
-5. **Rendering** (`internal/render`): Outputs results in chosen format (stdout table/json, interactive TUI, or file output)
+4. **Filtering** (`internal/scanGenerator.go`): Applies `OnlyFilter` (all/dirty/uncommitted/unpushed/unpulled/stash) to determine which repos to include in output
+5. **Rendering** (`internal/render`): Outputs results in chosen format (stdout JSON, interactive TUI, no output, or JSON files via `--json-output-path`)
 
 ### Key Packages
 
@@ -84,7 +84,7 @@ go run . -o json
 - **`internal/vcs/git`**: Git provider implementation and Git command wrappers for state checks, push, pull, and fetch operations
 - **`internal/vcs/jj`**: Jujutsu provider implementation for detecting and checking jj repositories. `commands.go` contains exported jj command wrappers and helpers; `jj.go` holds the `Provider` struct and `CheckRepoState` logic
 - **`internal/render`**: Three render paths:
-  - `stdout`: Plain table (using `charmbracelet/lipgloss`) or JSON output
+  - `stdout`: JSON report output, plus warning and error messages
   - `file`: Writes JSON reports to disk
   - `tui`: Interactive Bubble Tea interface with table, filtering, details panel, help popup, and git operations (push/pull/fetch)
 - **`pkg/report`**: Public API types (`RepoState`, `ScanReport`) consumed by renderers and external tools
@@ -105,8 +105,8 @@ The `vcs.GetRepoStatesConcurrent` function uses a worker pool pattern:
 
 ### TUI Architecture (`internal/render/tui`)
 Built with Bubble Tea (Elm architecture):
-- **Model**: Contains `repostable.Table`, header, filter state, warnings, focused model tracker
-- **Focused Model Pattern**: Different input modes (table navigation, filter text input, help popup) each implement `focusedModel` interface to handle updates and keybindings
+- **Model**: Contains `repostable.Model` (the repos table), the repository header, repo details, theme switcher, alerts, filter input, and a focus stack
+- **Focus Stack**: Input modes (repos table, filter text input, help popup, theme switcher) are `FocusState` values on `Model.focusStack`; `pushFocus`/`popFocus` in `focusModel.go` move between them, and `Update` routes keys on `currentFocus()`
 - **Update Flow**: Messages route through focused model → update appropriate state → return new model + commands
 - **View**: Composed vertically: header → body (table + optional filter/details) → footer (keybindings). The repository header uses the current model theme at render time and must receive each refreshed scan report alongside the table. Wrap the body before applying its height limit, and wrap the header and footer to terminal width before measuring their heights so the body leaves space for every footer line. Header regressions belong in production `Model.Update`/`Model.View` tests, not only component tests.
 - **VCS Operations**: TUI dispatches fetch/push/pull through the `vcs.ActionProvider` interface via the `Registry`, making actions VCS-agnostic. Providers that don't implement `ActionProvider` (e.g., jj for push/pull) surface an "unsupported action" alert. Action results and repo refresh are handled through `vcsActionResultMsg` and `vcsRefreshRepoResultMsg` messages
@@ -122,7 +122,7 @@ Built with Bubble Tea (Elm architecture):
 All root paths and dirIgnore patterns support environment variable expansion via `os.ExpandEnv`
 
 ### Filtering Logic
-The `filter` function in `rootCmd.go` applies `OnlyFilter` after all repos are discovered and checked. This means all git operations happen regardless of filter—filtering only affects output.
+The `filter` function in `internal/scanGenerator.go` applies `OnlyFilter` after all repos are discovered and checked. This means all git operations happen regardless of filter—filtering only affects output.
 
 `StaleDays` (`--stale-days`) is applied after `OnlyFilter` by `staleFilter` in `internal/scanGenerator.go`. It is skipped for `OnlyUnpulled`, and repos with an unknown (zero) `LastActivity` are always kept. Activity is only computed when stale filtering is enabled: `internal.ScanOptions` sets `vcs.ScanOptions.ComputeActivity`, and `vcs.CheckRepoState` then calls `CheckRepoStateWithActivity` on providers implementing the optional `vcs.ActivityProvider` interface (git and jj). It runs in the same pass as the state check so providers can reuse its results; the git provider leaves activity unknown when `git status` fails, and the jj provider when `jj diff` or the `@-` date query fails. jj dates from `@-`, never `@` or the op log: every jj command snapshots the working copy, re-dating `@` and adding an operation at scan time. jj commands run with `cmd.Dir` set to the repo because jj prints file paths relative to the working directory. Use `vcs.CheckRepoState` rather than `Provider.CheckRepoState` directly so the TUI refresh path keeps `LastActivity`.
 
@@ -130,7 +130,7 @@ The `filter` function in `rootCmd.go` applies `OnlyFilter` after all repos are d
 `scan.FindRepos` collects warnings (e.g., permission denied) but continues walking. Warnings are included in `ScanReport.Warnings`.
 
 ### Git Command Wrapper
-`git.RunGitCommand` uses `git -C <dir>` to run commands in a specific directory without changing the process's working directory. Stderr is captured but only used for error detection—stdout is returned.
+`git.RunGitCommand` uses `git -C <dir>` to run commands in a specific directory without changing the process's working directory. Stderr is discarded: a non-zero exit returns only the `exec` error, without stderr text. Stdout is returned.
 
 ## Testing Patterns
 
@@ -144,6 +144,6 @@ Tests use standard Go testing:
 - VCS registry tests in `internal/vcs/registry_test.go` (ActionProvider dispatch)
 - Stale filtering tests: git activity in `internal/vcs/git/activity_test.go` (pins dates with `GIT_COMMITTER_DATE` and `os.Chtimes`), jj activity in `internal/vcs/jj/activity_test.go` (pins dates with `JJ_TIMESTAMP`), activity gating in `internal/vcs/check_test.go`, a single `git status` per repo in `internal/vcs/git/activity_status_count_test.go`, filter rules in `internal/filter_stale_test.go`, and end-to-end scans in `internal/scanGenerator_stale_test.go`
 - TUI table/column tests in `internal/render/tui/repostable/ui_test.go`
-- Stdout table rendering tests in `internal/render/stdout/scanReport_test.go`
+- Stdout JSON and warning rendering tests in `internal/render/stdout/scanReport_test.go`
 
 When writing tests, prefer table-driven tests for multiple scenarios.
