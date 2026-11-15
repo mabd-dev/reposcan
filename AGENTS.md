@@ -66,6 +66,19 @@ go run . -o interactive
 go run . -o json
 ```
 
+## Changing Behavior
+
+- Before implementing, list every observable behavior change (CLI output, report
+  fields or paths, which roots or ignore patterns match, config meaning) as
+  old → new, and mark anything that is not backward compatible. Get approval
+  for those before writing code.
+- Before changing shared code (path handling, ignore matching, config loading),
+  list what currently works through it and check each case on `main` and on the
+  branch. If a case has no test, add one before changing the code.
+- Review comments: reproduce on `main` first. A bug that already exists on
+  `main` goes to a new issue unless the maintainer asks to fix it in the PR.
+  Fixing a review comment must not widen the PR's scope.
+
 ## Architecture
 
 ### Core Flow

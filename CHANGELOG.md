@@ -5,6 +5,7 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+- docs/agents-behavior-change-rules: `AGENTS.md` rules to flag backward-incompatible changes before implementing, check shared code changes against `main`, and keep review fixes to the PR's scope by @mabd-dev in [#109](https://github.com/mabd-dev/reposcan/pull/109)
 - fix/expand-tilde-paths: expand a leading `~` in `roots`, `dirIgnore` and `jsonPath`, so the README example config works and the default `~/Library/**` ignore matches. Roots are made absolute, so ignore patterns also work with relative (`-r .`) and trailing-slash roots, by @mabd-dev in [#107](https://github.com/mabd-dev/reposcan/pull/107)
 - ci/smoke-test: CI runs `scripts/smoke-test.sh` on Linux and macOS in place of the `go test` steps, so the built binary is checked end to end by @mabd-dev in [#106](https://github.com/mabd-dev/reposcan/pull/106)
 - fix/docs-links-and-release-go-version: update `release.yml` github action go version to use the one in go.mod by @mabd-dev in [#105](https://github.com/mabd-dev/reposcan/pull/105)
