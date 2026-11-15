@@ -43,7 +43,7 @@ func DirExists(path string) (bool, error) {
 
 // WriteToFile Write data to file and create all parent folders if needed
 func WriteToFile(data []byte, path string) error {
-	path, err := expandPath(path)
+	path, err := ExpandPath(path)
 	if err != nil {
 		return err
 	}
@@ -56,26 +56,26 @@ func WriteToFile(data []byte, path string) error {
 	return os.WriteFile(path, data, 0o644)
 }
 
-// expandPath expands a filesystem path that may start with '~' into an
-// absolute path using the current user's home directory.
+// ExpandPath expands a leading "~" (alone, or followed by a path separator)
+// to the current user's home directory, then expands environment variables.
 //
 // Examples:
 //
-//	expandPath("~/Documents/file.txt")   -> "/Users/someone/Documents/file.txt"
-//	expandPath("/tmp/file.txt")          -> "/tmp/file.txt"
+//	ExpandPath("~/Code")      -> "/Users/someone/Code"
+//	ExpandPath("$HOME/Code")  -> "/Users/someone/Code"
+//	ExpandPath("~bob/Code")   -> "~bob/Code" (other users' homes are not supported)
+//	ExpandPath("/tmp/file")   -> "/tmp/file"
 //
-// Only a leading '~' is expanded. If the path does not start with '~',
-// it is returned unchanged.
-//
-// Returns the expanded absolute path or an error if the home directory
-// cannot be determined.
-func expandPath(path string) (string, error) {
-	if strings.HasPrefix(path, "~") {
+// The rest of the path only gets OS separators, it is not cleaned, so glob
+// patterns and trailing slashes survive. On error the path is returned
+// unchanged, with the error from looking up the home directory.
+func ExpandPath(path string) (string, error) {
+	if path == "~" || strings.HasPrefix(path, "~/") || strings.HasPrefix(path, "~"+string(filepath.Separator)) {
 		home, err := os.UserHomeDir()
 		if err != nil {
-			return "", err
+			return path, err
 		}
-		return filepath.Join(home, path[1:]), nil
+		path = home + filepath.FromSlash(path[1:])
 	}
-	return path, nil
+	return os.ExpandEnv(path), nil
 }

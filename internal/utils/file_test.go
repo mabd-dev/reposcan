@@ -192,3 +192,52 @@ func TestWriteToFile(t *testing.T) {
 		}
 	})
 }
+
+func TestExpandPath(t *testing.T) {
+	home := t.TempDir()
+	setHome(t, home)
+	t.Setenv("REPOSCAN_TEST_DIR", "/env")
+	t.Setenv("REPOSCAN_TEST_NAME", "sub")
+	sep := string(filepath.Separator)
+
+	tests := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{name: "tilde alone", in: "~", want: home},
+		{name: "tilde slash", in: "~/Code", want: filepath.Join(home, "Code")},
+		{name: "tilde os separator", in: "~" + sep + "Code", want: filepath.Join(home, "Code")},
+		{name: "glob and trailing slash kept", in: "~/Library/**/", want: home + filepath.FromSlash("/Library/**/")},
+		{name: "env var", in: "$REPOSCAN_TEST_DIR/x", want: "/env/x"},
+		{name: "tilde and env var", in: "~/$REPOSCAN_TEST_NAME", want: filepath.Join(home, "sub")},
+		{name: "other user's home is not expanded", in: "~bob/Code", want: "~bob/Code"},
+		{name: "tilde not at start", in: "/a/~/b", want: "/a/~/b"},
+		{name: "plain path unchanged", in: "/tmp/file", want: "/tmp/file"},
+		{name: "empty", in: "", want: ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ExpandPath(tt.in)
+			if err != nil {
+				t.Fatalf("ExpandPath(%q) error: %v", tt.in, err)
+			}
+			if got != tt.want {
+				t.Fatalf("ExpandPath(%q) = %q, want %q", tt.in, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestExpandPath_NoHomeReturnsPathUnchanged(t *testing.T) {
+	unsetHome(t)
+
+	got, err := ExpandPath("~/Code")
+	if err == nil {
+		t.Fatal("expected error when home cannot be determined")
+	}
+	if got != "~/Code" {
+		t.Fatalf("expected path unchanged on error, got %q", got)
+	}
+}

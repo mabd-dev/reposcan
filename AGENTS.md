@@ -119,7 +119,7 @@ Built with Bubble Tea (Elm architecture):
 2. A file containing "gitdir:" (worktrees/submodules - partial support)
 
 ### Path Expansion
-All root paths and dirIgnore patterns support environment variable expansion via `os.ExpandEnv`
+`utils.ExpandPath` expands a leading `~` (or `~/…`) to the home directory, then environment variables via `os.ExpandEnv`. It is applied to roots (in `config.Validate` and `scan.FindRepos`) and to `jsonPath` (in `config.Validate` and `utils.WriteToFile`). `FindRepos` passes the expanded roots to `NewIgnoreMatcher` so root-anchored `/…` patterns line up. dirIgnore patterns get no env expansion: only patterns starting with `~/` are expanded, and they are matched as absolute paths, not anchored to each root like `/…` patterns.
 
 ### Filtering Logic
 The `filter` function in `internal/scanGenerator.go` applies `OnlyFilter` after all repos are discovered and checked. This means all git operations happen regardless of filter—filtering only affects output.

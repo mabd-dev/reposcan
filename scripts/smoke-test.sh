@@ -325,6 +325,15 @@ assert_eq '$VAR expansion in config roots' "$N_ALL" \
   "$(FIXROOT="$FIX" sh -c "printf 'version=1\nroots=[\"\$FIXROOT\"]\nonly=\"all\"\nno-telemetry=true\ndirignore=[\"**/node_modules/**\"]\n[output]\ntype=\"json\"\n' > '$CFG'"; \
      FIXROOT="$FIX" "$BIN" 2>/dev/null | jq '.repoStates | length')"
 
+# ~ is the sandbox HOME, so these repos live under it
+$G init -q "$HOME/code/tilde"
+$G init -q "$HOME/code/skip/ignored"
+printf 'version=1\nroots=["~/code"]\nonly="all"\nno-telemetry=true\ndirignore=["~/code/skip/**"]\n[output]\ntype="json"\n' > "$CFG"
+assert_eq '~ expansion in config roots + dirIgnore' "tilde" \
+  "$("$BIN" 2>/dev/null | jq -r '.repoStates[].repo' | tr '\n' ' ' | sed 's/ $//')"
+assert_eq '~ expansion in an unexpanded --root value' "ignored tilde" \
+  "$(rs -r '~/code' -d '**/nothing/**' -o json -f all | jq -r '.repoStates[].repo' | sort | tr '\n' ' ' | sed 's/ $//')"
+
 reset_config
 
 # ---------------------------------------------------------------- errors
@@ -367,10 +376,6 @@ field() { # field <repo-name> <jq-path-after-the-selector>
   rs -r "$FIX" -o json -f all | jq -r "[.repoStates[] | select(.repo==\"$1\")][0]$2"
 }
 
-bug_tilde_root() {
-  printf 'version = 1\nroots = ["~"]\nonly = "all"\nno-telemetry = true\n[output]\ntype = "json"\n' > "$CFG"
-  ! "$BIN" >/dev/null 2>&1
-}
 bug_partial_config() {
   printf 'roots = ["%s"]\n' "$FIX" > "$CFG"
   ! "$BIN" -o json -f all >/dev/null 2>&1
@@ -388,7 +393,6 @@ bug_worktree_repo_name() {
 bug_jj_null_stashes()       { [ "$(field jjrepo .stashes)" = "null" ]; }
 
 reset_config
-known_bug "tilde (~) in config roots is not expanded"                        bug_tilde_root
 known_bug "partial config.toml loses defaults instead of merging them"       bug_partial_config
 known_bug "malformed config.toml is swallowed, shown as empty-field errors"  bug_malformed_config
 
