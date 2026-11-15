@@ -41,7 +41,7 @@ known_bug() {
   if "$@" >/dev/null 2>&1; then
     printf '  %s %s\n' "$(yellow 'KNOWN')" "$label"
   else
-    printf '  %s %s\n' "$(green 'FIXED')" "$label — bug no longer reproduces, drop it from docs/known-issues.md"
+    printf '  %s %s\n' "$(green 'FIXED')" "$label — bug no longer reproduces, delete its known_bug check"
   fi
 }
 
@@ -94,7 +94,7 @@ fi
 if (cd "$REPO_ROOT" && go test ./... >"$TMP/test.out" 2>&1); then
   ok "go test ./..."
 else
-  bad "go test ./..." "$(grep -E '^(FAIL|---)' "$TMP/test.out" | head -5)"
+  bad "go test ./..." "$(cat "$TMP/test.out")" # full output: CI has no other go test log
 fi
 
 # reposcan wrapper: always isolated + no telemetry
@@ -358,9 +358,8 @@ section "subcommands"
 "$BIN" update --help 2>/dev/null | grep -q '\--alias' && ok "update --help shows --alias" || bad "update --help shows --alias"
 
 # ---------------------------------------------------------------- known issues
-# Bugs found during release testing that are not fixed yet, written up in
-# docs/known-issues.md. These never fail the run: KNOWN = still reproduces,
-# FIXED = gone, so drop the entry there and delete the check here.
+# Bugs found during release testing that are not fixed yet. These never fail
+# the run: KNOWN = still reproduces, FIXED = gone, so delete the check here.
 
 section "known issues (informational)"
 
