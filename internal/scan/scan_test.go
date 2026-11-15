@@ -3,6 +3,7 @@ package scan
 import (
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -196,45 +197,68 @@ func setHome(t *testing.T, dir string) {
 	t.Setenv("USERPROFILE", dir)
 }
 
-func TestFindRepos_ExpandsTildeAndEnvVarsInRoots(t *testing.T) {
-	home := t.TempDir()
+// TestFindRepos_RootFormsWithIgnorePatterns covers every way a root can be
+// written (~, $VAR, trailing slash, relative) against root-anchored "/..."
+// and home-relative "~/..." ignore patterns. Roots are made absolute and
+// clean before reaching the matcher, or these patterns silently stop matching.
+func TestFindRepos_RootFormsWithIgnorePatterns(t *testing.T) {
+	// Resolve symlinks (macOS /var -> /private/var) so the home dir and the
+	// working dir set by t.Chdir name the same path.
+	home, err := filepath.EvalSymlinks(t.TempDir())
+	if err != nil {
+		t.Fatalf("resolve temp dir: %v", err)
+	}
 	setHome(t, home)
-	t.Setenv("REPOSCAN_TEST_ROOT", filepath.Join(home, "code"))
+	code := filepath.Join(home, "code")
+	t.Setenv("REPOSCAN_TEST_ROOT", code)
 
-	gitRepo := filepath.Join(home, "code", "app")
-	makeDir(t, filepath.Join(gitRepo, ".git"))
+	makeDir(t, filepath.Join(code, "app", ".git"))
+	makeDir(t, filepath.Join(code, "vendor", "lib", ".git"))
+	makeDir(t, filepath.Join(home, "skip", "old", ".git"))
 
-	for _, root := range []string{"~/code", "$REPOSCAN_TEST_ROOT"} {
-		t.Run(root, func(t *testing.T) {
-			repos, warnings := FindRepos([]string{root}, nil)
+	tests := []struct {
+		name   string
+		cwd    string // relative to home; empty keeps the working dir
+		roots  []string
+		ignore []string
+		want   []string // repo paths relative to home
+	}{
+		{name: "tilde root", roots: []string{"~/code"}, ignore: []string{"/vendor/**"}, want: []string{"code/app"}},
+		{name: "tilde root with trailing slash", roots: []string{"~/code/"}, ignore: []string{"/vendor/**"}, want: []string{"code/app"}},
+		{name: "absolute root with trailing slash", roots: []string{code + string(filepath.Separator)}, ignore: []string{"/vendor/**"}, want: []string{"code/app"}},
+		{name: "env var root", roots: []string{"$REPOSCAN_TEST_ROOT"}, ignore: []string{"/vendor/**"}, want: []string{"code/app"}},
+		{name: "tilde root with tilde ignore", roots: []string{"~"}, ignore: []string{"~/skip/**"}, want: []string{"code/app", "code/vendor/lib"}},
+		{name: "tilde ignore is not anchored to the root", roots: []string{"~/code"}, ignore: []string{"~/vendor/**"}, want: []string{"code/app", "code/vendor/lib"}},
+		{name: "relative root with tilde ignore", cwd: ".", roots: []string{"."}, ignore: []string{"~/skip/**"}, want: []string{"code/app", "code/vendor/lib"}},
+		{name: "relative root with anchored ignore", cwd: "code", roots: []string{"."}, ignore: []string{"/vendor/**"}, want: []string{"code/app"}},
+		{name: "relative and absolute spellings of a root are deduplicated", cwd: "code", roots: []string{".", code}, want: []string{"code/app", "code/vendor/lib"}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if tt.cwd != "" {
+				t.Chdir(filepath.Join(home, tt.cwd))
+			}
+
+			repos, warnings := FindRepos(tt.roots, tt.ignore)
 			if len(warnings) != 0 {
 				t.Fatalf("unexpected warnings: %v", warnings)
 			}
-			if len(repos) != 1 || repos[0].Path != gitRepo {
-				t.Fatalf("expected only %s, got %v", gitRepo, repos)
+
+			got := make([]string, 0, len(repos))
+			for _, repo := range repos {
+				got = append(got, repo.Path)
+			}
+			want := make([]string, 0, len(tt.want))
+			for _, w := range tt.want {
+				want = append(want, filepath.Join(home, filepath.FromSlash(w)))
+			}
+			slices.Sort(got)
+			slices.Sort(want)
+			if !slices.Equal(got, want) {
+				t.Fatalf("FindRepos(%q, %q)\n got: %q\nwant: %q", tt.roots, tt.ignore, got, want)
 			}
 		})
-	}
-}
-
-// Root-anchored ("/...") and "~/" ignore patterns must both work when the
-// root itself is written with "~": the matcher has to see the expanded root.
-func TestFindRepos_TildeRootWithIgnorePatterns(t *testing.T) {
-	home := t.TempDir()
-	setHome(t, home)
-
-	code := filepath.Join(home, "code")
-	keep := filepath.Join(code, "app")
-	makeDir(t, filepath.Join(keep, ".git"))
-	makeDir(t, filepath.Join(code, "vendor", "lib", ".git"))
-	makeDir(t, filepath.Join(code, "skip", "old", ".git"))
-
-	repos, warnings := FindRepos([]string{"~/code"}, []string{"/vendor/**", "~/code/skip/**"})
-	if len(warnings) != 0 {
-		t.Fatalf("unexpected warnings: %v", warnings)
-	}
-	if len(repos) != 1 || repos[0].Path != keep {
-		t.Fatalf("expected only %s, got %v", keep, repos)
 	}
 }
 

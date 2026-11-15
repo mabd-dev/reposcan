@@ -23,6 +23,12 @@ func FindRepos(
 	expandedRoots := make([]string, 0, len(roots))
 	for _, root := range roots {
 		expanded, err := utils.ExpandPath(root)
+		if err == nil {
+			// Abs also cleans: a trailing slash would turn "/vendor/**" into
+			// "<root>//vendor/**", and a relative root makes WalkDir report
+			// relative paths that absolute ("~/...") patterns never match.
+			expanded, err = filepath.Abs(expanded)
+		}
 		if err != nil {
 			warnings = append(warnings, "root '"+root+"': "+err.Error())
 			continue

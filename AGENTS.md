@@ -119,7 +119,7 @@ Built with Bubble Tea (Elm architecture):
 2. A file containing "gitdir:" (worktrees/submodules - partial support)
 
 ### Path Expansion
-`utils.ExpandPath` expands a leading `~` (or `~/…`) to the home directory, then environment variables via `os.ExpandEnv`. It is applied to roots (in `config.Validate` and `scan.FindRepos`) and to `jsonPath` (in `config.Validate` and `utils.WriteToFile`). `FindRepos` passes the expanded roots to `NewIgnoreMatcher` so root-anchored `/…` patterns line up. dirIgnore patterns get no env expansion: only patterns starting with `~/` are expanded, and they are matched as absolute paths, not anchored to each root like `/…` patterns.
+`utils.ExpandPath` expands a leading `~` (or `~/…`) to the home directory, then environment variables via `os.ExpandEnv`. It is applied to roots (in `config.Validate` and `scan.FindRepos`) and to `jsonPath` (in `config.Validate` and `file.WriteScanReport`, before the filename is joined, since `filepath.Join` would clean `~/..` or `$VAR/..` away). `FindRepos` also makes each root absolute and clean with `filepath.Abs`, and passes those roots to both `WalkDir` and `NewIgnoreMatcher`: a trailing slash breaks root-anchored `/…` patterns, and a relative root makes `WalkDir` report relative paths that `~/…` patterns never match. Repo paths in the report are therefore always absolute. dirIgnore patterns get no env expansion: only patterns starting with `~/` are expanded, and they are matched as absolute paths, not anchored to each root like `/…` patterns.
 
 ### Filtering Logic
 The `filter` function in `internal/scanGenerator.go` applies `OnlyFilter` after all repos are discovered and checked. This means all git operations happen regardless of filter—filtering only affects output.
