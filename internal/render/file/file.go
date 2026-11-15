@@ -16,13 +16,6 @@ func WriteScanReport(
 	report report.ScanReport,
 	dirPath string,
 ) error {
-	// Expand before filepath.Join, which would clean "$VAR/.." or "~/.." away
-	// and leave a relative path with nothing left to expand.
-	dirPath, err := utils.ExpandPath(dirPath)
-	if err != nil {
-		return err
-	}
-
 	jsonReport, err := json.MarshalIndent(report, "", "    ")
 	if err != nil {
 		msg := "Error convert report to json, message=" + err.Error()
