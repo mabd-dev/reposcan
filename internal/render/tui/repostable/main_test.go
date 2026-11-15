@@ -96,7 +96,7 @@ func TestUpdateRepoStateUpdatesFilteredAndOriginalReports(t *testing.T) {
 	m := New(stubTheme(), testReport(), 80, 20, Options{})
 	updated := report.RepoState{ID: "beta", Repo: "Beta", Branch: "updated"}
 
-	m.UpdateRepoState(1, updated)
+	m.UpdateRepoState(updated)
 
 	if got := m.filteredRepos[1]; !reflect.DeepEqual(got, updated) {
 		t.Fatalf("filtered state = %#v, want %#v", got, updated)
@@ -117,7 +117,7 @@ func TestUpdateRepoStatePersistsFilteredRepoUpdate(t *testing.T) {
 	m.Filter("Beta")
 	updated := report.RepoState{ID: "beta", Repo: "Beta", Branch: "updated"}
 
-	m.UpdateRepoState(0, updated)
+	m.UpdateRepoState(updated)
 
 	if got := m.report.RepoStates[1]; !reflect.DeepEqual(got, updated) {
 		t.Fatalf("report state = %#v, want %#v", got, updated)
@@ -139,7 +139,7 @@ func TestUpdateRepoStateLeavesOriginalReportWhenIDIsUnknown(t *testing.T) {
 	wantFilteredRepos := append([]report.RepoState(nil), m.filteredRepos...)
 	wantRows := m.tbl.Rows()
 
-	m.UpdateRepoState(0, report.RepoState{ID: "unknown", Repo: "Unknown"})
+	m.UpdateRepoState(report.RepoState{ID: "unknown", Repo: "Unknown"})
 
 	if !reflect.DeepEqual(m.report.RepoStates, wantReport) {
 		t.Fatalf("report states changed for unknown ID: %#v", m.report.RepoStates)
@@ -149,6 +149,26 @@ func TestUpdateRepoStateLeavesOriginalReportWhenIDIsUnknown(t *testing.T) {
 	}
 	if !reflect.DeepEqual(m.tbl.Rows(), wantRows) {
 		t.Fatalf("table rows changed for unknown ID: %#v", m.tbl.Rows())
+	}
+}
+
+func TestUpdateRepoStateUpdatesHiddenRepoByID(t *testing.T) {
+	m := New(stubTheme(), testReport(), 80, 20, Options{})
+	m.Filter("Alpha")
+	updated := report.RepoState{ID: "beta", Repo: "Beta", Branch: "pulled"}
+
+	m.UpdateRepoState(updated)
+
+	if got := m.report.RepoStates[1]; !reflect.DeepEqual(got, updated) {
+		t.Fatalf("report state = %#v, want %#v", got, updated)
+	}
+	if len(m.filteredRepos) != 1 || m.filteredRepos[0].ID != "alpha" {
+		t.Fatalf("filtered repos changed for hidden repo: %#v", m.filteredRepos)
+	}
+
+	m.Filter("")
+	if got := m.filteredRepos[1]; !reflect.DeepEqual(got, updated) {
+		t.Fatalf("state after clearing filter = %#v, want %#v", got, updated)
 	}
 }
 
@@ -218,7 +238,7 @@ func TestUpdateThemeChangesThemeAndTableStyles(t *testing.T) {
 	}
 
 	// Refreshing one row must leave every remote label using the current theme.
-	m.UpdateRepoState(0, reportWithRemote.RepoStates[0])
+	m.UpdateRepoState(reportWithRemote.RepoStates[0])
 	for i, row := range m.tbl.Rows() {
 		if got, want := row[3], "⏳0 ↑0 ↓0   (upstream)"; got != want {
 			t.Errorf("row %d state = %q, want %q", i, got, want)

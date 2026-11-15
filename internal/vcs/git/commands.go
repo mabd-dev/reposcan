@@ -3,6 +3,7 @@ package git
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"net/url"
 	"os/exec"
 	"path"
@@ -236,7 +237,8 @@ func parseRepoName(remote string) (string, bool) {
 }
 
 // RunGitCommand executes a git command in dir and returns its stdout as a string.
-// Stderr is discarded, and non-zero exit codes are returned as errors.
+// Stderr is attached to the returned error so callers can show git's own
+// explanation (missing upstream, conflicts, auth failures) to the user.
 func RunGitCommand(dir string, args ...string) (string, error) {
 	cmd := exec.Command("git", append([]string{"-C", dir}, args...)...)
 
@@ -246,6 +248,9 @@ func RunGitCommand(dir string, args ...string) (string, error) {
 
 	err := cmd.Run()
 	if err != nil {
+		if msg := strings.TrimSpace(stderr.String()); msg != "" {
+			return "", fmt.Errorf("%w: %s", err, msg)
+		}
 		return "", err
 	}
 	return stdout.String(), nil

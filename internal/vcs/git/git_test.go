@@ -256,3 +256,16 @@ func TestCheckRepoState_WarnsWhenRemoteBranchMissing(t *testing.T) {
 		t.Fatalf("expected origin status with ahead/behind -1, got %+v", rs)
 	}
 }
+
+func TestRunGitCommandIncludesStderr(t *testing.T) {
+	gitOrSkip(t)
+	t.Setenv("LC_ALL", "C")
+
+	_, err := RunGitCommand(t.TempDir(), "status")
+	if err == nil {
+		t.Fatal("expected error outside a git repository")
+	}
+	if !strings.Contains(err.Error(), "not a git repository") {
+		t.Errorf("error %q does not include git's explanation", err)
+	}
+}
