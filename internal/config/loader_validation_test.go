@@ -140,3 +140,97 @@ func TestValidate(t *testing.T) {
 		t.Fatalf("expected a warning when JsonOutputPath does not exist")
 	}
 }
+
+func TestCreateOrReadConfigs_PartialFileKeepsDefaults(t *testing.T) {
+	restore, _ := withTempHome(t)
+	defer restore()
+
+	cfgPath, err := DefaultPaths().GetConfigFullPath()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Dir(cfgPath), 0o755); err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		name  string
+		toml  string
+		check func(t *testing.T, got Config)
+	}{
+		{
+			name: "only roots set",
+			toml: `roots = ["/x"]`,
+			check: func(t *testing.T, got Config) {
+				def := Defaults()
+				if strings.Join(got.Roots, ",") != "/x" {
+					t.Errorf("roots = %v, want [/x]", got.Roots)
+				}
+				if got.Only != def.Only || got.Output.Type != def.Output.Type {
+					t.Errorf("only/output = %q/%q, want defaults %q/%q", got.Only, got.Output.Type, def.Only, def.Output.Type)
+				}
+				if len(got.DirIgnore) != len(def.DirIgnore) {
+					t.Errorf("dirIgnore has %d entries, want %d defaults", len(got.DirIgnore), len(def.DirIgnore))
+				}
+				if got.MaxWorkers != def.MaxWorkers || !got.ShowVCSColumn() {
+					t.Errorf("maxWorkers=%d showVCS=%v, want defaults", got.MaxWorkers, got.ShowVCSColumn())
+				}
+				if got.Version != def.Version {
+					t.Errorf("version = %d, want default %d", got.Version, def.Version)
+				}
+			},
+		},
+		{
+			name: "no roots key falls back to home",
+			toml: `only = "all"`,
+			check: func(t *testing.T, got Config) {
+				if want := Defaults().Roots; strings.Join(got.Roots, ",") != strings.Join(want, ",") {
+					t.Errorf("roots = %v, want default %v", got.Roots, want)
+				}
+			},
+		},
+		{
+			name: "dirIgnore list replaces defaults, not merged",
+			toml: `dirIgnore = ["**/app/**"]`,
+			check: func(t *testing.T, got Config) {
+				if strings.Join(got.DirIgnore, ",") != "**/app/**" {
+					t.Errorf("dirIgnore = %v, want only [**/app/**]", got.DirIgnore)
+				}
+			},
+		},
+		{
+			name: "explicit empty dirIgnore clears defaults",
+			toml: "dirIgnore = []",
+			check: func(t *testing.T, got Config) {
+				if len(got.DirIgnore) != 0 {
+					t.Errorf("dirIgnore = %v, want empty", got.DirIgnore)
+				}
+			},
+		},
+		{
+			name: "output table with only type keeps other fields",
+			toml: "[output]\ntype = \"json\"\n[tui]\nshowVCS = false",
+			check: func(t *testing.T, got Config) {
+				if got.Output.Type != OutputJson || got.ShowVCSColumn() {
+					t.Errorf("output=%q showVCS=%v, want json/false", got.Output.Type, got.ShowVCSColumn())
+				}
+				if got.Only != Defaults().Only {
+					t.Errorf("only = %q, want default", got.Only)
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := os.WriteFile(cfgPath, []byte(tt.toml), 0o644); err != nil {
+				t.Fatal(err)
+			}
+			got, err := CreateOrReadConfigs(cfgPath)
+			if err != nil {
+				t.Fatalf("unexpected error: %v", err)
+			}
+			tt.check(t, got)
+		})
+	}
+}

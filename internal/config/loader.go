@@ -46,12 +46,12 @@ func CreateOrReadConfigs(path string) (Config, error) {
 		return Config{}, err
 	}
 
-	var configs Config
+	// Start from Defaults() so keys missing from the file keep their default.
+	// A key present in the file replaces the default, so `dirIgnore = []` still clears it.
+	configs := Defaults()
 	if configFileExists {
 		Load(&configs, path)
-		//fmt.Println("loaded config file, data=", configs)
 	} else {
-		configs = Defaults()
 		writeToFile(configs, path)
 	}
 
