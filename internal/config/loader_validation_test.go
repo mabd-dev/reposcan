@@ -175,6 +175,27 @@ func TestCreateOrReadConfigs_PartialFileKeepsDefaults(t *testing.T) {
 				if got.MaxWorkers != def.MaxWorkers || !got.ShowVCSColumn() {
 					t.Errorf("maxWorkers=%d showVCS=%v, want defaults", got.MaxWorkers, got.ShowVCSColumn())
 				}
+				if got.Version != def.Version {
+					t.Errorf("version = %d, want default %d", got.Version, def.Version)
+				}
+			},
+		},
+		{
+			name: "no roots key falls back to home",
+			toml: `only = "all"`,
+			check: func(t *testing.T, got Config) {
+				if want := Defaults().Roots; strings.Join(got.Roots, ",") != strings.Join(want, ",") {
+					t.Errorf("roots = %v, want default %v", got.Roots, want)
+				}
+			},
+		},
+		{
+			name: "dirIgnore list replaces defaults, not merged",
+			toml: `dirIgnore = ["**/app/**"]`,
+			check: func(t *testing.T, got Config) {
+				if strings.Join(got.DirIgnore, ",") != "**/app/**" {
+					t.Errorf("dirIgnore = %v, want only [**/app/**]", got.DirIgnore)
+				}
 			},
 		},
 		{

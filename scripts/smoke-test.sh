@@ -334,6 +334,11 @@ assert_eq '~ expansion in config roots + dirIgnore' "tilde" \
 assert_eq '~ expansion in an unexpanded --root value' "ignored tilde" \
   "$(rs -r '~/code' -d '**/nothing/**' -o json -f all | jq -r '.repoStates[].repo' | sort | tr '\n' ' ' | sed 's/ $//')"
 
+# keys missing from config.toml keep their defaults: only=dirty, valid output, default dirIgnore skips node_modules
+printf 'roots = ["%s"]\nno-telemetry = true\n' "$FIX" > "$CFG"
+assert_eq 'config with only roots falls back to defaults' "$N_DIRTY" \
+  "$("$BIN" -o json 2>/dev/null | jq '.repoStates | length')"
+
 reset_config
 
 # ---------------------------------------------------------------- errors
@@ -376,10 +381,6 @@ field() { # field <repo-name> <jq-path-after-the-selector>
   rs -r "$FIX" -o json -f all | jq -r "[.repoStates[] | select(.repo==\"$1\")][0]$2"
 }
 
-bug_partial_config() {
-  printf 'roots = ["%s"]\n' "$FIX" > "$CFG"
-  ! "$BIN" -o json -f all >/dev/null 2>&1
-}
 bug_malformed_config() {
   printf 'not = valid toml [[[\n' > "$CFG"
   ! "$BIN" -r "$FIX" -o json -f all >/dev/null 2>&1
@@ -393,7 +394,6 @@ bug_worktree_repo_name() {
 bug_jj_null_stashes()       { [ "$(field jjrepo .stashes)" = "null" ]; }
 
 reset_config
-known_bug "partial config.toml loses defaults instead of merging them"       bug_partial_config
 known_bug "malformed config.toml is swallowed, shown as empty-field errors"  bug_malformed_config
 
 reset_config
