@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/mabd-dev/reposcan/internal/utils"
 	"github.com/mabd-dev/reposcan/internal/vcs"
 )
 
@@ -19,13 +20,23 @@ func FindRepos(
 	roots []string,
 	dirignore []string,
 ) (repos []vcs.RepoInfo, warnings []string) {
-	matcher := NewIgnoreMatcher(roots, dirignore)
+	expandedRoots := make([]string, 0, len(roots))
+	for _, root := range roots {
+		expanded, err := utils.ExpandPath(root)
+		if err != nil {
+			warnings = append(warnings, "root '"+root+"': "+err.Error())
+			continue
+		}
+		expandedRoots = append(expandedRoots, expanded)
+	}
+
+	// The matcher needs expanded roots too, so root-anchored ("/...") patterns
+	// line up with the paths WalkDir reports.
+	matcher := NewIgnoreMatcher(expandedRoots, dirignore)
 
 	visitedDir := map[string]struct{}{}
 
-	for _, root := range roots {
-		root = os.ExpandEnv(root)
-
+	for _, root := range expandedRoots {
 		_ = filepath.WalkDir(root, func(path string, d fs.DirEntry, err error) error {
 			if err != nil {
 				// possible errors: permission denied

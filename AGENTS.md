@@ -66,6 +66,19 @@ go run . -o interactive
 go run . -o json
 ```
 
+## Changing Behavior
+
+- Before implementing, list every observable behavior change (CLI output, report
+  fields or paths, which roots or ignore patterns match, config meaning) as
+  old → new, and mark anything that is not backward compatible. Get approval
+  for those before writing code.
+- Before changing shared code (path handling, ignore matching, config loading),
+  list what currently works through it and check each case on `main` and on the
+  branch. If a case has no test, add one before changing the code.
+- Review comments: reproduce on `main` first. A bug that already exists on
+  `main` goes to a new issue unless the maintainer asks to fix it in the PR.
+  Fixing a review comment must not widen the PR's scope.
+
 ## Architecture
 
 ### Core Flow
@@ -119,7 +132,7 @@ Built with Bubble Tea (Elm architecture):
 2. A file containing "gitdir:" (worktrees/submodules - partial support)
 
 ### Path Expansion
-All root paths and dirIgnore patterns support environment variable expansion via `os.ExpandEnv`
+`utils.ExpandPath` expands a leading `~` (or `~/…`) to the home directory, then environment variables via `os.ExpandEnv`. It is applied to roots (in `config.Validate` and `scan.FindRepos`) and to `jsonPath` (in `config.Validate` and `file.WriteScanReport`, before the filename is joined, since `filepath.Join` would clean `~/..` or `$VAR/..` away). `utils.WriteToFile` writes paths as-is, so resolved paths such as the config file are never expanded; expand each user path exactly once. `FindRepos` passes the expanded roots to `NewIgnoreMatcher` so root-anchored `/…` patterns line up. dirIgnore patterns get no env expansion: only patterns starting with `~/` are expanded, and they are matched as absolute paths, not anchored to each root like `/…` patterns.
 
 ### Filtering Logic
 The `filter` function in `internal/scanGenerator.go` applies `OnlyFilter` after all repos are discovered and checked. This means all git operations happen regardless of filter—filtering only affects output.

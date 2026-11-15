@@ -85,6 +85,43 @@ func TestCreateOrReadConfigs_ReadsExistingFile(t *testing.T) {
 	}
 }
 
+// The config path is resolved from the home dir and read as-is, so writes
+// must use it as-is too. A home dir with a literal "$" used to be
+// env-expanded on write only, sending new configs and saved themes to a
+// different file than the one read back.
+func TestCreateOrReadConfigs_HomeWithDollarSign(t *testing.T) {
+	home := filepath.Join(t.TempDir(), "dev$REPOSCAN_TEST_VAR")
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home) // os.UserHomeDir on Windows
+	t.Setenv("REPOSCAN_TEST_VAR", "expanded")
+
+	cfgPath, err := DefaultPaths().GetConfigFullPath()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if _, err := CreateOrReadConfigs(cfgPath); err != nil {
+		t.Fatalf("create: %v", err)
+	}
+	if _, err := os.Stat(cfgPath); err != nil {
+		t.Fatalf("expected config created at %s: %v", cfgPath, err)
+	}
+
+	// A saved change (e.g. a theme picked in the TUI) must be read back.
+	cfg := Defaults()
+	cfg.Output.ColorSchemeName = "dracula"
+	if err := UpdateConfigs(cfg, cfgPath); err != nil {
+		t.Fatalf("update: %v", err)
+	}
+	got, err := CreateOrReadConfigs(cfgPath)
+	if err != nil {
+		t.Fatalf("read back: %v", err)
+	}
+	if got.Output.ColorSchemeName != "dracula" {
+		t.Fatalf("expected saved colorscheme to be read back, got %q", got.Output.ColorSchemeName)
+	}
+}
+
 func TestValidate(t *testing.T) {
 	cfg := Defaults()
 	// Force an invalid root path to trigger an error
