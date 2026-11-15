@@ -41,13 +41,10 @@ func DirExists(path string) (bool, error) {
 	return false, err
 }
 
-// WriteToFile Write data to file and create all parent folders if needed
+// WriteToFile writes data to path, creating parent folders if needed.
+// The path is used as-is: callers expand user-supplied paths (ExpandPath)
+// first, so resolved paths such as the config file are never re-expanded.
 func WriteToFile(data []byte, path string) error {
-	path, err := ExpandPath(path)
-	if err != nil {
-		return err
-	}
-
 	// Create parent directories if needed
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return err

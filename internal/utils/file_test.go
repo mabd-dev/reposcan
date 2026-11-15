@@ -152,30 +152,25 @@ func TestWriteToFile(t *testing.T) {
 		}
 	})
 
-	t.Run("expands leading tilde using HOME", func(t *testing.T) {
-		root := t.TempDir()
-		setHome(t, root)
+	// Callers pass resolved paths (the config file) or expand user paths
+	// themselves (the JSON report), so WriteToFile must not expand again:
+	// a home dir named "dev$X" would otherwise write somewhere else.
+	t.Run("writes the path as-is without expanding $ or ~", func(t *testing.T) {
+		cwd := t.TempDir()
+		t.Chdir(cwd) // a literal "~" path lands here, not in the package dir
+		setHome(t, filepath.Join(cwd, "home"))
+		t.Setenv("REPOSCAN_TEST_VAR", "expanded")
 
-		relRel := filepath.Join("proj", "out.txt")
-		if err := WriteToFile([]byte("x"), filepath.Join("~", relRel)); err != nil {
-			t.Fatalf("WriteToFile: %v", err)
-		}
-
-		want := filepath.Join(root, relRel)
-		got, err := os.ReadFile(want)
-		if err != nil {
-			t.Fatalf("expected file at %q: %v", want, err)
-		}
-		if string(got) != "x" {
-			t.Fatalf("expected content %q, got %q", "x", got)
-		}
-	})
-
-	t.Run("error when home cannot be determined", func(t *testing.T) {
-		unsetHome(t)
-
-		if err := WriteToFile([]byte("x"), "~/out.txt"); err == nil {
-			t.Fatal("expected error when $HOME is not defined")
+		for _, path := range []string{
+			filepath.Join(cwd, "dev$REPOSCAN_TEST_VAR", "config.toml"),
+			filepath.Join("~", "out.txt"),
+		} {
+			if err := WriteToFile([]byte("x"), path); err != nil {
+				t.Fatalf("WriteToFile(%q): %v", path, err)
+			}
+			if _, err := os.Stat(path); err != nil {
+				t.Fatalf("expected file at the literal path %q: %v", path, err)
+			}
 		}
 	})
 
