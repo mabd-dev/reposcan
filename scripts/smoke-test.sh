@@ -383,7 +383,9 @@ field() { # field <repo-name> <jq-path-after-the-selector>
 
 bug_malformed_config() { # fixed once the go-toml parse error ("toml: ...") is shown
   printf 'not = valid toml [[[\n' > "$CFG"
-  ! "$BIN" -r "$FIX" -o json -f all 2>&1 | grep -q 'toml:'
+  local out
+  out=$("$BIN" -r "$FIX" -o json -f all 2>&1) # exits 1 once fixed: capture first, a pipe would fail under pipefail
+  ! grep -q 'toml:' <<<"$out"
 }
 bug_no_upstream_minus_one() { [ "$(field noremote .remoteStatus[0].ahead)" = "-1" ]; }
 bug_worktree_repo_name() {
