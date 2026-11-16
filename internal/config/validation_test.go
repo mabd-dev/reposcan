@@ -74,6 +74,43 @@ func TestValidate_WhenConfigIsValid_ReturnsNoIssues(t *testing.T) {
 	}
 }
 
+func TestValidate_ExpandsTildeInRootsAndJSONPath(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home) // os.UserHomeDir on Windows
+	for _, dir := range []string{"code", "reports"} {
+		if err := os.MkdirAll(filepath.Join(home, dir), 0o755); err != nil {
+			t.Fatalf("create %s: %v", dir, err)
+		}
+	}
+
+	t.Run("existing dirs are valid", func(t *testing.T) {
+		cfg := Defaults()
+		cfg.Roots = []string{"~/code"}
+		cfg.Output.JSONPath = "~/reports"
+
+		result := Validate(cfg)
+		if len(result.Errors) != 0 || len(result.Warnings) != 0 {
+			t.Fatalf("expected no issues, got %+v", result)
+		}
+	})
+
+	t.Run("missing dirs report the expanded path", func(t *testing.T) {
+		cfg := Defaults()
+		cfg.Roots = []string{"~/missing"}
+		cfg.Output.JSONPath = "~/missing-reports"
+
+		result := Validate(cfg)
+		want := filepath.Join(home, "missing")
+		if len(result.Errors) != 1 || !strings.Contains(result.Errors[0].Message, want) {
+			t.Fatalf("expected one root error naming %q, got %+v", want, result.Errors)
+		}
+		if len(result.Warnings) != 1 || !strings.Contains(result.Warnings[0].Message, want+"-reports") {
+			t.Fatalf("expected one jsonOutputPath warning naming %q, got %+v", want+"-reports", result.Warnings)
+		}
+	})
+}
+
 func TestValidationResultLog_DoesNotPanic(t *testing.T) {
 	result := ValidationResult{
 		Warnings: []Issue{{Field: "output", Message: "warn"}},

@@ -3,6 +3,7 @@ package scan
 import (
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/mabd-dev/reposcan/internal/vcs"
@@ -184,5 +185,69 @@ func TestFindRepos_OverlappingRootsAreDeduplicated(t *testing.T) {
 	}
 	if len(repos) != 1 || repos[0].Path != gitRepo {
 		t.Fatalf("expected single deduplicated repo %s, got %v", gitRepo, repos)
+	}
+}
+
+// setHome points os.UserHomeDir at dir on every platform (HOME on unix,
+// USERPROFILE on Windows).
+func setHome(t *testing.T, dir string) {
+	t.Helper()
+	t.Setenv("HOME", dir)
+	t.Setenv("USERPROFILE", dir)
+}
+
+func TestFindRepos_ExpandsTildeAndEnvVarsInRoots(t *testing.T) {
+	home := t.TempDir()
+	setHome(t, home)
+	t.Setenv("REPOSCAN_TEST_ROOT", filepath.Join(home, "code"))
+
+	gitRepo := filepath.Join(home, "code", "app")
+	makeDir(t, filepath.Join(gitRepo, ".git"))
+
+	for _, root := range []string{"~/code", "$REPOSCAN_TEST_ROOT"} {
+		t.Run(root, func(t *testing.T) {
+			repos, warnings := FindRepos([]string{root}, nil)
+			if len(warnings) != 0 {
+				t.Fatalf("unexpected warnings: %v", warnings)
+			}
+			if len(repos) != 1 || repos[0].Path != gitRepo {
+				t.Fatalf("expected only %s, got %v", gitRepo, repos)
+			}
+		})
+	}
+}
+
+// Root-anchored ("/...") and "~/" ignore patterns must both work when the
+// root itself is written with "~": the matcher has to see the expanded root.
+func TestFindRepos_TildeRootWithIgnorePatterns(t *testing.T) {
+	home := t.TempDir()
+	setHome(t, home)
+
+	code := filepath.Join(home, "code")
+	keep := filepath.Join(code, "app")
+	makeDir(t, filepath.Join(keep, ".git"))
+	makeDir(t, filepath.Join(code, "vendor", "lib", ".git"))
+	makeDir(t, filepath.Join(code, "skip", "old", ".git"))
+
+	repos, warnings := FindRepos([]string{"~/code"}, []string{"/vendor/**", "~/code/skip/**"})
+	if len(warnings) != 0 {
+		t.Fatalf("unexpected warnings: %v", warnings)
+	}
+	if len(repos) != 1 || repos[0].Path != keep {
+		t.Fatalf("expected only %s, got %v", keep, repos)
+	}
+}
+
+func TestFindRepos_TildeRootWithoutHomeIsAWarning(t *testing.T) {
+	setHome(t, "")
+	t.Setenv("HOMEDRIVE", "")
+	t.Setenv("HOMEPATH", "")
+
+	repos, warnings := FindRepos([]string{"~/code"}, nil)
+	if len(repos) != 0 {
+		t.Fatalf("expected no repos, got %v", repos)
+	}
+	if len(warnings) != 1 || !strings.HasPrefix(warnings[0], "root '~/code'") {
+		t.Fatalf("expected 1 warning naming the unexpandable root, got %v", warnings)
 	}
 }

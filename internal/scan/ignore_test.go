@@ -1,6 +1,9 @@
 package scan
 
-import "testing"
+import (
+	"path/filepath"
+	"testing"
+)
 
 func TestIgnoreMatcher_BasicPatterns(t *testing.T) {
 	roots := []string{"/proj"}
@@ -56,5 +59,31 @@ func TestIgnoreMatcher_ShouldIgnoreDocumentedBranches(t *testing.T) {
 
 	if !m.ShouldIgnore("/proj/cache/build/x") {
 		t.Fatalf("expected build anywhere to be ignored")
+	}
+}
+
+// "~/" patterns are real paths under the home dir, not anchored to each root
+// the way "/..." patterns are.
+func TestIgnoreMatcher_TildePatternsMatchUnderHome(t *testing.T) {
+	home := t.TempDir()
+	setHome(t, home)
+
+	m := NewIgnoreMatcher([]string{filepath.Join(home, "code")}, []string{"~/Library/**", "~/stuff/"})
+
+	tests := []struct {
+		path string
+		want bool
+	}{
+		{path: filepath.Join(home, "Library"), want: true},
+		{path: filepath.Join(home, "Library", "Caches", "x"), want: true},
+		{path: filepath.Join(home, "stuff"), want: true},
+		{path: filepath.Join(home, "stuff", "repo"), want: true},
+		{path: filepath.Join(home, "code", "Library", "x"), want: false},
+		{path: filepath.Join(home, "code", "app"), want: false},
+	}
+	for _, tt := range tests {
+		if got := m.ShouldIgnore(tt.path); got != tt.want {
+			t.Errorf("ShouldIgnore(%q) = %v, want %v", tt.path, got, tt.want)
+		}
 	}
 }

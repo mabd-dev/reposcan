@@ -41,7 +41,7 @@ known_bug() {
   if "$@" >/dev/null 2>&1; then
     printf '  %s %s\n' "$(yellow 'KNOWN')" "$label"
   else
-    printf '  %s %s\n' "$(green 'FIXED')" "$label — bug no longer reproduces, drop it from docs/known-issues.md"
+    printf '  %s %s\n' "$(green 'FIXED')" "$label — bug no longer reproduces, delete its known_bug check"
   fi
 }
 
@@ -94,7 +94,7 @@ fi
 if (cd "$REPO_ROOT" && go test ./... >"$TMP/test.out" 2>&1); then
   ok "go test ./..."
 else
-  bad "go test ./..." "$(grep -E '^(FAIL|---)' "$TMP/test.out" | head -5)"
+  bad "go test ./..." "$(cat "$TMP/test.out")" # full output: CI has no other go test log
 fi
 
 # reposcan wrapper: always isolated + no telemetry
@@ -324,6 +324,20 @@ assert_eq '$VAR expansion in config roots' "$N_ALL" \
   "$(FIXROOT="$FIX" sh -c "printf 'version=1\nroots=[\"\$FIXROOT\"]\nonly=\"all\"\nno-telemetry=true\ndirignore=[\"**/node_modules/**\"]\n[output]\ntype=\"json\"\n' > '$CFG'"; \
      FIXROOT="$FIX" "$BIN" 2>/dev/null | jq '.repoStates | length')"
 
+# ~ is the sandbox HOME, so these repos live under it
+$G init -q "$HOME/code/tilde"
+$G init -q "$HOME/code/skip/ignored"
+printf 'version=1\nroots=["~/code"]\nonly="all"\nno-telemetry=true\ndirignore=["~/code/skip/**"]\n[output]\ntype="json"\n' > "$CFG"
+assert_eq '~ expansion in config roots + dirIgnore' "tilde" \
+  "$("$BIN" 2>/dev/null | jq -r '.repoStates[].repo' | tr '\n' ' ' | sed 's/ $//')"
+assert_eq '~ expansion in an unexpanded --root value' "ignored tilde" \
+  "$(rs -r '~/code' -d '**/nothing/**' -o json -f all | jq -r '.repoStates[].repo' | sort | tr '\n' ' ' | sed 's/ $//')"
+
+# keys missing from config.toml keep their defaults: only=dirty, valid output, default dirIgnore skips node_modules
+printf 'roots = ["%s"]\nno-telemetry = true\n' "$FIX" > "$CFG"
+assert_eq 'config with only roots falls back to defaults' "$N_DIRTY" \
+  "$("$BIN" -o json 2>/dev/null | jq '.repoStates | length')"
+
 reset_config
 
 # ---------------------------------------------------------------- errors
@@ -372,9 +386,8 @@ done
 reset_config
 
 # ---------------------------------------------------------------- known issues
-# Bugs found during release testing that are not fixed yet, written up in
-# docs/known-issues.md. These never fail the run: KNOWN = still reproduces,
-# FIXED = gone, so drop the entry there and delete the check here.
+# Bugs found during release testing that are not fixed yet. These never fail
+# the run: KNOWN = still reproduces, FIXED = gone, so delete the check here.
 
 section "known issues (informational)"
 
@@ -382,18 +395,11 @@ field() { # field <repo-name> <jq-path-after-the-selector>
   rs -r "$FIX" -o json -f all | jq -r "[.repoStates[] | select(.repo==\"$1\")][0]$2"
 }
 
-bug_tilde_root() {
-  printf 'version = 1\nroots = ["~"]\nonly = "all"\nno-telemetry = true\n[output]\ntype = "json"\n' > "$CFG"
-  ! "$BIN" >/dev/null 2>&1
-}
-bug_partial_config() { # no flags: -o/-f would fill in the missing keys
-  printf 'roots = ["%s"]\nno-telemetry = true\n[output]\ntype = "json"\n' "$FIX" > "$CFG"
-  ! "$BIN" >/dev/null 2>&1
-}
-bug_malformed_config() { # the flags let the scan run, so look for the TOML error
+bug_malformed_config() { # fixed once the go-toml parse error ("toml: ...") is shown
   printf 'not = valid toml [[[\n' > "$CFG"
-  local out; out=$("$BIN" --no-telemetry -r "$FIX" -o json -f all 2>&1)
-  ! grep -qi 'toml:' <<<"$out"
+  local out
+  out=$("$BIN" -r "$FIX" -o json -f all 2>&1) # exits 1 once fixed: capture first, a pipe would fail under pipefail
+  ! grep -q 'toml:' <<<"$out"
 }
 bug_no_upstream_minus_one() { [ "$(field noremote .remoteStatus[0].ahead)" = "-1" ]; }
 bug_worktree_repo_name() {
@@ -404,9 +410,7 @@ bug_worktree_repo_name() {
 bug_jj_null_stashes()       { [ "$(field jjrepo .stashes)" = "null" ]; }
 
 reset_config
-known_bug "tilde (~) in config roots is not expanded"                        bug_tilde_root
-known_bug "partial config.toml loses defaults instead of merging them"       bug_partial_config
-known_bug "malformed config.toml is swallowed, shown as empty-field errors"  bug_malformed_config
+known_bug "malformed config.toml is swallowed, its parse error is not shown"  bug_malformed_config
 
 reset_config
 known_bug "repo with no upstream reports ahead/behind as -1"                 bug_no_upstream_minus_one

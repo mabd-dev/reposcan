@@ -6,6 +6,11 @@ All notable changes to this project will be documented in this file.
 ## Unreleased
 
 - fix/config-startup-flow: `--help`, `version` and `update` work with a broken config.toml, `--help` no longer shows config values as defaults, and CLI flags can override invalid config values by @frittlechasm in [#104](https://github.com/mabd-dev/reposcan/pull/104)
+- fix/partial-config-defaults: keys missing from `config.toml` fall back to their defaults instead of becoming empty, so a config with only `roots` works and the default `dirIgnore` patterns still apply by @mabd-dev in [#108](https://github.com/mabd-dev/reposcan/pull/108)
+- docs/agents-behavior-change-rules: `AGENTS.md` rules to flag backward-incompatible changes before implementing, check shared code changes against `main`, and keep review fixes to the PR's scope by @mabd-dev in [#109](https://github.com/mabd-dev/reposcan/pull/109)
+- fix/expand-tilde-paths: expand a leading `~` in `roots`, `dirIgnore` and `jsonPath`, so the README example config works and the default `~/Library/**` ignore matches. `--json-output-path` with `~/..` or `$VAR/..` now writes to the right folder ([#111](https://github.com/mabd-dev/reposcan/issues/111)) by @mabd-dev in [#107](https://github.com/mabd-dev/reposcan/pull/107)
+- ci/smoke-test: CI runs `scripts/smoke-test.sh` on Linux and macOS in place of the `go test` steps, so the built binary is checked end to end by @mabd-dev in [#106](https://github.com/mabd-dev/reposcan/pull/106)
+- fix/docs-links-and-release-go-version: update `release.yml` github action go version to use the one in go.mod by @mabd-dev in [#105](https://github.com/mabd-dev/reposcan/pull/105)
 - fix/jj-branch-display-after-fetch: jj repos count ahead/behind like git's `HEAD` against every remote, keep showing the bookmark after a fetch moves it past `@` when no other bookmark sits below `@`, and show `x` when a remote has no matching bookmark by @frittlechasm in [#98](https://github.com/mabd-dev/reposcan/pull/98)
 - feat/staleDays: add `--stale-days` / `staleDays` to show only repos with no local activity for N days by @mabd-dev in [#79](https://github.com/mabd-dev/reposcan/pull/79)
 - feat/jjSupport: add Jujutsu (jj) repo support alongisde git repos by @frittlechasm in [#62](https://github.com/mabd-dev/reposcan/pull/62)

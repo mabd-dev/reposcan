@@ -152,30 +152,25 @@ func TestWriteToFile(t *testing.T) {
 		}
 	})
 
-	t.Run("expands leading tilde using HOME", func(t *testing.T) {
-		root := t.TempDir()
-		setHome(t, root)
+	// Callers pass resolved paths (the config file) or expand user paths
+	// themselves (the JSON report), so WriteToFile must not expand again:
+	// a home dir named "dev$X" would otherwise write somewhere else.
+	t.Run("writes the path as-is without expanding $ or ~", func(t *testing.T) {
+		cwd := t.TempDir()
+		t.Chdir(cwd) // a literal "~" path lands here, not in the package dir
+		setHome(t, filepath.Join(cwd, "home"))
+		t.Setenv("REPOSCAN_TEST_VAR", "expanded")
 
-		relRel := filepath.Join("proj", "out.txt")
-		if err := WriteToFile([]byte("x"), filepath.Join("~", relRel)); err != nil {
-			t.Fatalf("WriteToFile: %v", err)
-		}
-
-		want := filepath.Join(root, relRel)
-		got, err := os.ReadFile(want)
-		if err != nil {
-			t.Fatalf("expected file at %q: %v", want, err)
-		}
-		if string(got) != "x" {
-			t.Fatalf("expected content %q, got %q", "x", got)
-		}
-	})
-
-	t.Run("error when home cannot be determined", func(t *testing.T) {
-		unsetHome(t)
-
-		if err := WriteToFile([]byte("x"), "~/out.txt"); err == nil {
-			t.Fatal("expected error when $HOME is not defined")
+		for _, path := range []string{
+			filepath.Join(cwd, "dev$REPOSCAN_TEST_VAR", "config.toml"),
+			filepath.Join("~", "out.txt"),
+		} {
+			if err := WriteToFile([]byte("x"), path); err != nil {
+				t.Fatalf("WriteToFile(%q): %v", path, err)
+			}
+			if _, err := os.Stat(path); err != nil {
+				t.Fatalf("expected file at the literal path %q: %v", path, err)
+			}
 		}
 	})
 
@@ -191,4 +186,53 @@ func TestWriteToFile(t *testing.T) {
 			t.Fatal("expected error when a parent component is a regular file")
 		}
 	})
+}
+
+func TestExpandPath(t *testing.T) {
+	home := t.TempDir()
+	setHome(t, home)
+	t.Setenv("REPOSCAN_TEST_DIR", "/env")
+	t.Setenv("REPOSCAN_TEST_NAME", "sub")
+	sep := string(filepath.Separator)
+
+	tests := []struct {
+		name string
+		in   string
+		want string
+	}{
+		{name: "tilde alone", in: "~", want: home},
+		{name: "tilde slash", in: "~/Code", want: filepath.Join(home, "Code")},
+		{name: "tilde os separator", in: "~" + sep + "Code", want: filepath.Join(home, "Code")},
+		{name: "glob and trailing slash kept", in: "~/Library/**/", want: home + filepath.FromSlash("/Library/**/")},
+		{name: "env var", in: "$REPOSCAN_TEST_DIR/x", want: "/env/x"},
+		{name: "tilde and env var", in: "~/$REPOSCAN_TEST_NAME", want: filepath.Join(home, "sub")},
+		{name: "other user's home is not expanded", in: "~bob/Code", want: "~bob/Code"},
+		{name: "tilde not at start", in: "/a/~/b", want: "/a/~/b"},
+		{name: "plain path unchanged", in: "/tmp/file", want: "/tmp/file"},
+		{name: "empty", in: "", want: ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := ExpandPath(tt.in)
+			if err != nil {
+				t.Fatalf("ExpandPath(%q) error: %v", tt.in, err)
+			}
+			if got != tt.want {
+				t.Fatalf("ExpandPath(%q) = %q, want %q", tt.in, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestExpandPath_NoHomeReturnsPathUnchanged(t *testing.T) {
+	unsetHome(t)
+
+	got, err := ExpandPath("~/Code")
+	if err == nil {
+		t.Fatal("expected error when home cannot be determined")
+	}
+	if got != "~/Code" {
+		t.Fatalf("expected path unchanged on error, got %q", got)
+	}
 }

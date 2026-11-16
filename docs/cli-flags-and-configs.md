@@ -22,7 +22,7 @@ below are all available flags
 
 - `-r, --root PATH` (repeatable)
   - Config: `roots = ["/path1", "/path2"]`
-  - Description: Directories to scan for Git and jj repositories. Repeats to add multiple roots. Defaults to `$HOME` if unset.
+  - Description: Directories to scan for Git and jj repositories. Repeats to add multiple roots. Defaults to `$HOME` if unset. A leading `~` and environment variables like `$HOME` are expanded.
   - Example:
     - CLI: `reposcan -r ~/Code -r ~/work`
     - TOML:
@@ -32,7 +32,7 @@ below are all available flags
 
 - `-d, --dirIgnore GLOB` (repeatable)
   - Config: `dirIgnore = ["**/node_modules/**", "/vendor/**"]`
-  - Description: Glob patterns to skip while walking directories. Supports doublestar patterns.
+  - Description: Glob patterns to skip while walking directories. Supports doublestar patterns. A pattern starting with `/` is relative to each root (`/vendor/**` skips `<root>/vendor`). A pattern starting with `~/` is a path in your home directory (`~/Library/**`).
   - Example:
     - CLI: `reposcan -d "**/node_modules/**" -d "/vendor/**"`
     - TOML:

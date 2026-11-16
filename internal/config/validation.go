@@ -5,7 +5,6 @@ import (
 	"github.com/mabd-dev/reposcan/internal/render/stdout"
 	"github.com/mabd-dev/reposcan/internal/theme"
 	"github.com/mabd-dev/reposcan/internal/utils"
-	"os"
 	"slices"
 	"strconv"
 	"strings"
@@ -49,8 +48,11 @@ func Validate(config Config) ValidationResult {
 
 	// validate roots are valid paths
 	for _, r := range config.Roots {
-		root := os.ExpandEnv(r)
-		exists, err := utils.DirExists(root)
+		root, err := utils.ExpandPath(r)
+		exists := false
+		if err == nil {
+			exists, err = utils.DirExists(root)
+		}
 		if err != nil {
 			issue := Issue{
 				Field:   "root",
@@ -97,17 +99,21 @@ func Validate(config Config) ValidationResult {
 	}
 
 	if len(strings.TrimSpace(config.Output.JSONPath)) > 0 {
-		outputFileExists, err := utils.DirExists(config.Output.JSONPath)
+		jsonPath, err := utils.ExpandPath(config.Output.JSONPath)
+		outputFileExists := false
+		if err == nil {
+			outputFileExists, err = utils.DirExists(jsonPath)
+		}
 		if err != nil {
 			issue := Issue{
 				Field:   "jsonOutputPath",
-				Message: "error reading path: '" + config.Output.JSONPath + "' error=" + err.Error(),
+				Message: "error reading path: '" + jsonPath + "' error=" + err.Error(),
 			}
 			warnings = append(warnings, issue)
 		} else if !outputFileExists {
 			issue := Issue{
 				Field:   "jsonOutputPath",
-				Message: "output path '" + config.Output.JSONPath + "' does not exists!",
+				Message: "output path '" + jsonPath + "' does not exists!",
 			}
 			warnings = append(warnings, issue)
 		}

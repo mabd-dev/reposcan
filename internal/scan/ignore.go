@@ -5,11 +5,13 @@ import (
 	"strings"
 
 	doublestar "github.com/bmatcuk/doublestar/v4"
+	"github.com/mabd-dev/reposcan/internal/utils"
 )
 
 // IgnoreMatcher holds compiled patterns and the normalized scan roots.
 type IgnoreMatcher struct {
 	patterns []string // normalized (forward slashes)
+	absolute []string // "~/" patterns expanded to absolute paths, never root-anchored
 	roots    []string // normalized (forward slashes), expanded from user roots
 }
 
@@ -20,13 +22,26 @@ func NewIgnoreMatcher(roots []string, raw []string) *IgnoreMatcher {
 		normRoots = append(normRoots, filepath.ToSlash(r))
 	}
 
-	var pats []string
+	var pats, abs []string
 	for _, p := range raw {
 		p = strings.TrimSpace(p)
 		if p == "" || strings.HasPrefix(p, "#") {
 			continue
 		}
 		p = filepath.ToSlash(p)
+
+		// "~/" patterns name real paths under the home dir. Once expanded they
+		// start with "/", which ShouldIgnore would anchor to every scan root,
+		// so they go in their own list and are matched against the path as-is.
+		target := &pats
+		if strings.HasPrefix(p, "~/") {
+			expanded, err := utils.ExpandPath(p)
+			if err != nil {
+				continue // no home dir, so nothing can be under it
+			}
+			p = filepath.ToSlash(expanded)
+			target = &abs
+		}
 
 		// If no slash and no wildcard, treat as directory token anywhere.
 		if !strings.Contains(p, "/") && !strings.ContainsAny(p, "*?[") {
@@ -43,14 +58,15 @@ func NewIgnoreMatcher(roots []string, raw []string) *IgnoreMatcher {
 		// add a sibling pattern without the trailing "/**" to match the folder path.
 		if strings.HasSuffix(p, "/**") {
 			base := strings.TrimSuffix(p, "/**")
-			pats = append(pats, base)
+			*target = append(*target, base)
 		}
 
-		pats = append(pats, p)
+		*target = append(*target, p)
 	}
 
 	return &IgnoreMatcher{
 		patterns: pats,
+		absolute: abs,
 		roots:    normRoots,
 	}
 }
@@ -58,10 +74,13 @@ func NewIgnoreMatcher(roots []string, raw []string) *IgnoreMatcher {
 // ShouldIgnore reports whether absPath should be ignored.
 // absPath must be absolute or at least rooted; it is normalized to forward slashes.
 func (m *IgnoreMatcher) ShouldIgnore(absPath string) bool {
-	if len(m.patterns) == 0 {
-		return false
-	}
 	path := filepath.ToSlash(absPath)
+
+	for _, pat := range m.absolute {
+		if ok, _ := doublestar.PathMatch(pat, path); ok {
+			return true
+		}
+	}
 
 	for _, pat := range m.patterns {
 		if strings.HasPrefix(pat, "/") {

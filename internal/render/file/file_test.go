@@ -95,3 +95,63 @@ func TestWriteScanReport_MarshalError(t *testing.T) {
 		t.Fatalf("expected no file written on marshal error, got %v", entries)
 	}
 }
+
+// TestWriteScanReport_ExpandsDirPath checks the report lands in the folder the
+// user meant. dirPath is expanded exactly once, before the filename is joined:
+// filepath.Join would clean "~/.." or "$VAR/.." away, and a second expansion
+// would mangle an env value that contains a literal "$".
+func TestWriteScanReport_ExpandsDirPath(t *testing.T) {
+	base := t.TempDir()
+	home := filepath.Join(base, "home")
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home) // os.UserHomeDir on Windows
+	t.Setenv("REPOSCAN_TEST_REPORTS", filepath.Join(base, "reports"))
+	t.Setenv("REPOSCAN_TEST_INNER", "inner")
+	t.Setenv("REPOSCAN_TEST_LITERAL", filepath.Join(base, "dev$REPOSCAN_TEST_INNER"))
+
+	tests := []struct {
+		dirPath string
+		want    string // relative to base
+	}{
+		{dirPath: "$REPOSCAN_TEST_REPORTS", want: "reports"},
+		{dirPath: "$REPOSCAN_TEST_REPORTS/../out", want: "out"},
+		{dirPath: "~/reports", want: "home/reports"},
+		{dirPath: "~/../out", want: "out"},
+		{dirPath: "$REPOSCAN_TEST_LITERAL", want: "dev$REPOSCAN_TEST_INNER"},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.dirPath, func(t *testing.T) {
+			// A path that loses its prefix becomes relative to the working
+			// dir, so run in an empty one and check nothing lands there.
+			cwd := t.TempDir()
+			t.Chdir(cwd)
+			want := filepath.Join(base, filepath.FromSlash(tt.want))
+			t.Cleanup(func() { os.RemoveAll(want) })
+
+			r := report.ScanReport{Version: 1, GeneratedAt: time.Date(2025, 8, 31, 22, 4, 45, 0, time.UTC)}
+			if err := WriteScanReport(r, tt.dirPath); err != nil {
+				t.Fatalf("WriteScanReport(%q) error: %v", tt.dirPath, err)
+			}
+
+			if entries, err := os.ReadDir(want); err != nil || len(entries) != 1 {
+				t.Fatalf("expected 1 report in %s, got %d entries (err=%v)", want, len(entries), err)
+			}
+			if entries, _ := os.ReadDir(cwd); len(entries) != 0 {
+				t.Fatalf("expected nothing written to the working dir, found %v", entries)
+			}
+		})
+	}
+}
+
+func TestWriteScanReport_ErrorWhenHomeCannotBeDetermined(t *testing.T) {
+	for _, key := range []string{"HOME", "USERPROFILE", "HOMEDRIVE", "HOMEPATH"} {
+		t.Setenv(key, "")
+	}
+	t.Chdir(t.TempDir()) // nothing may be written, but keep the package dir clean
+
+	r := report.ScanReport{Version: 1, GeneratedAt: time.Now()}
+	if err := WriteScanReport(r, "~/reports"); err == nil {
+		t.Fatal("expected an error when the home directory cannot be determined")
+	}
+}
