@@ -188,6 +188,24 @@ func TestFindRepos_OverlappingRootsAreDeduplicated(t *testing.T) {
 	}
 }
 
+// With root ".", WalkDir reports children without a "./" prefix, so repos
+// under a hidden directory must keep their leading dot.
+func TestFindRepos_DotRootFindsReposInHiddenDirs(t *testing.T) {
+	root := t.TempDir()
+	makeDir(t, filepath.Join(root, ".hidden", "repo", ".git"))
+	makeDir(t, filepath.Join(root, "visible", ".git"))
+	t.Chdir(root)
+
+	repos, warnings := FindRepos([]string{"."}, nil)
+	if len(warnings) != 0 {
+		t.Fatalf("unexpected warnings: %v", warnings)
+	}
+	got := repoTypeByPath(repos)
+	if len(got) != 2 || got[filepath.Join(".hidden", "repo")] != vcs.TypeGit || got["visible"] != vcs.TypeGit {
+		t.Fatalf("expected .hidden/repo and visible, got %v", repos)
+	}
+}
+
 // setHome points os.UserHomeDir at dir on every platform (HOME on unix,
 // USERPROFILE on Windows).
 func setHome(t *testing.T, dir string) {

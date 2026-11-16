@@ -29,3 +29,27 @@ func TestIsGitRepo_UnreadableGitFileReturnsFalse(t *testing.T) {
 		t.Fatalf("isGitRepo should be false when .git exists but cannot be read")
 	}
 }
+
+func TestFindRepos_FollowsSymlinkedRoot(t *testing.T) {
+	base := t.TempDir()
+	target := filepath.Join(base, "real")
+	if err := os.MkdirAll(filepath.Join(target, "repo", ".git"), 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+
+	// WalkDir lstat's the root, so a symlinked root used to yield no repos.
+	link := filepath.Join(base, "link")
+	if err := os.Symlink(target, link); err != nil {
+		t.Skipf("symlink not supported: %v", err)
+	}
+
+	repos, warnings := FindRepos([]string{link}, nil)
+	if len(warnings) != 0 {
+		t.Fatalf("unexpected warnings: %v", warnings)
+	}
+
+	want := filepath.Join(link, "repo")
+	if len(repos) != 1 || repos[0].Path != want {
+		t.Fatalf("expected %s, got %v", want, repos)
+	}
+}
