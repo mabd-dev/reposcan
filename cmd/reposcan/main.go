@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/mabd-dev/reposcan/internal/config"
+	"github.com/spf13/cobra"
 )
 
 // Execute runs the root Cobra command for the reposcan CLI.
@@ -18,37 +18,27 @@ func Execute() {
 }
 
 func init() {
-	configFullPath, err := config.DefaultPaths().GetConfigFullPath()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-	configs, err := config.CreateOrReadConfigs(configFullPath)
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
-
-	// validationResult configs data are valid
-	validationResult := config.Validate(configs)
-	if validationResult.IsValid() {
-		validationResult.Print()
-		os.Exit(1)
-	}
-
-	RootCmd.PersistentFlags().StringArrayP("root", "r", configs.Roots, "Root directory to scan (repeatable). Defaults to $HOME if unset in config.")
-	RootCmd.PersistentFlags().StringArrayP("dirIgnore", "d", []string{}, "Glob patterns to ignore during scan (repeatable)")
-	RootCmd.PersistentFlags().StringP("output", "o", string(configs.Output.Type), "Output format: json|interactive|none")
-	RootCmd.PersistentFlags().StringP("filter", "f", string(configs.Only), "Repository filter: all|dirty|uncommitted|unpushed|unpulled|stash")
-	RootCmd.PersistentFlags().String("json-output-path", configs.Output.JSONPath, "Write scan report JSON files to this directory (optional)")
-	RootCmd.PersistentFlags().Int("stale-days", configs.StaleDays, "Only show repos with no local activity for at least N days (0 = disabled). Ignored with --filter unpulled")
-	RootCmd.PersistentFlags().IntP("max-workers", "w", configs.MaxWorkers, "Number of concurrent git checks")
-	RootCmd.PersistentFlags().BoolP("debug", "", configs.Debug, "Enable/Disable debug mode")
-	RootCmd.PersistentFlags().BoolP("no-telemetry", "", configs.NoTelemetry, "Enable/Disable sending telemetry")
-	// RootCmd.PersistentFlags().StringP("colorscheme", "", configs.Output.ColorSchemeName, "Used only if 'output' is 'interactive'")
+	addRootFlags(RootCmd)
 
 	RootCmd.AddCommand(versionCmd)
 
 	updateCmd.PersistentFlags().StringP("alias", "a", "reposcan", "reposcan binary name")
 	RootCmd.AddCommand(updateCmd)
+}
+
+// addRootFlags registers the scan flags with zero values. readFlags applies
+// only flags the user set, and a zero value keeps "(default ...)" out of
+// --help, where it could contradict the user's config.toml.
+func addRootFlags(cmd *cobra.Command) {
+	flags := cmd.PersistentFlags()
+	flags.StringArrayP("root", "r", nil, "Root directory to scan (repeatable)")
+	flags.StringArrayP("dirIgnore", "d", nil, "Glob patterns to ignore during scan (repeatable)")
+	flags.StringP("output", "o", "", "Output format: json|interactive|none")
+	flags.StringP("filter", "f", "", "Repository filter: all|dirty|uncommitted|unpushed|unpulled|stash")
+	flags.String("json-output-path", "", "Write scan report JSON files to this directory (optional)")
+	flags.Int("stale-days", 0, "Only show repos with no local activity for at least N days (0 = disabled). Ignored with --filter unpulled")
+	flags.IntP("max-workers", "w", 0, "Number of concurrent git checks")
+	flags.Bool("debug", false, "Enable/Disable debug mode")
+	flags.Bool("no-telemetry", false, "Enable/Disable sending telemetry")
+	// flags.StringP("colorscheme", "", "", "Used only if 'output' is 'interactive'")
 }

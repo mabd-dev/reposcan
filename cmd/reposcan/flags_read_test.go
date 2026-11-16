@@ -1,6 +1,7 @@
 package reposcan
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/mabd-dev/reposcan/internal/config"
@@ -9,8 +10,9 @@ import (
 func TestReadFlags_AppliesAllFlags(t *testing.T) {
 	// base config defaults
 	cfg := config.Defaults()
+	cfg.NoTelemetry = true // so --no-telemetry=false must override it
 
-	cmd := newRootFlagsCmd("")
+	cmd := newRootFlagsCmd()
 
 	args := []string{
 		"-r", "/tmp/root1",
@@ -64,6 +66,31 @@ func TestReadFlags_AppliesAllFlags(t *testing.T) {
 	}
 }
 
+func TestReadFlags_UnsetFlagsKeepConfigValues(t *testing.T) {
+	cfg := config.Defaults()
+	cfg.Roots = []string{"/from/config"}
+	cfg.DirIgnore = []string{"**/from-config/**"}
+	cfg.Only = config.OnlyUnpushed
+	cfg.Output.Type = config.OutputJson
+	cfg.Output.JSONPath = "/config/out"
+	cfg.StaleDays = 3
+	cfg.Debug = true
+	cfg.NoTelemetry = true
+	want := cfg
+	want.MaxWorkers = 2
+
+	cmd := newRootFlagsCmd()
+	parseFlags(t, cmd, "-w", "2")
+
+	if err := readFlags(cmd, &cfg); err != nil {
+		t.Fatalf("readFlags error: %v", err)
+	}
+
+	if !reflect.DeepEqual(cfg, want) {
+		t.Fatalf("unset flags changed the config:\ngot  %#v\nwant %#v", cfg, want)
+	}
+}
+
 func TestReadTableOutput_DefaultInteractiveOutput(t *testing.T) {
 	// base config defaults
 	cfg := config.Defaults()
@@ -76,7 +103,7 @@ func TestReadTableOutput_DefaultInteractiveOutput(t *testing.T) {
 
 func TestReadTableOutput_SwitchToInteractiveOutput(t *testing.T) {
 	cfg := config.Defaults()
-	cmd := newRootFlagsCmd("")
+	cmd := newRootFlagsCmd()
 	parseFlags(t, cmd, "-o", "table")
 
 	if err := readFlags(cmd, &cfg); err != nil {

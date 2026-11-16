@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-func TestValidationResultIsValid_ReportsWhetherErrorsExist(t *testing.T) {
+func TestValidationResultHasErrors_ReportsWhetherErrorsExist(t *testing.T) {
 	tests := []struct {
 		name   string
 		result ValidationResult
@@ -22,8 +22,8 @@ func TestValidationResultIsValid_ReportsWhetherErrorsExist(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.result.IsValid(); got != tt.want {
-				t.Fatalf("expected IsValid() = %v, got %v", tt.want, got)
+			if got := tt.result.HasErrors(); got != tt.want {
+				t.Fatalf("expected HasErrors() = %v, got %v", tt.want, got)
 			}
 		})
 	}

@@ -2,6 +2,7 @@ package reposcan
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -31,7 +32,15 @@ func TestRootCmdRunE(t *testing.T) {
 			setup: func(t *testing.T, home string) []string {
 				return []string{"-r", filepath.Join(home, "missing")}
 			},
-			wantErr: "invalid configuration after flags",
+			wantErr: "invalid configuration",
+		},
+		{
+			name: "rejects an invalid config value no flag overrides",
+			setup: func(t *testing.T, home string) []string {
+				writeConfig(t, home, fmt.Sprintf("roots = [%q]\nonly = \"dirty\"\n\n[output]\ntype = \"json\"\n", filepath.Join(home, "missing")))
+				return nil
+			},
+			wantErr: "invalid configuration",
 		},
 		{
 			name: "fails when the config path cannot be read",
@@ -52,7 +61,7 @@ func TestRootCmdRunE(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			home := isolateHome(t)
-			cmd := newRootFlagsCmd("")
+			cmd := newRootFlagsCmd()
 			parseFlags(t, cmd, tt.setup(t, home)...)
 
 			var err error
@@ -70,8 +79,8 @@ func TestRootCmdRunE_WritesJSONToStdoutAndOutputDir(t *testing.T) {
 	root := t.TempDir()
 	outDir := t.TempDir()
 
-	cmd := newRootFlagsCmd("")
-	parseFlags(t, cmd, "-r", root, "-o", "json", "--json-output-path", outDir)
+	cmd := newRootFlagsCmd()
+	parseFlags(t, cmd, "-r", root, "-o", "json", "--json-output-path", outDir, "--no-telemetry")
 
 	var err error
 	out := captureStdout(t, func() { err = RootCmd.RunE(cmd, nil) })
@@ -95,6 +104,32 @@ func TestRootCmdRunE_WritesJSONToStdoutAndOutputDir(t *testing.T) {
 	}
 	if string(saved) != strings.TrimSuffix(out, "\n") {
 		t.Fatalf("saved report differs from stdout:\n%s\nvs\n%s", saved, out)
+	}
+}
+
+func TestRootCmdRunE_FlagOverridesInvalidConfigValue(t *testing.T) {
+	home := isolateHome(t)
+	writeConfig(t, home, fmt.Sprintf("roots = [%q]\nonly = \"dirty\"\n\n[output]\ntype = \"json\"\n", filepath.Join(home, "missing")))
+
+	cmd := newRootFlagsCmd()
+	parseFlags(t, cmd, "-r", t.TempDir(), "--no-telemetry")
+
+	var err error
+	out := captureStdout(t, func() { err = RootCmd.RunE(cmd, nil) })
+	if err != nil {
+		t.Fatalf("expected -r to replace the missing config root, got %v", err)
+	}
+	var scanReport report.ScanReport
+	if err := json.Unmarshal([]byte(out), &scanReport); err != nil || scanReport.GeneratedAt.IsZero() {
+		t.Fatalf("expected a JSON scan report on stdout (err=%v):\n%s", err, out)
+	}
+}
+
+// Flags are registered with zero values so --help shows no defaults that
+// could contradict the user's config.toml.
+func TestRootCmd_HelpShowsNoDefaults(t *testing.T) {
+	if usage := RootCmd.PersistentFlags().FlagUsages(); strings.Contains(usage, "(default") {
+		t.Fatalf("help output shows a default value:\n%s", usage)
 	}
 }
 

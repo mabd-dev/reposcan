@@ -101,9 +101,8 @@ fi
 rs() { "$BIN" --no-telemetry "$@" 2>/dev/null; }
 
 # reset_config wipes the sandbox config.toml and lets reposcan regenerate the
-# defaults. Needed between config tests: an invalid config.toml aborts the
-# process before CLI flags are parsed, so a leftover bad config breaks
-# everything that follows.
+# defaults. Needed between config tests: a leftover bad config.toml fails
+# every later run whose flags don't replace the bad keys.
 reset_config() { rm -f "$HOME/.config/reposcan/config.toml"; "$BIN" --no-telemetry -r "$FIX" -o none -f all >/dev/null 2>&1; }
 
 # repos <filter> -> newline-separated repo names
@@ -370,6 +369,21 @@ section "subcommands"
 "$BIN" version 2>/dev/null | grep -q '^reposcan v' && ok "version prints reposcan vX.Y.Z" || bad "version prints reposcan vX.Y.Z"
 "$BIN" --help  2>/dev/null | grep -q 'Available Commands' && ok "--help renders" || bad "--help renders"
 "$BIN" update --help 2>/dev/null | grep -q '\--alias' && ok "update --help shows --alias" || bad "update --help shows --alias"
+
+# Only the root command reads config.toml (docs/config-loading.md). Each check runs
+# a fresh process, so it also covers config loaded in init(), which in-process Go
+# tests can't isolate from the real HOME.
+config_free=("--help" "version" "update --help" "completion bash")
+printf 'roots = ["%s"]\n' "$TMP/nope" > "$CFG"
+for cmd in "${config_free[@]}"; do
+  "$BIN" $cmd >/dev/null 2>&1; assert_eq "$cmd works with a broken config.toml" "0" "$?"
+done
+for cmd in "${config_free[@]}"; do
+  rm -f "$CFG"
+  "$BIN" $cmd >/dev/null 2>&1; assert_eq "$cmd works without config.toml" "0" "$?"
+  [ ! -f "$CFG" ] && ok "$cmd does not create config.toml" || bad "$cmd does not create config.toml"
+done
+reset_config
 
 # ---------------------------------------------------------------- known issues
 # Bugs found during release testing that are not fixed yet. These never fail

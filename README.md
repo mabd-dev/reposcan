@@ -99,14 +99,14 @@ reposcan -r ~/Code -r ~/work
 
 Common flags
 ```sh
--d, --dirIgnore stringArray     # (default [$HOME])
--f, --filter string             # Repository filter: all|dirty|uncommitted|unpushed|unpulled|stash (default "dirty")
+-d, --dirIgnore stringArray     # Glob patterns to ignore during scan (repeatable)
+-f, --filter string             # Repository filter: all|dirty|uncommitted|unpushed|unpulled|stash
 -h, --help                      # help for reposcan
     --json-output-path string   # Write scan report JSON files to this directory (optional)
--w, --max-workers int           # Number of concurrent git checks (default 8)
--o, --output string             # Output format: json|interactive|none (default "interactive")
+-w, --max-workers int           # Number of concurrent git checks
+-o, --output string             # Output format: json|interactive|none
     --stale-days int            # Only show repos with no local activity for at least N days (0 = disabled)
--r, --root stringArray          # Root directory to scan (repeatable). Defaults to $HOME if unset in config. (default [$HOME])
+-r, --root stringArray          # Root directory to scan (repeatable)
   , --debug                     # Enable/Disable debug mode
 ```
 
