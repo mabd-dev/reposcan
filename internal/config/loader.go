@@ -27,6 +27,31 @@ func UpdateConfigs(configs Config, path string) error {
 	return writeToFile(configs, path)
 }
 
+// SetColorScheme sets output.colorscheme in the config file at path and keeps
+// every other key as it is in the file, so values from CLI flags are not saved.
+func SetColorScheme(path, schemeID string) error {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+	file := map[string]any{}
+	if err := toml.Unmarshal(b, &file); err != nil {
+		return err
+	}
+	output, ok := file["output"].(map[string]any)
+	if !ok {
+		output = map[string]any{}
+		file["output"] = output
+	}
+	output["colorscheme"] = schemeID
+
+	data, err := tomlMarshal(file)
+	if err != nil {
+		return err
+	}
+	return utils.WriteToFile(data, path)
+}
+
 // Load reads a TOML configuration file from path into conf.
 func Load(conf *Config, path string) error {
 	b, err := os.ReadFile(path)

@@ -1,6 +1,8 @@
 package tui
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 
@@ -603,6 +605,41 @@ func TestUpdateColorSchemeSwitcherPassthrough(t *testing.T) {
 	res := nm.(Model)
 	if res.colorSchemeSwitcher.WantsClose() {
 		t.Error("should not want close")
+	}
+}
+
+func TestUpdateColorSchemeSwitcherSavesOnlyColorScheme(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
+	cfgPath, err := config.DefaultPaths().GetConfigFullPath()
+	if err != nil {
+		t.Fatalf("config path: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Dir(cfgPath), 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	fileContent := "roots = ['/home/me']\nonly = 'dirty'\nno-telemetry = false\n"
+	if err := os.WriteFile(cfgPath, []byte(fileContent), 0o644); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+
+	m := newTestModel(t)
+	// runtime config after `reposcan -r /some/other/dir -f all --no-telemetry`
+	m.configs = config.Config{Roots: []string{"/some/other/dir"}, Only: config.OnlyAll, NoTelemetry: true}
+	sw, _ := m.colorSchemeSwitcher.Update(tea.KeyPressMsg{Text: "enter"})
+	m.colorSchemeSwitcher = sw
+	m.updateColorSchemeSwitcher(tea.WindowSizeMsg{})
+
+	var got config.Config
+	if err := config.Load(&got, cfgPath); err != nil {
+		t.Fatalf("load config: %v", err)
+	}
+	if len(got.Roots) != 1 || got.Roots[0] != "/home/me" || got.Only != config.OnlyDirty || got.NoTelemetry {
+		t.Errorf("flag values were saved to config.toml: %+v", got)
+	}
+	if got.Output.ColorSchemeName != sw.SelectedSchemeID() {
+		t.Errorf("colorscheme = %q, want %q", got.Output.ColorSchemeName, sw.SelectedSchemeID())
 	}
 }
 
