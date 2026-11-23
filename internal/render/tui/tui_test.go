@@ -3,6 +3,7 @@ package tui
 import (
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -19,6 +20,7 @@ import (
 	"github.com/mabd-dev/reposcan/internal/theme"
 	"github.com/mabd-dev/reposcan/internal/vcs"
 	"github.com/mabd-dev/reposcan/pkg/report"
+	"github.com/pelletier/go-toml/v2"
 )
 
 func testTheme(t *testing.T) theme.Theme {
@@ -619,7 +621,7 @@ func TestUpdateColorSchemeSwitcherSavesOnlyColorScheme(t *testing.T) {
 	if err := os.MkdirAll(filepath.Dir(cfgPath), 0o755); err != nil {
 		t.Fatalf("mkdir: %v", err)
 	}
-	fileContent := "roots = ['/home/me']\nonly = 'dirty'\nno-telemetry = false\n"
+	fileContent := "roots = ['/home/me']\nonly = 'dirty'\nno-telemetry = false\n\n[output]\ntype = 'json'\njsonPath = '/home/me/reports'\n"
 	if err := os.WriteFile(cfgPath, []byte(fileContent), 0o644); err != nil {
 		t.Fatalf("write config: %v", err)
 	}
@@ -631,15 +633,22 @@ func TestUpdateColorSchemeSwitcherSavesOnlyColorScheme(t *testing.T) {
 	m.colorSchemeSwitcher = sw
 	m.updateColorSchemeSwitcher(tea.WindowSizeMsg{})
 
-	var got config.Config
-	if err := config.Load(&got, cfgPath); err != nil {
-		t.Fatalf("load config: %v", err)
+	want := map[string]any{}
+	if err := toml.Unmarshal([]byte(fileContent), &want); err != nil {
+		t.Fatalf("parse want: %v", err)
 	}
-	if len(got.Roots) != 1 || got.Roots[0] != "/home/me" || got.Only != config.OnlyDirty || got.NoTelemetry {
-		t.Errorf("flag values were saved to config.toml: %+v", got)
+	want["output"].(map[string]any)["colorscheme"] = sw.SelectedSchemeID()
+
+	b, err := os.ReadFile(cfgPath)
+	if err != nil {
+		t.Fatalf("read config: %v", err)
 	}
-	if got.Output.ColorSchemeName != sw.SelectedSchemeID() {
-		t.Errorf("colorscheme = %q, want %q", got.Output.ColorSchemeName, sw.SelectedSchemeID())
+	got := map[string]any{}
+	if err := toml.Unmarshal(b, &got); err != nil {
+		t.Fatalf("parse config: %v", err)
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("config.toml after theme switch:\n got: %v\nwant: %v", got, want)
 	}
 }
 
