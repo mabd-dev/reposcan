@@ -80,6 +80,46 @@ func TestSummaryPath(t *testing.T) {
 	}
 }
 
+// TestNewestFileModTime verifies that the newest mtime among the summary
+// entries is returned, and that entries without a path or whose file is gone
+// are skipped instead of dating the repo.
+func TestNewestFileModTime(t *testing.T) {
+	oldAt := time.Date(2026, 1, 8, 9, 0, 0, 0, time.UTC)
+	newAt := time.Date(2026, 1, 12, 18, 30, 0, 0, time.UTC)
+
+	repo := t.TempDir()
+	writeFileAt(t, filepath.Join(repo, "old.txt"), "old", oldAt)
+	writeFileAt(t, filepath.Join(repo, "sub", "new.txt"), "new", newAt)
+
+	tests := []struct {
+		name  string
+		lines []string
+		want  time.Time
+	}{
+		{name: "no entries", lines: nil, want: time.Time{}},
+		{name: "single file", lines: []string{"M old.txt"}, want: oldAt},
+		{name: "newest wins regardless of order", lines: []string{"M sub/new.txt", "A old.txt"}, want: newAt},
+		{name: "rename dated from its new path", lines: []string{"R {gone.txt => sub/new.txt}"}, want: newAt},
+		{name: "missing file skipped", lines: []string{"D gone.txt", "M old.txt"}, want: oldAt},
+		{name: "only missing files", lines: []string{"D gone.txt"}, want: time.Time{}},
+		{
+			name:  "entries without a path skipped",
+			lines: []string{"", "M", "A ", "R {old.txt => }", "M old.txt"},
+			want:  oldAt,
+		},
+		{name: "only entries without a path", lines: []string{"M", "R {old.txt => }"}, want: time.Time{}},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := newestFileModTime(repo, tt.lines)
+			if !got.Equal(tt.want) {
+				t.Fatalf("newestFileModTime(%q) = %v, want %v", tt.lines, got, tt.want)
+			}
+		})
+	}
+}
+
 // TestCheckRepoStateWithActivity dates real jj repos.
 func TestCheckRepoStateWithActivity(t *testing.T) {
 	if _, err := exec.LookPath("jj"); err != nil {

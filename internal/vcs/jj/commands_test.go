@@ -2,6 +2,7 @@ package jj
 
 import (
 	"errors"
+	"os/exec"
 	"reflect"
 	"testing"
 )
@@ -114,20 +115,115 @@ func TestGetRepoName(t *testing.T) {
 }
 
 // TestGetFirstRemoteURL verifies that informational, blank, and malformed lines
-// are ignored before returning the first valid remote URL.
+// are ignored before returning the first valid remote URL, that a repo without
+// remotes returns no URL and no error, and that command failures propagate.
 func TestGetFirstRemoteURL(t *testing.T) {
-	binary := useFakeJJ(t, map[string]fakeJJResponse{
-		fakeJJCommandKey("git", "remote", "list"): {
-			Stdout: "\nDone importing changes from the underlying Git repo.\ninvalid\norigin ssh://git@example.com/acme/widgets.git extra\n",
+	tests := []struct {
+		name       string
+		remoteList fakeJJResponse
+		want       string
+		wantStderr string
+	}{
+		{
+			name: "skips noise before first remote",
+			remoteList: fakeJJResponse{
+				Stdout: "\nDone importing changes from the underlying Git repo.\ninvalid\n" +
+					"origin ssh://git@example.com/acme/widgets.git extra\n" +
+					"upstream https://example.com/other/widgets.git\n",
+			},
+			want: "ssh://git@example.com/acme/widgets.git",
 		},
-	})
-
-	got, err := getFirstRemoteURL(binary, t.TempDir())
-	if err != nil {
-		t.Fatalf("getFirstRemoteURL() error = %v", err)
+		{
+			name: "no remotes",
+		},
+		{
+			name: "only informational and malformed lines",
+			remoteList: fakeJJResponse{
+				Stdout: "Done importing changes from the underlying Git repo.\ninvalid\n\n",
+			},
+		},
+		{
+			name:       "command fails",
+			remoteList: fakeJJResponse{Stderr: "There is no jj repo in \".\"\n", ExitCode: 1},
+			wantStderr: `There is no jj repo in "."`,
+		},
 	}
-	if want := "ssh://git@example.com/acme/widgets.git"; got != want {
-		t.Fatalf("getFirstRemoteURL() = %q, want %q", got, want)
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			binary := useFakeJJ(t, map[string]fakeJJResponse{
+				fakeJJCommandKey("git", "remote", "list"): tt.remoteList,
+			})
+
+			got, err := getFirstRemoteURL(binary, t.TempDir())
+			if tt.wantStderr != "" {
+				var commandErr commandError
+				if !errors.As(err, &commandErr) {
+					t.Fatalf("getFirstRemoteURL() error = %v (%T), want commandError", err, err)
+				}
+				if commandErr.Stderr != tt.wantStderr {
+					t.Fatalf("getFirstRemoteURL() stderr = %q, want %q", commandErr.Stderr, tt.wantStderr)
+				}
+			} else if err != nil {
+				t.Fatalf("getFirstRemoteURL() error = %v", err)
+			}
+			if got != tt.want {
+				t.Fatalf("getFirstRemoteURL() = %q, want %q", got, tt.want)
+			}
+		})
+	}
+}
+
+// TestGetFirstRemoteURLWithRealJJ checks the fake responses above against real
+// jj output: a fresh repo lists no remotes, an added remote is returned as
+// configured, and a directory that is not a jj repo is an error.
+func TestGetFirstRemoteURLWithRealJJ(t *testing.T) {
+	if _, err := exec.LookPath("jj"); err != nil {
+		t.Skip("jj binary not available")
+	}
+
+	const remoteURL = "https://example.com/acme/widgets.git"
+
+	tests := []struct {
+		name    string
+		setup   func(t *testing.T) string
+		want    string
+		wantErr bool
+	}{
+		{
+			name: "repo without remotes",
+			setup: func(t *testing.T) string {
+				return initJJRepo(t, t.TempDir(), "repo")
+			},
+		},
+		{
+			name: "repo with a remote",
+			setup: func(t *testing.T) string {
+				repo := initJJRepo(t, t.TempDir(), "repo")
+				runCommand(t, "jj", "-R", repo, "git", "remote", "add", "origin", remoteURL)
+				return repo
+			},
+			want: remoteURL,
+		},
+		{
+			name: "not a jj repo",
+			setup: func(t *testing.T) string {
+				return fakeRepoDir(t, "plain")
+			},
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := getFirstRemoteURL("jj", tt.setup(t))
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("getFirstRemoteURL() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if got != tt.want {
+				t.Fatalf("getFirstRemoteURL() = %q, want %q", got, tt.want)
+			}
+		})
 	}
 }
 
