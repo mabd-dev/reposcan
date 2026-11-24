@@ -39,7 +39,11 @@ func sampleScanReport() report.ScanReport {
 
 func newTestModel(t *testing.T) Model {
 	t.Helper()
-	th := testTheme(t)
+	return newTestModelWithTheme(t, testTheme(t))
+}
+
+func newTestModelWithTheme(t *testing.T, th theme.Theme) Model {
+	t.Helper()
 	rep := sampleScanReport()
 
 	reposTable := repostable.New(th, rep, 100, 30, repostable.Options{ShowVCS: true})
