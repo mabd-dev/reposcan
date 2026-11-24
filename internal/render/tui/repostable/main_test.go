@@ -186,8 +186,12 @@ func TestUpdateRepoStateIgnoresUpdatesWithoutMatchingRepo(t *testing.T) {
 			}
 			wantReport := append([]report.RepoState(nil), m.report.RepoStates...)
 			wantFilteredRepos := append([]report.RepoState(nil), m.filteredRepos...)
-			// Rows() returns the table's own slice, so copy it to detect in-place writes.
-			wantRows := append([]table.Row(nil), m.tbl.Rows()...)
+			// Rows() returns the table's own slice, so copy each row's cells to
+			// detect in-place writes.
+			wantRows := make([]table.Row, len(m.tbl.Rows()))
+			for i, row := range m.tbl.Rows() {
+				wantRows[i] = append(table.Row(nil), row...)
+			}
 
 			m.UpdateRepoState(tc.index, tc.state)
 
