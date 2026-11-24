@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"testing"
 
+	"charm.land/bubbles/v2/table"
 	"charm.land/lipgloss/v2"
 	"github.com/mabd-dev/reposcan/pkg/report"
 )
@@ -132,23 +133,74 @@ func TestUpdateRepoStatePersistsFilteredRepoUpdate(t *testing.T) {
 	}
 }
 
-func TestUpdateRepoStateLeavesOriginalReportWhenIDIsUnknown(t *testing.T) {
-	m := New(stubTheme(), testReport(), 80, 20, Options{})
-	m.Filter("Alpha")
-	wantReport := append([]report.RepoState(nil), m.report.RepoStates...)
-	wantFilteredRepos := append([]report.RepoState(nil), m.filteredRepos...)
-	wantRows := m.tbl.Rows()
-
-	m.UpdateRepoState(0, report.RepoState{ID: "unknown", Repo: "Unknown"})
-
-	if !reflect.DeepEqual(m.report.RepoStates, wantReport) {
-		t.Fatalf("report states changed for unknown ID: %#v", m.report.RepoStates)
+func TestUpdateRepoStateIgnoresUpdatesWithoutMatchingRepo(t *testing.T) {
+	tests := []struct {
+		name  string
+		index int
+		state report.RepoState
+		// prepare runs after the "Beta" filter is applied, before the update.
+		prepare func(m *Model)
+	}{
+		{
+			name:  "index below range",
+			index: -1,
+			state: report.RepoState{ID: "beta", Repo: "Beta", Branch: "updated"},
+		},
+		{
+			// Index 1 exists in the report but not in the filtered rows.
+			name:  "index past filtered rows",
+			index: 1,
+			state: report.RepoState{ID: "beta", Repo: "Beta", Branch: "updated"},
+		},
+		{
+			name:  "ID differs from filtered row",
+			index: 0,
+			state: report.RepoState{ID: "unknown", Repo: "Unknown"},
+		},
+		{
+			// A refresh for alpha that was started at row 0 before the filter
+			// changed must not overwrite beta, which is now at row 0.
+			name:  "ID of another repo in the report",
+			index: 0,
+			state: report.RepoState{ID: "alpha", Repo: "Alpha", Branch: "updated"},
+		},
+		{
+			// With a filter active, the filtered rows are a copy of the report,
+			// so renaming the row through the returned pointer leaves the
+			// report without a repo for that ID.
+			name:  "filtered row ID missing from report",
+			index: 0,
+			state: report.RepoState{ID: "renamed", Repo: "Beta", Branch: "updated"},
+			prepare: func(m *Model) {
+				m.GetRepoStateAt(0).ID = "renamed"
+			},
+		},
 	}
-	if !reflect.DeepEqual(m.filteredRepos, wantFilteredRepos) {
-		t.Fatalf("filtered states changed for unknown ID: %#v", m.filteredRepos)
-	}
-	if !reflect.DeepEqual(m.tbl.Rows(), wantRows) {
-		t.Fatalf("table rows changed for unknown ID: %#v", m.tbl.Rows())
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			m := New(stubTheme(), testReport(), 80, 20, Options{})
+			m.Filter("Beta")
+			if tc.prepare != nil {
+				tc.prepare(&m)
+			}
+			wantReport := append([]report.RepoState(nil), m.report.RepoStates...)
+			wantFilteredRepos := append([]report.RepoState(nil), m.filteredRepos...)
+			// Rows() returns the table's own slice, so copy it to detect in-place writes.
+			wantRows := append([]table.Row(nil), m.tbl.Rows()...)
+
+			m.UpdateRepoState(tc.index, tc.state)
+
+			if !reflect.DeepEqual(m.report.RepoStates, wantReport) {
+				t.Fatalf("report states = %#v, want unchanged %#v", m.report.RepoStates, wantReport)
+			}
+			if !reflect.DeepEqual(m.filteredRepos, wantFilteredRepos) {
+				t.Fatalf("filtered states = %#v, want unchanged %#v", m.filteredRepos, wantFilteredRepos)
+			}
+			if !reflect.DeepEqual(m.tbl.Rows(), wantRows) {
+				t.Fatalf("table rows = %#v, want unchanged %#v", m.tbl.Rows(), wantRows)
+			}
+		})
 	}
 }
 
