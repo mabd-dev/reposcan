@@ -1,7 +1,9 @@
 package scan
 
 import (
+	"os"
 	"path/filepath"
+	"runtime"
 	"testing"
 )
 
@@ -52,8 +54,9 @@ func TestIgnoreMatcher_NoPatternsIgnoresNothing(t *testing.T) {
 // TestIgnoreMatcher_ShouldIgnoreDocumentedBranches locks in the reachable
 // ShouldIgnore behavior. Note: the filepath.IsAbs(pat) branch (a Windows-only
 // path like "C:/...") is not reachable on POSIX, where filepath.IsAbs and the
-// anchored "/"-prefix branch are equivalent; that branch is covered by the
-// Windows CI runner.
+// anchored "/"-prefix branch are equivalent; that branch is covered by
+// TestIgnoreMatcher_WindowsDrivePatternIsNotRootAnchored on the Windows CI
+// runner.
 func TestIgnoreMatcher_ShouldIgnoreDocumentedBranches(t *testing.T) {
 	m := NewIgnoreMatcher([]string{"/proj"}, []string{"**/build/**"})
 
@@ -80,6 +83,70 @@ func TestIgnoreMatcher_TildePatternsMatchUnderHome(t *testing.T) {
 		{path: filepath.Join(home, "stuff", "repo"), want: true},
 		{path: filepath.Join(home, "code", "Library", "x"), want: false},
 		{path: filepath.Join(home, "code", "app"), want: false},
+	}
+	for _, tt := range tests {
+		if got := m.ShouldIgnore(tt.path); got != tt.want {
+			t.Errorf("ShouldIgnore(%q) = %v, want %v", tt.path, got, tt.want)
+		}
+	}
+}
+
+// Without a home dir a "~/" pattern names no real path, so it is dropped: it
+// is neither kept unexpanded nor expanded against an empty home. The other
+// patterns still apply.
+func TestIgnoreMatcher_TildePatternsDroppedWithoutHome(t *testing.T) {
+	setHome(t, "")
+	t.Setenv("HOMEDRIVE", "")
+	t.Setenv("HOMEPATH", "")
+	if home, err := os.UserHomeDir(); err == nil {
+		t.Skipf("home dir still resolves to %q with HOME unset", home)
+	}
+
+	m := NewIgnoreMatcher([]string{"/proj"}, []string{"~/Library/**", "~/stuff/", "node_modules"})
+
+	tests := []struct {
+		path string
+		want bool
+	}{
+		// A "~/" pattern kept unexpanded would match these literal paths.
+		{path: "~/Library", want: false},
+		{path: "~/Library/Caches", want: false},
+		{path: "~/stuff/repo", want: false},
+		// An empty home would turn "~/Library/**" into "/Library/**".
+		{path: "/Library/Caches", want: false},
+		{path: "/stuff/repo", want: false},
+		{path: "/proj/Library/Caches", want: false},
+		// The remaining pattern is unaffected.
+		{path: "/proj/app/node_modules", want: true},
+		{path: "/proj/app/node_modules/pkg", want: true},
+	}
+	for _, tt := range tests {
+		if got := m.ShouldIgnore(tt.path); got != tt.want {
+			t.Errorf("ShouldIgnore(%q) = %v, want %v", tt.path, got, tt.want)
+		}
+	}
+}
+
+// A Windows drive-letter pattern is absolute but does not start with "/", so
+// it is matched as-is rather than anchored to each root. On POSIX every
+// absolute path starts with "/" and is root-anchored instead.
+func TestIgnoreMatcher_WindowsDrivePatternIsNotRootAnchored(t *testing.T) {
+	if runtime.GOOS != "windows" {
+		t.Skip("drive-letter paths are only absolute on Windows")
+	}
+
+	m := NewIgnoreMatcher([]string{`C:\proj`}, []string{`C:\proj\skip\**`})
+
+	tests := []struct {
+		path string
+		want bool
+	}{
+		{path: `C:\proj\skip`, want: true},
+		{path: `C:\proj\skip\repo`, want: true},
+		{path: `C:\proj\skip\a\b`, want: true},
+		{path: `C:\proj\keep`, want: false},
+		{path: `C:\proj\skipped`, want: false},
+		{path: `D:\proj\skip\repo`, want: false},
 	}
 	for _, tt := range tests {
 		if got := m.ShouldIgnore(tt.path); got != tt.want {
