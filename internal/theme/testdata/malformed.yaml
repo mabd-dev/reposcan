@@ -1,0 +1,7 @@
+# Test fixture for loader_errors_test.go: valid YAML whose palette is a list
+# instead of a mapping, so decoding it into Base24Scheme fails.
+system: "base24"
+name: "Malformed"
+variant: "dark"
+palette:
+  - "#000000"
