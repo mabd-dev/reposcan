@@ -98,7 +98,8 @@ func TestNewestFileModTime(t *testing.T) {
 	}{
 		{name: "no entries", lines: nil, want: time.Time{}},
 		{name: "single file", lines: []string{"M old.txt"}, want: oldAt},
-		{name: "newest wins regardless of order", lines: []string{"M sub/new.txt", "A old.txt"}, want: newAt},
+		{name: "newest file first", lines: []string{"M sub/new.txt", "A old.txt"}, want: newAt},
+		{name: "newest file last", lines: []string{"A old.txt", "M sub/new.txt"}, want: newAt},
 		{name: "rename dated from its new path", lines: []string{"R {gone.txt => sub/new.txt}"}, want: newAt},
 		{name: "missing file skipped", lines: []string{"D gone.txt", "M old.txt"}, want: oldAt},
 		{name: "only missing files", lines: []string{"D gone.txt"}, want: time.Time{}},
