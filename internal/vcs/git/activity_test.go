@@ -309,6 +309,17 @@ func TestLastActivity_WarnsWhenHeadDateUnavailable(t *testing.T) {
 				writeFileAt(t, filepath.Join(repo, "a.txt"), "a", oldFileAt)
 				runGitAt(t, repo, commitAt, "add", ".")
 				runGitWithDate(t, repo, "@253402300800 +0000", "commit", "-m", "init")
+
+				// Git for Windows does not keep a timestamp this large, so the
+				// date it prints parses and no warning is raised.
+				out, err := exec.Command("git", "-C", repo, "log", "-1", "--format=%cI").Output()
+				if err != nil {
+					t.Fatalf("git log: %v", err)
+				}
+				date := strings.TrimSpace(string(out))
+				if _, err := time.Parse(time.RFC3339, date); err == nil {
+					t.Skipf("git stored the year-10000 commit date as %q, which parses", date)
+				}
 			},
 		},
 	}
