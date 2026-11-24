@@ -4,7 +4,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"reflect"
 	"runtime"
+	"strings"
 	"testing"
 	"time"
 )
@@ -12,13 +14,19 @@ import (
 // runGitAt runs git in dir with committer/author dates pinned to at.
 func runGitAt(t *testing.T, dir string, at time.Time, args ...string) {
 	t.Helper()
+	runGitWithDate(t, dir, at.Format(time.RFC3339), args...)
+}
+
+// runGitWithDate runs git in dir with committer/author dates pinned to date,
+// given in any format git accepts (e.g. "@<unix seconds> +0000").
+func runGitWithDate(t *testing.T, dir string, date string, args ...string) {
+	t.Helper()
 	full := append([]string{"-C", dir,
 		"-c", "user.email=test@example.com",
 		"-c", "user.name=test",
 		"-c", "commit.gpgsign=false",
 	}, args...)
 	cmd := exec.Command("git", full...)
-	date := at.Format(time.RFC3339)
 	cmd.Env = append(os.Environ(), "GIT_COMMITTER_DATE="+date, "GIT_AUTHOR_DATE="+date)
 	if out, err := cmd.CombinedOutput(); err != nil {
 		t.Fatalf("git %v: %v\n%s", args, err, out)
@@ -248,6 +256,89 @@ func TestProviderCheckRepoStateWithActivity(t *testing.T) {
 			}
 			if (len(warnings) > 0) != tt.wantWarning {
 				t.Fatalf("warnings = %v, wantWarning %v", warnings, tt.wantWarning)
+			}
+		})
+	}
+}
+
+// When HEAD resolves but its committer date cannot be read, LastActivity warns
+// and drops only the HEAD signal. Uncommitted files are dated older than the
+// commit, so a result equal to their mtime shows HEAD was not used.
+func TestLastActivity_WarnsWhenHeadDateUnavailable(t *testing.T) {
+	gitOrSkip(t)
+
+	commitAt := time.Date(2026, 1, 10, 12, 0, 0, 0, time.UTC)
+	oldFileAt := commitAt.Add(-48 * time.Hour)
+
+	tests := []struct {
+		name  string
+		setup func(t *testing.T, repo string)
+	}{
+		{
+			// rev-parse --verify HEAD only reads the ref, so it still succeeds,
+			// while git log fails with "bad object HEAD". git status fails the
+			// same way, so only direct callers of LastActivity reach this.
+			name: "HEAD commit object missing",
+			setup: func(t *testing.T, repo string) {
+				writeFileAt(t, filepath.Join(repo, "a.txt"), "a", oldFileAt)
+				runGitAt(t, repo, commitAt, "add", ".")
+				runGitAt(t, repo, commitAt, "commit", "-m", "init")
+
+				out, err := exec.Command("git", "-C", repo, "rev-parse", "HEAD").Output()
+				if err != nil {
+					t.Fatalf("rev-parse HEAD: %v", err)
+				}
+				sha := strings.TrimSpace(string(out))
+				obj := filepath.Join(repo, ".git", "objects", sha[:2], sha[2:])
+				// Loose objects are read-only; make the file writable so the
+				// removal also works on Windows.
+				if err := os.Chmod(obj, 0o644); err != nil {
+					t.Fatalf("HEAD commit is not a loose object: %v", err)
+				}
+				if err := os.Remove(obj); err != nil {
+					t.Fatal(err)
+				}
+			},
+		},
+		{
+			// git log succeeds and prints "10000-01-01T00:00:00Z", which is not
+			// RFC 3339 (four-digit year). git status still works here, so the
+			// provider reaches this case too.
+			name: "HEAD committer date beyond year 9999",
+			setup: func(t *testing.T, repo string) {
+				writeFileAt(t, filepath.Join(repo, "a.txt"), "a", oldFileAt)
+				runGitAt(t, repo, commitAt, "add", ".")
+				runGitWithDate(t, repo, "@253402300800 +0000", "commit", "-m", "init")
+
+				// Git for Windows does not keep a timestamp this large, so the
+				// date it prints parses and no warning is raised.
+				out, err := exec.Command("git", "-C", repo, "log", "-1", "--format=%cI").Output()
+				if err != nil {
+					t.Fatalf("git log: %v", err)
+				}
+				date := strings.TrimSpace(string(out))
+				if _, err := time.Parse(time.RFC3339, date); err == nil {
+					t.Skipf("git stored the year-10000 commit date as %q, which parses", date)
+				}
+			},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			repo := t.TempDir()
+			runGit(t, repo, "init", "-q")
+			tt.setup(t, repo)
+			writeFileAt(t, filepath.Join(repo, "a.txt"), "changed", oldFileAt)
+
+			got, warnings := LastActivity(repo, []string{"a.txt"})
+
+			wantWarnings := []string{"Failed to get HEAD commit date, path=" + repo}
+			if !reflect.DeepEqual(warnings, wantWarnings) {
+				t.Fatalf("warnings = %q, want %q", warnings, wantWarnings)
+			}
+			if !got.Equal(oldFileAt) {
+				t.Fatalf("LastActivity = %v, want %v (file mtime, HEAD skipped)", got, oldFileAt)
 			}
 		})
 	}
