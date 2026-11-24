@@ -1,11 +1,16 @@
 package colorschemeswitcher
 
 import (
+	"fmt"
+	"os"
+	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
 	tea "charm.land/bubbletea/v2"
 	"charm.land/lipgloss/v2"
+	"github.com/mabd-dev/reposcan/internal/logger"
 	"github.com/mabd-dev/reposcan/internal/theme"
 )
 
@@ -90,6 +95,113 @@ func TestNew_NegativeHeight_UsesFloor(t *testing.T) {
 	m := New(stubTheme(), 0)
 	if len(m.colorSchemes) == 0 {
 		t.Fatal("schemes should load regardless of height")
+	}
+}
+
+// useSchemeIDs replaces theme.Schemes, the exported list of scheme IDs that New
+// loads, for the duration of the test.
+func useSchemeIDs(t *testing.T, ids []string) {
+	t.Helper()
+	original := theme.Schemes
+	theme.Schemes = ids
+	t.Cleanup(func() { theme.Schemes = original })
+}
+
+// captureLogs enables the logger with HOME pointed at a temp dir and returns a
+// func that reads everything logged so far. Logging is disabled again on cleanup.
+func captureLogs(t *testing.T) func() string {
+	t.Helper()
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
+	logger.Init(true, "logs")
+	t.Cleanup(func() { logger.Init(false, "") })
+
+	return func() string {
+		t.Helper()
+		logDir := filepath.Join(home, "logs")
+		entries, err := os.ReadDir(logDir)
+		if err != nil {
+			t.Fatalf("ReadDir(%q) error = %v", logDir, err)
+		}
+		var sb strings.Builder
+		for _, e := range entries {
+			b, err := os.ReadFile(filepath.Join(logDir, e.Name()))
+			if err != nil {
+				t.Fatalf("ReadFile(%q) error = %v", e.Name(), err)
+			}
+			sb.Write(b)
+		}
+		return sb.String()
+	}
+}
+
+func TestNew_SchemeLoadFailure_SkipsAndLogsScheme(t *testing.T) {
+	tests := []struct {
+		name       string
+		ids        []string
+		wantIDs    []string
+		wantFailed []string
+	}{
+		{
+			name:    "all schemes load",
+			ids:     []string{"0x96f", "3024-day"},
+			wantIDs: []string{"0x96f", "3024-day"},
+		},
+		{
+			name:       "unknown scheme between valid ones is skipped",
+			ids:        []string{"0x96f", "does-not-exist", "3024-day"},
+			wantIDs:    []string{"0x96f", "3024-day"},
+			wantFailed: []string{"does-not-exist"},
+		},
+		{
+			name:       "every scheme unknown leaves the list empty",
+			ids:        []string{"missing-a", "missing-b"},
+			wantFailed: []string{"missing-a", "missing-b"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			useSchemeIDs(t, tt.ids)
+			readLogs := captureLogs(t)
+
+			m := New(stubTheme(), 30)
+
+			gotIDs := make([]string, 0, len(m.colorSchemes))
+			for _, s := range m.colorSchemes {
+				if s.scheme.Name == "" {
+					t.Errorf("scheme %q loaded with an empty name", s.id)
+				}
+				gotIDs = append(gotIDs, s.id)
+			}
+			if !slices.Equal(gotIDs, tt.wantIDs) {
+				t.Errorf("loaded scheme IDs = %q, want %q", gotIDs, tt.wantIDs)
+			}
+			if len(m.filteredColorSchemes) != len(tt.wantIDs) {
+				t.Errorf("filtered schemes = %d, want %d", len(m.filteredColorSchemes), len(tt.wantIDs))
+			}
+			if got := len(m.tbl.Rows()); got != len(tt.wantIDs) {
+				t.Errorf("table rows = %d, want %d", got, len(tt.wantIDs))
+			}
+
+			counter := fmt.Sprintf("%d/%d", len(tt.wantIDs), len(tt.wantIDs))
+			if !strings.Contains(m.View(), counter) {
+				t.Errorf("View should show counter %q for the schemes that loaded", counter)
+			}
+
+			logs := readLogs()
+			for _, id := range tt.ids {
+				msg := "failed to parse color scheme " + id + ","
+				wantLogged := slices.Contains(tt.wantFailed, id)
+				if got := strings.Contains(logs, msg); got != wantLogged {
+					t.Errorf("log contains %q = %v, want %v; logs:\n%s", msg, got, wantLogged, logs)
+				}
+			}
+			if len(tt.wantFailed) > 0 && !strings.Contains(logs, "level=ERROR") {
+				t.Errorf("scheme load failure should be logged at ERROR level; logs:\n%s", logs)
+			}
+		})
 	}
 }
 
