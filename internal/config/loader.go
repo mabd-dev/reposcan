@@ -1,7 +1,9 @@
 package config
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 
 	"github.com/mabd-dev/reposcan/internal/utils"
@@ -13,7 +15,7 @@ var tomlMarshal = toml.Marshal
 
 // writeToFile serializes config to TOML and writes it to path.
 // Parent directories are created if necessary.
-func writeToFile(config Config, path string) error {
+func writeToFile(config any, path string) error {
 
 	data, err := tomlMarshal(config)
 	if err != nil {
@@ -29,13 +31,10 @@ func UpdateConfigs(configs Config, path string) error {
 
 // SetColorScheme sets output.colorscheme in the config file at path and keeps
 // every other key as it is in the file, so values from CLI flags are not saved.
+// A missing file is created with only output.colorscheme.
 func SetColorScheme(path, schemeID string) error {
-	b, err := os.ReadFile(path)
-	if err != nil {
-		return err
-	}
 	file := map[string]any{}
-	if err := toml.Unmarshal(b, &file); err != nil {
+	if err := Load(&file, path); err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return err
 	}
 	output, ok := file["output"].(map[string]any)
@@ -45,15 +44,11 @@ func SetColorScheme(path, schemeID string) error {
 	}
 	output["colorscheme"] = schemeID
 
-	data, err := tomlMarshal(file)
-	if err != nil {
-		return err
-	}
-	return utils.WriteToFile(data, path)
+	return writeToFile(file, path)
 }
 
 // Load reads a TOML configuration file from path into conf.
-func Load(conf *Config, path string) error {
+func Load(conf any, path string) error {
 	b, err := os.ReadFile(path)
 	if err != nil {
 		return err
