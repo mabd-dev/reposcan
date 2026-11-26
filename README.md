@@ -82,8 +82,51 @@ curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh |
 ```sh
 git clone https://github.com/mabd-dev/reposcan.git
 cd reposcan
-go build -o reposcan .
+go build -o reposcan ./cmd/reposcan
 ```
+
+### Windows installation
+
+#### Option 1: Via `go install` (Recommended)
+
+If you have Go installed on Windows:
+
+```powershell
+go install github.com/mabd-dev/reposcan/cmd/reposcan@latest
+```
+
+Make sure your Go binaries folder (`%USERPROFILE%\go\bin` or `$env:GOPATH\bin`) is included in your system `PATH`.
+
+#### Option 2: Build from source
+
+In PowerShell or Command Prompt:
+
+```powershell
+git clone https://github.com/mabd-dev/reposcan.git
+cd reposcan
+go build -o reposcan.exe ./cmd/reposcan
+```
+
+Move `reposcan.exe` to a folder in your `PATH` (such as `C:\Windows` or a custom tools folder like `C:\tools\bin`).
+
+#### Shell differences on Windows
+
+- **PowerShell**:
+  ```powershell
+  # Scan your user profile
+  reposcan -r $HOME
+
+  # Scan multiple drives or directories
+  reposcan -r C:\Users\username\Code -r D:\Projects
+  ```
+- **Command Prompt (cmd.exe)**:
+  ```cmd
+  reposcan -r %USERPROFILE%
+  ```
+- **Git Bash**:
+  ```bash
+  reposcan -r ~
+  ```
 
 
 ## 🚀 Usage
@@ -154,6 +197,10 @@ Current jj limitations:
 
 ## ⚙️ Configuration
 By default, `reposcan` looks for a config file in: 
+
+- **Linux / macOS**: `~/.config/reposcan/config.toml`
+- **Windows**: `%USERPROFILE%\.config\reposcan\config.toml` (e.g. `C:\Users\<username>\.config\reposcan\config.toml` or `$HOME\.config\reposcan\config.toml` in PowerShell)
+
 ```sh
 ~/.config/reposcan/config.toml
 ```
