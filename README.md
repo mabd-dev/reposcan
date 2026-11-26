@@ -87,7 +87,11 @@ go build -o reposcan .
 
 ### Windows installation
 
-#### Option 1: Via `go install` (Recommended)
+#### Option 1: Pre-built binary (Recommended)
+
+Download the latest `reposcan-<version>-windows-amd64.exe` binary directly from the [Releases](https://github.com/mabd-dev/reposcan/releases) page. Rename it to `reposcan.exe` and place it in a folder in your `PATH` (such as `%USERPROFILE%\bin` or `C:\tools\bin`).
+
+#### Option 2: Via `go install`
 
 If you have Go installed on Windows:
 

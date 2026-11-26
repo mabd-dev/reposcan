@@ -60,12 +60,23 @@ jobs:
           - os: linux
             arch: amd64
             runner: ubuntu-latest
+            ext: ""
+            cgo: 1
           - os: darwin
             arch: amd64
             runner: macos-latest
+            ext: ""
+            cgo: 1
           - os: darwin
             arch: arm64
             runner: macos-latest
+            ext: ""
+            cgo: 1
+          - os: windows
+            arch: amd64
+            runner: windows-latest
+            ext: ".exe"
+            cgo: 0
 
     runs-on: ${{ matrix.runner }}
 
@@ -88,12 +99,13 @@ jobs:
         run: go mod tidy
 
       - name: Build Binary
+        shell: bash
         env:
           GOOS: ${{ matrix.os }}
           GOARCH: ${{ matrix.arch }}
-          CGO_ENABLED: 1
+          CGO_ENABLED: ${{ matrix.cgo }}
         run: |
-          ASSET_NAME="reposcan-${{ github.ref_name }}-${{ matrix.os }}-${{ matrix.arch }}"
+          ASSET_NAME="reposcan-${{ github.ref_name }}-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.ext }}"
           echo "Building $ASSET_NAME ..."
           go build \
             -ldflags "-X github.com/mabd-dev/reposcan/cmd/reposcan.mixpanelToken=${{ secrets.MIXPANEL_TOKEN }}" \
@@ -101,11 +113,12 @@ jobs:
             .
 
       - name: Verify Binary
-        run: ./reposcan-${{ github.ref_name }}-${{ matrix.os }}-${{ matrix.arch }} version
+        shell: bash
+        run: ./reposcan-${{ github.ref_name }}-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.ext }} version
 
       - name: Upload Binary to Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.ref_name }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          files: reposcan-${{ github.ref_name }}-${{ matrix.os }}-${{ matrix.arch }}
+          files: reposcan-${{ github.ref_name }}-${{ matrix.os }}-${{ matrix.arch }}${{ matrix.ext }}
