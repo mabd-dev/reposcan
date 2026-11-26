@@ -22,12 +22,14 @@ below are all available flags
 
 - `-r, --root PATH` (repeatable)
   - Config: `roots = ["/path1", "/path2"]`
-  - Description: Directories to scan for Git and jj repositories. Repeats to add multiple roots. Defaults to `$HOME` if unset. A leading `~` and environment variables like `$HOME` are expanded.
+  - Description: Directories to scan for Git and jj repositories. Repeats to add multiple roots. Defaults to the user's home directory if unset. A leading `~` and environment variables written as `$VAR` or `${VAR}` are expanded. For Windows config values, use paths such as `~/Code` or `${USERPROFILE}/Code`; `%USERPROFILE%` is expanded only by Command Prompt, not by reposcan. On Windows, standard drive paths (such as `C:\Users\username\Code` or `D:\projects`) and both `/` and `\` separators are supported.
   - Example:
-    - CLI: `reposcan -r ~/Code -r ~/work`
+    - CLI: `reposcan -r ~/Code -r ~/work` (or in PowerShell: `reposcan -r C:\Users\username\Code`)
     - TOML:
       ```toml
       roots = ["~/Code", "~/work"]
+      # On Windows:
+      # roots = ["C:/Users/username/Code", "D:/projects"]
       ```
 
 - `-d, --dirIgnore GLOB` (repeatable)
