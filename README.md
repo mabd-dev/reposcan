@@ -82,7 +82,7 @@ curl -fsSL https://raw.githubusercontent.com/mabd-dev/reposcan/main/install.sh |
 ```sh
 git clone https://github.com/mabd-dev/reposcan.git
 cd reposcan
-go build -o reposcan ./cmd/reposcan
+go build -o reposcan .
 ```
 
 ### Windows installation
@@ -92,7 +92,7 @@ go build -o reposcan ./cmd/reposcan
 If you have Go installed on Windows:
 
 ```powershell
-go install github.com/mabd-dev/reposcan/cmd/reposcan@latest
+go install github.com/mabd-dev/reposcan@latest
 ```
 
 Make sure your Go binaries folder (`%USERPROFILE%\go\bin` or `$env:GOPATH\bin`) is included in your system `PATH`.
@@ -104,7 +104,7 @@ In PowerShell or Command Prompt:
 ```powershell
 git clone https://github.com/mabd-dev/reposcan.git
 cd reposcan
-go build -o reposcan.exe ./cmd/reposcan
+go build -o reposcan.exe .
 ```
 
 Move `reposcan.exe` to a folder in your `PATH` (such as `C:\Windows` or a custom tools folder like `C:\tools\bin`).
@@ -121,7 +121,7 @@ Move `reposcan.exe` to a folder in your `PATH` (such as `C:\Windows` or a custom
   ```
 - **Command Prompt (cmd.exe)**:
   ```cmd
-  reposcan -r %USERPROFILE%
+  reposcan -r "%USERPROFILE%"
   ```
 - **Git Bash**:
   ```bash
