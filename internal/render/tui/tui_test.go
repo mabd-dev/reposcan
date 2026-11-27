@@ -1,6 +1,9 @@
 package tui
 
 import (
+	"os"
+	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -17,6 +20,7 @@ import (
 	"github.com/mabd-dev/reposcan/internal/theme"
 	"github.com/mabd-dev/reposcan/internal/vcs"
 	"github.com/mabd-dev/reposcan/pkg/report"
+	"github.com/pelletier/go-toml/v2"
 )
 
 func testTheme(t *testing.T) theme.Theme {
@@ -607,6 +611,48 @@ func TestUpdateColorSchemeSwitcherPassthrough(t *testing.T) {
 	res := nm.(Model)
 	if res.colorSchemeSwitcher.WantsClose() {
 		t.Error("should not want close")
+	}
+}
+
+func TestUpdateColorSchemeSwitcherSavesOnlyColorScheme(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	t.Setenv("USERPROFILE", home)
+	cfgPath, err := config.DefaultPaths().GetConfigFullPath()
+	if err != nil {
+		t.Fatalf("config path: %v", err)
+	}
+	if err := os.MkdirAll(filepath.Dir(cfgPath), 0o755); err != nil {
+		t.Fatalf("mkdir: %v", err)
+	}
+	fileContent := "roots = ['/home/me']\nonly = 'dirty'\nno-telemetry = false\n\n[output]\ntype = 'json'\njsonPath = '/home/me/reports'\n"
+	if err := os.WriteFile(cfgPath, []byte(fileContent), 0o644); err != nil {
+		t.Fatalf("write config: %v", err)
+	}
+
+	m := newTestModel(t)
+	// runtime config after `reposcan -r /some/other/dir -f all --no-telemetry`
+	m.configs = config.Config{Roots: []string{"/some/other/dir"}, Only: config.OnlyAll, NoTelemetry: true}
+	sw, _ := m.colorSchemeSwitcher.Update(tea.KeyPressMsg{Text: "enter"})
+	m.colorSchemeSwitcher = sw
+	m.updateColorSchemeSwitcher(tea.WindowSizeMsg{})
+
+	want := map[string]any{}
+	if err := toml.Unmarshal([]byte(fileContent), &want); err != nil {
+		t.Fatalf("parse want: %v", err)
+	}
+	want["output"].(map[string]any)["colorscheme"] = sw.SelectedSchemeID()
+
+	b, err := os.ReadFile(cfgPath)
+	if err != nil {
+		t.Fatalf("read config: %v", err)
+	}
+	got := map[string]any{}
+	if err := toml.Unmarshal(b, &got); err != nil {
+		t.Fatalf("parse config: %v", err)
+	}
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("config.toml after theme switch:\n got: %v\nwant: %v", got, want)
 	}
 }
 

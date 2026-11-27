@@ -134,7 +134,7 @@ func (m Model) updateColorSchemeSwitcher(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 		oldColorSchemeID := m.theme.Colors.ID
 		m.configs.Output.ColorSchemeName = schemeID
-		err = config.UpdateConfigs(m.configs, cfgFullPath)
+		err = config.SetColorScheme(cfgFullPath, schemeID)
 		if err != nil {
 			m.configs.Output.ColorSchemeName = oldColorSchemeID
 			logger.Error("failed to save new configs in config.toml: %v", err)
